@@ -1,25 +1,21 @@
 # BakeMao — CONTEXT
 
-## SNAPSHOT（v0.1.2 | 2026-04-17）
+## SNAPSHOT（v0.1.3 | 2026-04-17）
 
-- **Vercel Production**：[bakemao.vercel.app](https://bakemao.vercel.app)（專案 `chaolins-projects-7a1f0e81/bakemao`；`vercel --prod` 已成功）
-- 子網域 **bakemao.smallfatmao.com**：請在 Vercel → Domains 綁定，DNS `CNAME` 指到 Vercel
-- 尚未設定 GitHub `remote`；若要 Type A「push main 自動部署」，請 `git remote add origin …` 後 push，並在 Vercel 連結該 repo
-- Next.js 14 App Router + Tailwind + Zustand + Vitest
-- `@ducanh2912/next-pwa`（PWA / `public/sw.js`）
-- 計算引擎 `src/lib/calculator.ts` + 單元測試
-- 主頁：模具、配方、結果、Wake Lock、離線 Banner、儲存（Supabase + localStorage 離線佇列 stub）
-- MoldSelector：修正 `useEffect` 依賴 `parts` 物件 + 重複 `setState` 造成的 Maximum update depth infinite loop
-- 配方頁 `/recipes`、分享圖 `html2canvas`
+- **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)（`main` 已推送；Type A：**push main → Vercel 自動部署**，已 `vercel git connect` 連結專案）
+- **Vercel Production**：[bakemao.vercel.app](https://bakemao.vercel.app)（專案 `chaolins-projects-7a1f0e81/bakemao`）
+- **環境變數**：已於 Vercel 設定 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（**Production + Development**；數值來自本機 **Maomemo** 的 `.env.local`，與 MaoMemo **共用同一 Supabase 專案**）。Preview（PR）專用變數若需與 Production 一致，請至 Vercel Dashboard → Environment Variables 為 **Preview** 新增（CLI 對非 `main` 分支須逐分支指定）。
+- **自訂網域**：已在 Vercel 專案加入 **bakemao.smallfatmao.com**；DNS 尚在 **GoDaddy**（`ns33/ns34.domaincontrol.com`），請依 Vercel 指示新增 **`A bakemao → 76.76.21.21`**（或改用 Vercel nameservers），驗證通過後才會正式指向站點。
+- **資料庫**：請在 **該 Supabase 專案** 執行 `supabase/migrations/0001_create_recipes.sql`（若尚未執行），儲存配方與登入才會正常。
+- Next.js 14 App Router + Tailwind + Zustand + Vitest、`@ducanh2912/next-pwa`、計算引擎與 MoldSelector 無限迴圈修正等（見前版 SNAPSHOT）
 
 ## 目前狀態
 
-- **已完成**：CURSOR_TASKS TASK-00～11 對應之程式骨架與核心流程；`npm run build` 可通過
-- **需設定（Vercel Dashboard → Project → Settings → Environment Variables）**：`NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`（可選 `SUPABASE_SERVICE_ROLE_KEY` 供未來 server 功能）；執行 `supabase/migrations/0001_create_recipes.sql`；OAuth 於 Supabase Dashboard 設定 Google/Apple
-- **預設 Supabase client fallback**：無 env 時仍可 build，上線前務必換成真實金鑰
+- 自動化部署鏈結：GitHub ↔ Vercel 已就緒；下次 `git push origin main` 會觸發新 deployment。
+- 若日後 BakeMao 要**獨立 Supabase 專案**：於 Supabase 新建專案後，在 Vercel 覆寫上述兩個 `NEXT_PUBLIC_*` 即可。
 
 ## 下一步
 
-- 補 PWA 多尺寸圖示（`public/icons/*`）與品牌 `logo.png`（分享浮水印可替換為圖檔）
-- 完善 `offlineSync` 連線後上傳、衝突處理
-- 實機測 iOS PWA / Wake Lock / html2canvas 字體
+- 完成 **bakemao.smallfatmao.com** 的 DNS A 記錄（或 CNAME，依 Vercel 當下指示為準）
+- Supabase：OAuth（Google／Apple）若尚未為該 redirect URL 設定，請於 Dashboard 補上
+- 補 PWA 多尺寸圖示、`offlineSync` 完整化、實機測
