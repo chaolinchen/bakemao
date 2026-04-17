@@ -1,66 +1,71 @@
 # BakeMao — CONTEXT
 
-## SNAPSHOT（v0.1.4 | 2026-04-17）
+## SNAPSHOT（v0.1.8 | 2026-04-17）
 
-- **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)（已 `git connect`，push `main` 自動部署）
-- **Supabase**：程式只會「連到你填的那個專案」——**儀表板不會自動出現名為 BakeMao 的專案**，必須自行**新建一個 Supabase Project**（名稱可自取，例如 `bakemao`），再依下文貼 URL／anon key、跑 SQL。
-- **自訂網域**：`bakemao.smallfatmao.com` 已掛在 Vercel；DNS 須在網域商依 Vercel 指示設定。
-- Next.js 14、`@ducanh2912/next-pwa`、計算引擎、Zustand、MoldSelector 迴圈修正等（略）
+- **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
+- **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
+- **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
+- **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；build 仍有 **jose／Edge Runtime** 警告（middleware 匯入 `auth`），屬已知、與計算 UI 無關。
+- **功能進度**：`CURSOR_TASKS.md` **TASK-00～TASK-11 已完成**；近期為 **dev 無限迴圈修復**（見上）與文件同步。
 
----
+**Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 
-## Supabase：從零建立 BakeMao 用專案（必做）
-
-若後台**沒有**可給 BakeMao 用的專案，請照序做（約 5–10 分鐘）：
-
-### 1）新建專案
-
-1. 開 [Supabase Dashboard](https://supabase.com/dashboard) → **New project**
-2. **Name**：自訂（例：`bakemao`）— 這只是顯示名稱，不必與 App 名稱相同  
-3. **Database password**、**Region**（選離台灣近一點，例如 Tokyo / Singapore）依需求填寫 → 建立並等開機完成
-
-### 2）複製 URL 與 anon key
-
-1. Project → **Settings** → **API**
-2. 複製 **Project URL** → 對應 `NEXT_PUBLIC_SUPABASE_URL`
-3. 複製 **anon public** key → 對應 `NEXT_PUBLIC_SUPABASE_ANON_KEY`  
-   （不要用 `service_role` 放進前端或 `NEXT_PUBLIC_*`。）
-
-### 3）本機 `.env.local`（可選，方便本機 `npm run dev`）
-
-在 `bakemao/` 目錄建立 `.env.local`（勿 commit），內容參考 `.env.example`，貼上兩個變數。
-
-### 4）Vercel 環境變數
-
-1. [Vercel](https://vercel.com) → 專案 **bakemao** → **Settings** → **Environment Variables**
-2. 編輯或新增同一組 **Production**（與需要的話 **Preview**）：
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. 儲存後 **Redeploy** 一次 Production（Deployments → 右上角 … → Redeploy），讓線上 bundle 用到新金鑰
-
-### 5）建立資料表（recipes）
-
-1. Supabase → **SQL Editor** → **New query**
-2. 打開本 repo：`supabase/migrations/0001_create_recipes.sql`，**整份貼上** → **Run**
-3. 左側 **Table Editor** 應可看到 **`recipes`** 表
-
-### 6）OAuth（Google / Apple）— 登入與導向網址
-
-1. **Authentication** → **Providers**：啟用 Google／Apple（依需求）
-2. **Authentication** → **URL Configuration** → **Redirect URLs** 至少加入：
-   - `https://bakemao.vercel.app/auth/callback`
-   - `https://bakemao.smallfatmao.com/auth/callback`（若已綁定網域）
-   - 本機開發可加：`http://localhost:3000/auth/callback`
+**PWA**：`@ducanh2912/next-pwa`；dev 可能顯示 PWA disabled；production 才有完整 SW。
 
 ---
 
-## 目前狀態
+## 本機開發：背景會看到很多 process？
 
-- 部署：GitHub ↔ Vercel 已連線；**Supabase 要你自己建專案 + 跑 migration** 後，儲存配方與登入才會對應到正確資料庫。
-- 若先前 Vercel 曾指向「別的專案」的金鑰：請依上節 **§4** 改成**新專案**的 URL／anon key。
+通常 **只須開一個** `npm run dev`。**一組** Next dev 會出現 **兩個**相關 process，屬正常：
 
-## 下一步
+| 你看到的 | 說明 |
+|---------|------|
+| `node …/next dev` | CLI 父进程 |
+| `next-server (v14.x)` | 實際 Listen **:3000** 的服務 |
 
-- 完成 **bakemao.smallfatmao.com** DNS
-- 依 §6 補齊 OAuth 與 Redirect URLs
-- 補 PWA 圖示、offline 同步實作、實機測
+**不需要**兩組各開一次；若 **3000、3001 同時有 next**，代表**重複啟動**，應只保留一組或關掉舊的。**Cursor / 其他 agent 的背景 terminal** 若已結束，相關 process 也應一併消失；若埠仍被占，用 `lsof -i :3000` 查 PID 再結束。
+
+---
+
+## 測試應在哪裡做？
+
+| 類型 | 指令 / 位置 |
+|------|-------------|
+| **單元測試（計算引擎等）** | 專案根目錄：`npm test`（等同 `vitest run`），對應 `src/lib/*.test.ts` |
+| **建置／型別／Lint** | `npm run build`（含 `next lint` + typecheck） |
+| **手動端對端** | 瀏覽器：`http://localhost:3000`（計算、登入、儲存配方、`/recipes`、分享圖） |
+| **線上驗證** | 部署網址（例 `https://bakemao.smallfatmao.com`）：確認 **Vercel 環境變數**與 **Google redirect URI** 已含該 origin |
+
+目前 **無** Playwright／Cypress 專案內 E2E 腳本；若要自動化瀏覽器測試需另加。
+
+---
+
+## 疑難：`.next` chunk 遺失（`Cannot find module './xxx.js'`）
+
+多發生在換套件、中斷建置或 dev 久掛之後。處理：**刪除 `.next` 目錄** → 再執行 `npm run dev` 或 `npm run build`。
+
+---
+
+## Neon：初始化資料庫（必做）
+
+1. [Neon Console](https://console.neon.tech) → 複製連線字串 → `.env.local` 的 `DATABASE_URL`（勿 commit）。
+2. Neon **SQL Editor** 執行 **`neon/001_init.sql`** 整份。
+3. **Vercel** → bakemao → **Environment Variables**：同上變數，儲存後 **Redeploy**。
+
+---
+
+## 目前狀態（給 agent 續作）
+
+- **規格**：仍以 **`PRD_BakeMao_v1.0.md`**（v1.5.1）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **已結案：Maximum update depth**  
+  - **模具**：不再用 `useEffect` 把推導容積寫回 store；**`calcStore.computeResult`** 依 **`moldUi` + `getMoldParts`** 與畫面「共 X g」對齊。  
+  - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
+  其他元件多為單一欄位 `useCalcStore((s) => s.x)`，無需 shallow。
+- **建置品質**：`npm run build`、`npm test` 上次執行成功；若遇 **`Cannot find module './xxx.js'`** 或怪錯，先 **`rm -rf .next`** 再 dev／build。
+- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**middleware／jose／Edge** 警告若需消除可再評估是否拆分 Edge 專用 auth 或調整匯入（目前不影響主流程）。
+
+## 下一步（產品向）
+
+- 本機／線上再手動確認 **首頁載入無紅屏**、模具切換與結果列正常。
+- **手機實測**：PWA、離線、分享圖；**Google OAuth**：後台只保留正式＋本機（＋選用 vercel.app）redirect。
+- 有餘力再：**`vercel --prod`** 與 **GitHub push** 同 AGENTS 建議順序。

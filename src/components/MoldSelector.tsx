@@ -1,121 +1,81 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import molds from '@/data/molds.json'
-import { boxVolumeCC, cylinderVolumeCC } from '@/lib/moldsVolume'
-import { useCalcStore } from '@/store/calcStore'
+import { getMoldParts, parseMoldNum } from '@/lib/moldParts'
+import {
+  useCalcStore,
+  type ChiffonKey,
+  type MoldUiState,
+} from '@/store/calcStore'
 import { SegmentControl } from './ui/SegmentControl'
 import { NumberInput } from './ui/NumberInput'
 import { Stepper } from './ui/Stepper'
 
-type Shape = 'cylinder' | 'rectangle' | 'muffin' | 'direct'
-type ChiffonKey = 'small' | 'medium' | 'large'
-
-function parseNum(s: string): number {
-  const n = parseFloat(String(s).replace(/,/g, ''))
-  return Number.isFinite(n) ? Math.abs(n) : 0
-}
-
-function getMoldParts(
-  preset: (typeof molds)[number] | undefined,
-  presetId: string,
+/** Apply preset defaults when user picks from dropdown (no useEffect → no sync loops) */
+function moldUiPatchForPreset(
+  pr: (typeof molds)[number],
   chiffonKey: ChiffonKey,
-  shape: Shape,
-  cyl: { d: string; h: string },
-  box: { l: string; w: string; h: string },
-  muffin: { single: string; qty: number },
-  direct: string,
-  fixedQty: number
-): { volumeCC: number; quantity: number } | null {
-  if (!preset) return null
-
-  if (preset.type === 'chiffon' && preset.volumes) {
-    return { volumeCC: preset.volumes[chiffonKey], quantity: 1 }
+  mi: MoldUiState
+): Partial<MoldUiState> {
+  if (pr.type === 'fixed') {
+    const v = String(pr.volume)
+    return {
+      direct: mi.direct === v ? mi.direct : v,
+      muffin:
+        mi.muffin.single === v ? mi.muffin : { ...mi.muffin, single: v },
+    }
   }
-
-  if (shape === 'muffin') {
-    const s = parseNum(muffin.single)
-    const q = Math.max(1, Math.min(99, muffin.qty))
-    if (s <= 0) return null
-    return { volumeCC: s, quantity: q }
+  if (pr.type === 'chiffon' && pr.volumes) {
+    const v = String(pr.volumes[chiffonKey])
+    return {
+      shape: 'direct',
+      direct: mi.direct === v ? mi.direct : v,
+    }
   }
-
-  if (shape === 'cylinder') {
-    const d = parseNum(cyl.d)
-    const h = parseNum(cyl.h)
-    if (d <= 0 || h <= 0) return null
-    return { volumeCC: cylinderVolumeCC(d, h), quantity: 1 }
+  if (pr.type === 'cylinder') {
+    const next = { d: String(pr.diameter), h: String(pr.height) }
+    return {
+      shape: 'cylinder',
+      cyl:
+        mi.cyl.d === next.d && mi.cyl.h === next.h ? mi.cyl : next,
+    }
   }
-
-  if (shape === 'rectangle') {
-    const l = parseNum(box.l)
-    const w = parseNum(box.w)
-    const h = parseNum(box.h)
-    if (l <= 0 || w <= 0 || h <= 0) return null
-    return { volumeCC: boxVolumeCC(l, w, h), quantity: 1 }
+  if (pr.type === 'rectangle') {
+    const next = {
+      l: String(pr.length),
+      w: String(pr.width),
+      h: String(pr.height),
+    }
+    return {
+      shape: 'rectangle',
+      box:
+        mi.box.l === next.l &&
+        mi.box.w === next.w &&
+        mi.box.h === next.h
+          ? mi.box
+          : next,
+    }
   }
-
-  // direct
-  const per = parseNum(direct)
-  if (per <= 0) return null
-  if (preset.type === 'fixed') {
-    const q = Math.max(1, Math.min(99, fixedQty))
-    return { volumeCC: per, quantity: q }
-  }
-  return { volumeCC: per, quantity: 1 }
+  return {}
 }
 
 export function MoldSelector() {
   const targetKind = useCalcStore((s) => s.targetKind)
   const setTargetKind = useCalcStore((s) => s.setTargetKind)
-  const moldVolumeCC = useCalcStore((s) => s.moldVolumeCC)
   const moldQuantity = useCalcStore((s) => s.moldQuantity)
-  const setMoldVolumeCC = useCalcStore((s) => s.setMoldVolumeCC)
   const setMoldQuantity = useCalcStore((s) => s.setMoldQuantity)
   const totalGram = useCalcStore((s) => s.totalGram)
   const setTotalGram = useCalcStore((s) => s.setTotalGram)
+  const moldUi = useCalcStore((s) => s.moldUi)
+  const setMoldUi = useCalcStore((s) => s.setMoldUi)
 
-  const [presetId, setPresetId] = useState('pudding-90')
-  const [chiffonKey, setChiffonKey] = useState<ChiffonKey>('medium')
-  const [shape, setShape] = useState<Shape>('direct')
-  const [cyl, setCyl] = useState({ d: '15', h: '6' })
-  const [box, setBox] = useState({ l: '17', w: '8', h: '6' })
-  const [muffin, setMuffin] = useState({ single: '90', qty: 18 })
-  const [direct, setDirect] = useState('90')
+  const { presetId, chiffonKey, shape, cyl, box, muffin, direct } = moldUi
 
   const preset = useMemo(
     () => molds.find((m) => m.id === presetId),
     [presetId]
   )
-
-  useEffect(() => {
-    if (!preset) return
-    if (preset.type === 'fixed') {
-      const v = String(preset.volume)
-      setDirect((prev) => (prev === v ? prev : v))
-      setMuffin((m) =>
-        m.single === v ? m : { ...m, single: v }
-      )
-    } else if (preset.type === 'chiffon' && preset.volumes) {
-      setShape('direct')
-      const v = String(preset.volumes[chiffonKey])
-      setDirect((prev) => (prev === v ? prev : v))
-    } else if (preset.type === 'cylinder') {
-      setShape('cylinder')
-      const next = { d: String(preset.diameter), h: String(preset.height) }
-      setCyl((c) => (c.d === next.d && c.h === next.h ? c : next))
-    } else if (preset.type === 'rectangle') {
-      setShape('rectangle')
-      const next = {
-        l: String(preset.length),
-        w: String(preset.width),
-        h: String(preset.height),
-      }
-      setBox((b) =>
-        b.l === next.l && b.w === next.w && b.h === next.h ? b : next
-      )
-    }
-  }, [presetId, preset, chiffonKey])
 
   const parts = useMemo(
     () =>
@@ -142,24 +102,6 @@ export function MoldSelector() {
       moldQuantity,
     ]
   )
-
-  const pv = parts?.volumeCC
-  const pq = parts?.quantity
-
-  useEffect(() => {
-    if (targetKind !== 'mold' || pv == null || pq == null) return
-    if (pv === moldVolumeCC && pq === moldQuantity) return
-    setMoldVolumeCC(pv)
-    setMoldQuantity(pq)
-  }, [
-    targetKind,
-    pv,
-    pq,
-    moldVolumeCC,
-    moldQuantity,
-    setMoldVolumeCC,
-    setMoldQuantity,
-  ])
 
   const totalCc =
     targetKind === 'mold' && parts
@@ -189,7 +131,7 @@ export function MoldSelector() {
           <label className="text-xs text-[#6B5A4A]">總克數（成品）</label>
           <NumberInput
             value={totalGram === 0 ? '' : String(totalGram)}
-            onChange={(e) => setTotalGram(parseNum(e.target.value))}
+            onChange={(e) => setTotalGram(parseMoldNum(e.target.value))}
           />
         </div>
       ) : (
@@ -198,7 +140,14 @@ export function MoldSelector() {
           <select
             className="mb-3 w-full rounded-lg border border-[#D9C9B5] bg-white px-3 py-2"
             value={presetId}
-            onChange={(e) => setPresetId(e.target.value)}
+            onChange={(e) => {
+              const nextId = e.target.value
+              const pr = molds.find((m) => m.id === nextId)
+              if (!pr) return
+              const mi = useCalcStore.getState().moldUi
+              const patch = moldUiPatchForPreset(pr, mi.chiffonKey, mi)
+              setMoldUi({ presetId: nextId, ...patch })
+            }}
           >
             {molds.map((m) => (
               <option key={m.id} value={m.id}>
@@ -218,7 +167,21 @@ export function MoldSelector() {
                   { value: 'large', label: '偏大' },
                 ]}
                 value={chiffonKey}
-                onChange={(v) => setChiffonKey(v)}
+                onChange={(v) => {
+                  const nextKey = v as ChiffonKey
+                  const pr = preset
+                  if (pr?.type === 'chiffon' && pr.volumes) {
+                    const mi = useCalcStore.getState().moldUi
+                    const vol = String(pr.volumes[nextKey])
+                    setMoldUi({
+                      chiffonKey: nextKey,
+                      shape: 'direct',
+                      direct: mi.direct === vol ? mi.direct : vol,
+                    })
+                  } else {
+                    setMoldUi({ chiffonKey: nextKey })
+                  }
+                }}
               />
             </div>
           ) : null}
@@ -234,7 +197,7 @@ export function MoldSelector() {
                 { value: 'direct', label: '直接 cc' },
               ]}
               value={shape}
-              onChange={(v) => setShape(v)}
+              onChange={(v) => setMoldUi({ shape: v })}
             />
           </div>
 
@@ -243,12 +206,16 @@ export function MoldSelector() {
               <Field
                 label="直徑 cm"
                 value={cyl.d}
-                onChange={(v) => setCyl((c) => ({ ...c, d: v }))}
+                onChange={(v) =>
+                  setMoldUi({ cyl: { ...cyl, d: v } })
+                }
               />
               <Field
                 label="高 cm"
                 value={cyl.h}
-                onChange={(v) => setCyl((c) => ({ ...c, h: v }))}
+                onChange={(v) =>
+                  setMoldUi({ cyl: { ...cyl, h: v } })
+                }
               />
             </div>
           ) : null}
@@ -257,17 +224,23 @@ export function MoldSelector() {
               <Field
                 label="長 cm"
                 value={box.l}
-                onChange={(v) => setBox((c) => ({ ...c, l: v }))}
+                onChange={(v) =>
+                  setMoldUi({ box: { ...box, l: v } })
+                }
               />
               <Field
                 label="寬 cm"
                 value={box.w}
-                onChange={(v) => setBox((c) => ({ ...c, w: v }))}
+                onChange={(v) =>
+                  setMoldUi({ box: { ...box, w: v } })
+                }
               />
               <Field
                 label="高 cm"
                 value={box.h}
-                onChange={(v) => setBox((c) => ({ ...c, h: v }))}
+                onChange={(v) =>
+                  setMoldUi({ box: { ...box, h: v } })
+                }
               />
             </div>
           ) : null}
@@ -278,7 +251,9 @@ export function MoldSelector() {
                 <NumberInput
                   value={muffin.single}
                   onChange={(e) =>
-                    setMuffin((m) => ({ ...m, single: e.target.value }))
+                    setMoldUi({
+                      muffin: { ...muffin, single: e.target.value },
+                    })
                   }
                 />
               </div>
@@ -290,7 +265,9 @@ export function MoldSelector() {
                   min={1}
                   max={99}
                   value={muffin.qty}
-                  onChange={(n) => setMuffin((m) => ({ ...m, qty: n }))}
+                  onChange={(n) =>
+                    setMoldUi({ muffin: { ...muffin, qty: n } })
+                  }
                 />
               </div>
             </div>
@@ -304,7 +281,7 @@ export function MoldSelector() {
               </label>
               <NumberInput
                 value={direct}
-                onChange={(e) => setDirect(e.target.value)}
+                onChange={(e) => setMoldUi({ direct: e.target.value })}
               />
               {preset?.type === 'fixed' ? (
                 <div className="mt-2 flex items-center gap-3">

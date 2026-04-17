@@ -1,7 +1,7 @@
 'use client'
 
+import { signIn, useSession } from 'next-auth/react'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { queueOfflineSave } from '@/lib/offlineSync'
 import { computeResult, useCalcStore } from '@/store/calcStore'
 import { BottomSheet } from './ui/BottomSheet'
@@ -14,6 +14,7 @@ function defaultRecipeName() {
 }
 
 export function SaveRecipeBar() {
+  const { data: session, status } = useSession()
   const [authOpen, setAuthOpen] = useState(false)
   const [nameOpen, setNameOpen] = useState(false)
   const [name, setName] = useState(defaultRecipeName)
@@ -22,7 +23,6 @@ export function SaveRecipeBar() {
 
   const save = async () => {
     const snapshot = useCalcStore.getState()
-    const supabase = createClient()
     const r = computeResult(snapshot)
     const ingredientsBlob = {
       lines: snapshot.ingredients,
@@ -32,6 +32,7 @@ export function SaveRecipeBar() {
       moldQuantity: snapshot.moldQuantity,
       totalGram: snapshot.totalGram,
       loss: snapshot.loss,
+      moldUi: snapshot.moldUi,
       resultSnapshot: r.ingredients,
     }
     const payload = {
@@ -40,7 +41,7 @@ export function SaveRecipeBar() {
       target_type: snapshot.targetKind,
       target_gram: r.targetGram,
       mold_id: null as string | null,
-      mold_params: {} as Record<string, unknown>,
+      mold_params: snapshot.moldUi as unknown as Record<string, unknown>,
       quantity: snapshot.moldQuantity,
       loss_type: snapshot.loss.type,
       loss_value:
@@ -53,10 +54,7 @@ export function SaveRecipeBar() {
       client_updated_at: new Date().toISOString(),
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
+    if (status !== 'authenticated' || !session) {
       setAuthOpen(true)
       return
     }
@@ -69,38 +67,21 @@ export function SaveRecipeBar() {
       return
     }
 
-    const { error } = await supabase.from('recipes').insert({
-      user_id: session.user.id,
-      name: payload.name,
-      mode: payload.mode,
-      target_type: payload.target_type,
-      target_gram: payload.target_gram,
-      mold_id: payload.mold_id,
-      mold_params: payload.mold_params,
-      quantity: payload.quantity,
-      loss_type: payload.loss_type,
-      loss_value: payload.loss_value,
-      ingredients: payload.ingredients,
-      client_updated_at: payload.client_updated_at,
-      is_pinned: false,
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
     })
 
-    if (error) {
-      setToast(`儲存失敗：${error.message}`)
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      setToast(`儲存失敗：${(err as { error?: string }).error ?? res.statusText}`)
     } else {
       setToast('已儲存 ✓')
     }
     setTimeout(() => setToast(null), 3000)
     setNameOpen(false)
-  }
-
-  const signIn = async (provider: 'google' | 'apple') => {
-    const supabase = createClient()
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${origin}/auth/callback?next=/` },
-    })
   }
 
   return (
@@ -131,10 +112,16 @@ export function SaveRecipeBar() {
         title="登入以儲存"
       >
         <div className="flex flex-col gap-2">
-          <Button className="w-full" onClick={() => void signIn('google')}>
+          <Button
+            className="w-full"
+            onClick={() => void signIn('google', { callbackUrl: '/' })}
+          >
             Google 登入
           </Button>
-          <Button className="w-full" onClick={() => void signIn('apple')}>
+          <Button
+            className="w-full"
+            onClick={() => void signIn('apple', { callbackUrl: '/' })}
+          >
             Apple 登入
           </Button>
         </div>

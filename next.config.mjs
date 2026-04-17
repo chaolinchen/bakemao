@@ -8,12 +8,26 @@ const withPWA = withPWAInit({
     {
       urlPattern: /^https:\/\/fonts\.(?:googleapis|gstatic)\.com\/.*/i,
       handler: 'CacheFirst',
-      options: { cacheName: 'google-fonts' },
+      options: { cacheName: 'google-fonts', expiration: { maxEntries: 20 } },
     },
     {
-      urlPattern: /\/data\/.*\.json$/i,
+      urlPattern: /\/_next\/static\/.*/i,
       handler: 'CacheFirst',
-      options: { cacheName: 'static-json' },
+      options: { cacheName: 'next-app-shell', expiration: { maxEntries: 200 } },
+    },
+    {
+      urlPattern: /\/_next\/data\/.*/i,
+      handler: 'CacheFirst',
+      options: { cacheName: 'next-data', expiration: { maxEntries: 50 } },
+    },
+    {
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        networkTimeoutSeconds: 5,
+        expiration: { maxEntries: 32 },
+      },
     },
   ],
 })

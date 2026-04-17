@@ -1,32 +1,30 @@
 'use client'
 
 import { useMemo } from 'react'
-import { computeResult, useCalcStore } from '@/store/calcStore'
+import { useShallow } from 'zustand/react/shallow'
+import molds from '@/data/molds.json'
+import { getMoldParts } from '@/lib/moldParts'
+import { computeResult, useCalcStore, type CalcStateSlice } from '@/store/calcStore'
 import { Button } from './ui/Button'
 import { captureAndShare } from '@/lib/shareImage'
 
 export function CalcResult() {
-  const slice = useCalcStore((s) => ({
-    mode: s.mode,
-    targetKind: s.targetKind,
-    ingredients: s.ingredients,
-    loss: s.loss,
-    moldVolumeCC: s.moldVolumeCC,
-    moldQuantity: s.moldQuantity,
-    totalGram: s.totalGram,
-  }))
+  // Object selector must be shallow-compared — else every render gets a new `{}` → infinite loop
+  const slice = useCalcStore(
+    useShallow((s): CalcStateSlice => ({
+      mode: s.mode,
+      targetKind: s.targetKind,
+      moldVolumeCC: s.moldVolumeCC,
+      moldQuantity: s.moldQuantity,
+      totalGram: s.totalGram,
+      loss: s.loss,
+      ingredients: s.ingredients,
+      moldUi: s.moldUi,
+    }))
+  )
 
   const result = useMemo(
-    () =>
-      computeResult({
-        mode: slice.mode,
-        targetKind: slice.targetKind,
-        moldVolumeCC: slice.moldVolumeCC,
-        moldQuantity: slice.moldQuantity,
-        totalGram: slice.totalGram,
-        loss: slice.loss,
-        ingredients: slice.ingredients,
-      }),
+    () => computeResult(slice),
     [slice]
   )
 
@@ -40,9 +38,26 @@ export function CalcResult() {
       ? Math.round(slice.loss.ratio * 1000) / 10
       : 0
 
+  const moldTotalCc = useMemo(() => {
+    if (slice.targetKind !== 'mold') return 0
+    const preset = molds.find((m) => m.id === slice.moldUi.presetId)
+    const p = getMoldParts(
+      preset,
+      slice.moldUi.presetId,
+      slice.moldUi.chiffonKey,
+      slice.moldUi.shape,
+      slice.moldUi.cyl,
+      slice.moldUi.box,
+      slice.moldUi.muffin,
+      slice.moldUi.direct,
+      slice.moldQuantity
+    )
+    return p ? p.volumeCC * p.quantity : 0
+  }, [slice.targetKind, slice.moldUi, slice.moldQuantity])
+
   const empty =
     slice.ingredients.length === 0 ||
-    (slice.targetKind === 'mold' && slice.moldVolumeCC * slice.moldQuantity <= 0) ||
+    (slice.targetKind === 'mold' && moldTotalCc <= 0) ||
     (slice.targetKind === 'gram' && slice.totalGram <= 0)
 
   if (empty || (result.totalGram <= 0 && fixRows.length === 0)) {

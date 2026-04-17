@@ -1,12 +1,33 @@
 # BakeMao 烘焙貓 — Cursor 工作清單
 > PRD 完整規格請見 `PRD_BakeMao_v1.0.md`
 > 本文件供 Cursor 獨立執行，不需要頻繁詢問 Claude
+> 更新：2026-04-17 — 資料庫 **Neon**；登入 **NextAuth v5**；**TASK-00～11 已完成**。  
+> **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.1.8** 為準。
+
+---
+
+## 進度狀態
+
+| Task | 狀態 | 備註 |
+|------|------|------|
+| TASK-00 | ✅ 完成 | 專案初始化 |
+| TASK-01 | ✅ 完成 | molds.json、ingredients.json |
+| TASK-02 | ✅ 完成 | calculator.ts |
+| TASK-03 | ✅ 完成 | MoldSelector.tsx |
+| TASK-04 | ✅ 完成 | RecipeInput.tsx |
+| TASK-05 | ✅ 完成 | IngredientSearchSheet.tsx |
+| TASK-06 | ✅ 完成 | CalcResult.tsx |
+| TASK-07 | ✅ 完成 | 主頁面組裝 |
+| TASK-08 | ✅ 完成 | PWA 設定 |
+| TASK-09 | ✅ 完成 | **Neon** 整合 + 登入（見下方更新規格）|
+| TASK-10 | ✅ 完成 | 配方管理頁（含 mold UI 還原、pointer: coarse 左滑刪除） |
+| TASK-11 | ✅ 完成 | 分享結果圖（logo.svg 浮水印 + 文字後備） |
 
 ---
 
 ## 專案初始化
 
-### TASK-00：建立 Next.js 專案
+### TASK-00：建立 Next.js 專案 ✅
 ```
 - Next.js 14（App Router）
 - TypeScript
@@ -16,8 +37,8 @@
 - 部署目標：bakemao.smallfatmao.com（Vercel）
 - 套件：
     @ducanh2912/next-pwa（⚠️ 不要用 next-pwa，App Router 相容性有問題）
-    @supabase/supabase-js
-    @supabase/ssr
+    ⚠️ 不要安裝 @supabase/supabase-js 或 @supabase/ssr（已改用 Neon）
+    @neondatabase/serverless（資料庫）
     html2canvas
     zustand
 - 字體：Playfair Display、DM Mono、Noto Sans TC、Noto Serif TC（next/font/google）
@@ -238,37 +259,78 @@ type CalcResult = {
 - manifest.json：名稱「BakeMao 烘焙貓」、主色 #C8602A、背景 #F7F0E6
 - 快取靜態資料（molds.json、ingredients.json）
 
-### TASK-09：Supabase 整合 + 登入
-- Supabase client 初始化（`/src/lib/supabase.ts`）
-- Google OAuth、Apple Sign In
-- 儲存流程：
-  1. 點擊儲存 → 未登入 → Bottom Sheet 顯示登入選項
-  2. 登入成功 → 自動儲存 → Toast「已儲存 ✓」
-  3. 已登入 → 直接儲存，顯示命名 Dialog（預設「配方 YYYY/MM/DD HH:mm」，最多 30 字）
-- 離線時：暫存 localStorage，連線後自動同步
+### TASK-09：Neon 整合 + 登入
 
-資料表（Supabase SQL）：
-```sql
-create table recipes (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users not null,
-  name text not null,
-  mode text check (mode in ('percent', 'gram')),
-  target_type text check (target_type in ('mold', 'gram')),
-  target_gram numeric,
-  mold_id text,
-  mold_params jsonb,
-  quantity int default 1,
-  loss_type text,
-  loss_value numeric,
-  ingredients jsonb not null,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-alter table recipes enable row level security;
-create policy "users can only access own recipes"
-  on recipes for all using (auth.uid() = user_id);
-```
+> ⚠️ 資料庫已由 Supabase 改為 **Neon**（postgresql）
+> ⚠️ 移除 @supabase/ssr、@supabase/supabase-js；安裝 @neondatabase/serverless
+> ⚠️ 移除 src/lib/supabase/ 目錄；改建 src/lib/db.ts
+
+**步驟：**
+
+1. **移除舊套件**
+   ```bash
+   npm uninstall @supabase/ssr @supabase/supabase-js
+   npm install @neondatabase/serverless
+   ```
+
+2. **建立 DB 客戶端** `/src/lib/db.ts`
+   ```typescript
+   import { neon } from '@neondatabase/serverless'
+   export const sql = neon(process.env.DATABASE_URL!)
+   ```
+
+3. **環境變數**（`.env.local` 已建立）
+   ```
+   DATABASE_URL=postgresql://...（已設定，見 .env.local）
+   ```
+   Vercel 也需要設定 `DATABASE_URL`。
+
+4. **建立資料表**（在 Neon Dashboard SQL Editor 執行）
+   ```sql
+   CREATE TABLE IF NOT EXISTS users (
+     id          TEXT PRIMARY KEY,           -- provider user ID
+     provider    TEXT NOT NULL,              -- 'google' | 'apple'
+     email       TEXT,
+     created_at  TIMESTAMPTZ DEFAULT now()
+   );
+
+   CREATE TABLE IF NOT EXISTS recipes (
+     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+     user_id          TEXT REFERENCES users(id) NOT NULL,
+     name             TEXT NOT NULL CHECK (char_length(name) <= 30),
+     mode             TEXT NOT NULL CHECK (mode IN ('percent', 'gram')),
+     target_type      TEXT NOT NULL CHECK (target_type IN ('mold', 'gram')),
+     target_gram      NUMERIC CHECK (target_gram >= 0),
+     mold_id          TEXT,
+     mold_params      JSONB,
+     quantity         INT DEFAULT 1 CHECK (quantity >= 1 AND quantity <= 99),
+     loss_type        TEXT CHECK (loss_type IN ('preset', 'manual')),
+     loss_value       NUMERIC,
+     ingredients      JSONB NOT NULL,
+     is_pinned        BOOLEAN DEFAULT false,
+     client_updated_at TIMESTAMPTZ,
+     created_at       TIMESTAMPTZ DEFAULT now(),
+     updated_at       TIMESTAMPTZ DEFAULT now()
+   );
+
+   CREATE INDEX IF NOT EXISTS recipes_user_id_idx
+     ON recipes (user_id, updated_at DESC);
+   ```
+
+5. **Auth 方案**：使用 NextAuth.js（next-auth v5）搭配 Neon adapter
+   ```bash
+   npm install next-auth@beta @auth/neon-adapter
+   ```
+   - Google OAuth provider
+   - Apple Sign In provider
+   - session 存 JWT（無需 session table）
+
+6. **儲存流程**（同原規格）：
+   1. 點擊儲存 → 未登入 → Bottom Sheet 顯示登入選項
+   2. 登入成功 → 自動儲存 → Toast「已儲存 ✓」
+   3. 已登入 → 直接儲存，顯示命名 Dialog（預設「配方 YYYY/MM/DD HH:mm」，最多 30 字）
+
+7. **離線時**：暫存 localStorage，連線後自動同步（offlineSync.ts 邏輯不變）
 
 ### TASK-10：配方管理頁
 位置：`/src/app/recipes/page.tsx`

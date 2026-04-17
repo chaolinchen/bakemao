@@ -11,10 +11,12 @@
 - `generateMetadata` 支援未來各模具規格 SEO 落地頁動態 Open Graph
 - **注意：** 計算引擎與 Wake Lock 屬客戶端邏輯，對應頁面需標記 `'use client'`
 
-### Supabase
-- 與生態系一致（PRD 明確要求）
-- Auth 模組原生支援 Google OAuth / Apple Sign In
-- RLS 在資料庫層強制隔離
+### Neon（替代 Supabase）
+- Supabase 免費帳號已達 2 個專案上限，改用 Neon
+- Neon：serverless PostgreSQL，免費方案無專案數量限制，0.5GB 儲存（配方文字資料充足）
+- 搭配 NextAuth.js v5 + @auth/neon-adapter 處理 Google OAuth / Apple Sign In
+- 行列級安全改由應用層 `WHERE user_id = session.user.id` 實作（無 RLS）
+- `DATABASE_URL` 已設定於 `.env.local`，Vercel 需同步設定
 
 ### Vercel
 - Next.js 官方部署平台，零配置 CI/CD
@@ -76,8 +78,7 @@
 │   ├── lib/
 │   │   ├── calculator.ts         # 計算引擎（純函數）
 │   │   ├── calculator.test.ts    # 單元測試
-│   │   ├── supabase.ts           # Supabase client（browser）
-│   │   ├── supabase-server.ts    # Supabase client（Server Component）
+│   │   ├── db.ts                 # Neon serverless client
 │   │   ├── shareImage.ts         # html2canvas + Web Share API
 │   │   ├── wakeLock.ts           # Wake Lock API 封裝
 │   │   ├── offlineSync.ts        # localStorage 暫存 + 連線後自動同步
@@ -102,7 +103,7 @@
 │   │   ├── ingredient.ts
 │   │   └── recipe.ts
 │   │
-│   └── middleware.ts             # Supabase Auth session refresh
+│   └── middleware.ts             # NextAuth session refresh
 │
 ├── supabase/
 │   └── migrations/
@@ -210,50 +211,47 @@ window online 事件 → 逐一 Supabase upsert → 清除 localStorage
 
 ---
 
-## 6. Supabase Schema（完整版）
+## 6. Neon Database Schema
+
+> 資料庫：Neon（serverless PostgreSQL）
+> 連線：`@neondatabase/serverless`，使用 `DATABASE_URL` 環境變數
+> Auth：NextAuth.js v5 + @auth/neon-adapter（Google OAuth / Apple Sign In）
+> 安全：應用層過濾 `WHERE user_id = session.user.id`（無 RLS）
 
 ```sql
-create table recipes (
-  id                uuid primary key default gen_random_uuid(),
-  user_id           uuid references auth.users not null,
-  name              text not null check (char_length(name) <= 30),
-  mode              text not null check (mode in ('percent', 'gram')),
-  target_type       text not null check (target_type in ('mold', 'gram')),
-  target_gram       numeric check (target_gram >= 0),
-  mold_id           text,
-  mold_params       jsonb,
-  quantity          int default 1 check (quantity >= 1 and quantity <= 99),
-  loss_type         text check (loss_type in ('preset', 'manual')),
-  loss_value        numeric,
-  ingredients       jsonb not null,
-  is_pinned         boolean default false,
-  client_updated_at timestamptz,
-  created_at        timestamptz default now(),
-  updated_at        timestamptz default now()
+-- 在 Neon Dashboard SQL Editor 執行
+
+CREATE TABLE IF NOT EXISTS users (
+  id         TEXT PRIMARY KEY,           -- NextAuth provider account ID
+  provider   TEXT NOT NULL,              -- 'google' | 'apple'
+  email      TEXT,
+  name       TEXT,
+  image      TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
 );
 
-alter table recipes enable row level security;
-
-create policy "users can only access own recipes"
-  on recipes for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-
-create or replace function update_updated_at_column()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
-
-create trigger recipes_updated_at
-  before update on recipes
-  for each row execute function update_updated_at_column();
+CREATE TABLE IF NOT EXISTS recipes (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           TEXT REFERENCES users(id) NOT NULL,
+  name              TEXT NOT NULL CHECK (char_length(name) <= 30),
+  mode              TEXT NOT NULL CHECK (mode IN ('percent', 'gram')),
+  target_type       TEXT NOT NULL CHECK (target_type IN ('mold', 'gram')),
+  target_gram       NUMERIC CHECK (target_gram >= 0),
+  mold_id           TEXT,
+  mold_params       JSONB,
+  quantity          INT DEFAULT 1 CHECK (quantity >= 1 AND quantity <= 99),
+  loss_type         TEXT CHECK (loss_type IN ('preset', 'manual')),
+  loss_value        NUMERIC,
+  ingredients       JSONB NOT NULL,
+  is_pinned         BOOLEAN DEFAULT false,
+  client_updated_at TIMESTAMPTZ,
+  created_at        TIMESTAMPTZ DEFAULT now(),
+  updated_at        TIMESTAMPTZ DEFAULT now()
+);
 
 -- 配方列表頁效能 index
-create index recipes_user_id_updated_at_idx
-  on recipes (user_id, updated_at desc);
+CREATE INDEX IF NOT EXISTS recipes_user_id_updated_at_idx
+  ON recipes (user_id, updated_at DESC);
 ```
 
 ### ingredients JSONB 結構
@@ -322,8 +320,10 @@ git branch -M main
 # DNS：在 smallfatmao.com 的 DNS 設定新增 CNAME bakemao → cname.vercel-dns.com
 
 # 5. 設定環境變數（Vercel Dashboard 或 CLI）
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+vercel env add DATABASE_URL
+vercel env add AUTH_SECRET
+vercel env add AUTH_GOOGLE_ID
+vercel env add AUTH_GOOGLE_SECRET
 ```
 
 ### 日常開發流程
@@ -346,11 +346,15 @@ git push origin feat/功能名稱
 
 | 變數 | 說明 | 放哪裡 |
 |------|------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 專案 URL | `.env.local` + Vercel |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key（公開）| `.env.local` + Vercel |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role（私密，僅 Server）| Vercel only（不進 git）|
+| `DATABASE_URL` | Neon PostgreSQL 連線字串 | `.env.local` + Vercel |
+| `AUTH_SECRET` | NextAuth.js 簽名金鑰 | `.env.local` + Vercel |
+| `AUTH_GOOGLE_ID` | Google OAuth Client ID | `.env.local` + Vercel |
+| `AUTH_GOOGLE_SECRET` | Google OAuth Client Secret | `.env.local` + Vercel |
+| `AUTH_APPLE_ID` | Apple Sign In（選用）| `.env.local` + Vercel |
+| `AUTH_APPLE_SECRET` | Apple Sign In（選用）| `.env.local` + Vercel |
 
 > `.env.local` 不進 git（`.gitignore` 確認排除）
+> `DATABASE_URL` 已設定於 `.env.local`（Neon ap-southeast-1 region）
 
 ---
 

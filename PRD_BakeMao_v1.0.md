@@ -1,5 +1,8 @@
 # BakeMao 烘焙貓 PRD
-**版本：v1.4 | 日期：2026-04-17 | 狀態：確認**
+**版本：v1.5.1 | 日期：2026-04-17 | 狀態：確認**
+
+> **v1.5：** 後台已由 Supabase 改為 **Neon（PostgreSQL）** + **NextAuth.js v5**；配方與使用者資料表以 repo `neon/001_init.sql` 為準。  
+> **v1.5.1：** 新增 **§19 實作備註**（Zustand 選擇器與模具推導；**不變更**產品功能規格）。
 
 ---
 
@@ -81,7 +84,7 @@
 |------|------|
 | **PWA 離線支援** | 核心計算邏輯離線可用（Service Worker） |
 | **Wake Lock 螢幕常亮** | 進入計算頁後螢幕不熄滅，離開後釋放 |
-| **配方儲存（需登入）** | Supabase 帳號，支援 Google / Apple SSO |
+| **配方儲存（需登入）** | Neon + NextAuth（Google 為主，Apple 可選） |
 | **配方管理** | 查看、編輯、刪除已儲存配方 |
 | **分享結果圖** | 計算完成後生成含材料克數的圖片，一鍵存圖/發 IG Story |
 
@@ -166,7 +169,7 @@
 - **廚房場景：** 單手操作優先；食材搜尋用 Bottom Sheet；克數字體最小 28px Bold
 - **相容性：** iOS Safari 16+、Android Chrome 108+
 - **部署：** bakemao.smallfatmao.com，Vercel + Next.js
-- **資料庫：** Supabase（與生態系一致，非 Firestore）
+- **資料庫：** Neon（PostgreSQL）；登入工作階段與帳號由 NextAuth + Neon Adapter 管理
 
 ---
 
@@ -316,12 +319,10 @@
 
 配方命名：預設「配方 YYYY/MM/DD HH:mm」，最多 30 字
 
-Supabase recipes 資料表欄位：
-  id, user_id, name, mode, target_type, target_gram,
-  mold_id, mold_params(JSON), quantity,
-  loss_type, loss_value, ingredients(JSON),
-  created_at, updated_at
-  + RLS：用戶只能存取自己的配方
+**recipes（Neon，見 `neon/001_init.sql`）** 主要欄位：
+  `id`（UUID）, `user_id`（INTEGER → Auth users）, `name`, `mode`, `target_type`, `target_gram`,
+  `mold_id`, `mold_params`(JSONB), `quantity`, `loss_type`, `loss_value`, `ingredients`(JSONB),
+  `created_at`, `updated_at` 等。API 層依使用者 session 篩選 `user_id`。
 ```
 
 ---
@@ -332,3 +333,16 @@ Supabase recipes 資料表欄位：
 - [x] ~~克數反推的基準~~ → **已決策：反推模式用總重 = 100%；正向模式保留傳統烘焙百分比（麵粉 = 100%，總計 > 100%）**
 - [x] ~~子域名確認~~ → **已決策：`bakemao.smallfatmao.com`**
 - [x] ~~品牌理化數值維護~~ → **已決策：MVP 不做更新機制，有問題手動改 JSON**
+
+---
+
+## 19. 實作備註（工程／避免迴圈，非規格變更）
+
+以下為 **2026-04** 起實作共識，供後續改 UI 或 store 時避免重踩：
+
+| 主題 | 說明 |
+|------|------|
+| **模具目標克數** | 畫面顯示「共 XXX g」與計算引擎必須同源：以 **`moldUi` + 幾何推導**（例如 `getMoldParts`）在 **`computeResult`** 內算出目標；**不要**再用 `useEffect` 把推導值寫回 Zustand 與訂閱互撞造成無限更新。 |
+| **Zustand 多欄位選取** | `useCalcStore((s) => ({ a: s.a, b: s.b, ... }))` 每次回傳**新物件**時，預設相等性會認為 snapshot 一直變 → 可能 **Maximum update depth**。解法：**`useShallow`（`zustand/react/shallow`）** 或拆成多個單欄 selector。 |
+| **建置／chunk** | 若出現 **`Cannot find module './xxx.js'`** 等：刪除 **`.next`** 後重跑 `npm run dev` / `npm run build`。 |
+| **Auth 與 Edge** | Middleware 鏈若匯入 **NextAuth／jose**，build 可能對 **Edge Runtime** 發警告；屬部署/邊界議題，與配方計算規格無關，可另議拆分。 |
