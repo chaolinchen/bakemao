@@ -1,0 +1,747 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>蒸烤雞蛋牛奶布丁</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2f7bdcf3-f7b4-80d2-b1cb-edf86c1ff3ae" class="page sans"><header><h1 class="page-title" dir="auto">蒸烤雞蛋牛奶布丁</h1><p class="page-description" dir="auto"></p><table class="properties"><tbody><tr class="property-row property-row-multi_select"><th><span class="icon property-icon"><img src="https://www.notion.so/icons/list_gray.svg" style="width:14px;height:14px;display:block"/></span>Multi-select</th><td></td></tr><tr class="property-row property-row-select"><th><span class="icon property-icon"><img src="https://www.notion.so/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Select</th><td><span class="selected-value select-value-color-orange">個別蛋糕</span></td></tr><tr class="property-row property-row-select"><th><span class="icon property-icon"><img src="https://www.notion.so/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>困難度</th><td><span class="selected-value select-value-color-purple">⭐⭐</span></td></tr></tbody></table></header><div class="page-body"><div style="display:contents" dir="ltr"><nav id="2f7bdcf3-f7b4-8014-88c6-d251e9129078" class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-80b6-8d9c-fd97a084a182">計分注意事項</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8063-8261-c069c3a72a0d">材料與配方</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8040-a3cc-fd8b3b296115">焦糖</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-802b-b58a-d507a9aa998b">布丁餡液製作</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8021-99cd-d9844a77e459">製作流程</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8000-a7e8-e93905e1be52">計算</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-80e1-89e6-f9cafee1c472">預熱爐子</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8043-844a-d5226af23d66">前置動作</a></div><div class="table_of_contents-item table_of_contents-indent-1"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8090-9fce-d3416e80462f">製作流程</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-802e-886f-f8edec4d3ee7">焦糖液製作</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-801c-9131-f9c47aca7a5c">布丁液製作</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-8050-a8d8-e69f64750bd5">烘培</a></div><div class="table_of_contents-item table_of_contents-indent-2"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-80dd-9048-d41aec29ada3">出爐</a></div><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#2f7bdcf3-f7b4-80b8-9c77-c7e53a7ce3e3">製作注意事項</a></div></nav></div><div style="display:contents" dir="auto"><h1 id="2f7bdcf3-f7b4-80b6-8d9c-fd97a084a182" class="">計分注意事項</h1></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8047-beaf-db3c08db1cb7" class="numbered-list" start="1"><li>烤模由承辦單位提供</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80f6-b2aa-e49dacd26d30" class="numbered-list" start="2"><li>焦糖（砂糖用量固定為 100g）由考生自行製作，須具焦糖色但不得有苦味，否則以零分計</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-804d-8cb7-ff0ad9c588af" class="numbered-list" start="3"><li>布丁餡每個 90 +- 10cc，成品（未脫模）需達烤模高度 80% 以上，否則以不良品計</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-800b-b6f2-de0e61d791ac" class="numbered-list" start="4"><li>成品（未脫模）表面裂開超過 10% 者，以不良品計</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8032-b697-f7a45698e2a1" class="numbered-list" start="5"><li>脱模後裂開或形狀崩塌 2 個（含）以上，以零分計</li></ol></div><div style="display:contents" dir="auto"><h1 id="2f7bdcf3-f7b4-8063-8261-c069c3a72a0d" class="">材料與配方</h1></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80f0-acbe-dfd9be866593" class="">考試版本 1：製作底部直徑 4.5 cm 高 5 cm 布丁 18 個，焦糖每個約 5g，成品脫模 5 個</p></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80fd-97be-e7b93f877566" class="">考試版本 2：製作底部直徑 4.5 cm 高 5 cm 布丁 20 個，焦糖每個約 5g，成品脫模 5 個</p></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80fa-bb82-d344660b50c2" class="">考試版本 3：製作底部直徑 4.5 cm 高 5 cm 布丁 22 個，焦糖每個約 5g，成品脫模 5 個</p></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-8040-a3cc-fd8b3b296115" class="">焦糖</h2></div><div style="display:contents" dir="ltr"><table id="2f7bdcf3-f7b4-800e-938b-c3cb0edf402a" class="simple-table"><tbody><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-805c-a0dd-df1068f0c38e"><td id="loOo" class="" style="width:47px"></td><td id="g=AG" class="" style="width:169.66666666666666px"></td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:52.65625px"></td><td id="zN_O" class="">考試版本 1</td><td id="kGsn" class="">考試版本 2</td><td id="{mb_" class="">考試版本 3</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8069-82a6-fcb2830a1edf"><td id="loOo" class="" style="width:47px">組合</td><td id="g=AG" class="" style="width:169.66666666666666px">材料</td><td id="glsb" class="" style="width:165px">注意事項</td><td id="Twys" class="" style="width:52.65625px">%</td><td id="zN_O" class="">18 個</td><td id="kGsn" class="">20 個</td><td id="{mb_" class="">22 個</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-80ae-aef8-dd947405842b"><td id="loOo" class="" style="width:47px">一、</td><td id="g=AG" class="" style="width:169.66666666666666px">細砂糖（固定量）</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:52.65625px">100</td><td id="zN_O" class="">100</td><td id="kGsn" class="">100</td><td id="{mb_" class="">100</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8069-8364-f4e8acd496b7"><td id="loOo" class="" style="width:47px">一、</td><td id="g=AG" class="" style="width:169.66666666666666px">生水</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:52.65625px">25</td><td id="zN_O" class="">25</td><td id="kGsn" class="">25</td><td id="{mb_" class="">25</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-80c5-941f-efe80797012b"><td id="loOo" class="" style="width:47px">二、</td><td id="g=AG" class="" style="width:169.66666666666666px">生水</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:52.65625px">25</td><td id="zN_O" class="">25</td><td id="kGsn" class="">25</td><td id="{mb_" class="">25</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8033-a650-d1f0d380d78d"><td id="loOo" class="" style="width:47px"></td><td id="g=AG" class="" style="width:169.66666666666666px">合計</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:52.65625px">150</td><td id="zN_O" class="">150</td><td id="kGsn" class="">150</td><td id="{mb_" class="">150</td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-802b-b58a-d507a9aa998b" class="">布丁餡液製作</h2></div><div style="display:contents" dir="ltr"><table id="2f7bdcf3-f7b4-8011-bfd3-db09951b4f31" class="simple-table"><tbody><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-80b6-b1c3-ee04f0ed8be3"><td id="loOo" class="" style="width:47px"></td><td id="g=AG" class="" style="width:169.66666666666666px"></td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:54.65625px"></td><td id="zN_O" class="">考試版本 1</td><td id="kGsn" class="">考試版本 2</td><td id="{mb_" class="">考試版本 3</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-80d6-b1f5-dea9d618252a"><td id="loOo" class="" style="width:47px">組合</td><td id="g=AG" class="" style="width:169.66666666666666px">材料</td><td id="glsb" class="" style="width:165px">注意事項</td><td id="Twys" class="" style="width:54.65625px">%</td><td id="zN_O" class="">18 個</td><td id="kGsn" class="">20 個</td><td id="{mb_" class="">22 個</td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-80a6-bba6-fe105eb01371"><td id="loOo" class="" style="width:47px">一、</td><td id="g=AG" class="" style="width:169.66666666666666px">細砂糖</td><td id="glsb" class="" style="width:165px">大鋼盆</td><td id="Twys" class="" style="width:54.65625px">15</td><td id="zN_O" class="">163</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8091-b081-c6a1b3ee59f5"><td id="loOo" class="" style="width:47px">一、</td><td id="g=AG" class="" style="width:169.66666666666666px">香草粉</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:54.65625px">0.5</td><td id="zN_O" class="">5</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8075-99cc-e3c2870d69c1"><td id="loOo" class="" style="width:47px">一、</td><td id="g=AG" class="" style="width:169.66666666666666px">鮮奶</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:54.65625px">100</td><td id="zN_O" class="">1088</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-806b-bd7c-fec1b1fed985"><td id="loOo" class="" style="width:47px">二、</td><td id="g=AG" class="" style="width:169.66666666666666px">全蛋（約 8 ~ 9 顆）</td><td id="glsb" class="" style="width:165px">充份拌勻</td><td id="Twys" class="" style="width:54.65625px">40</td><td id="zN_O" class="">435</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-8090-b8c3-f6579ceb2d3e"><td id="loOo" class="" style="width:47px">二、</td><td id="g=AG" class="" style="width:169.66666666666666px">蛋黃</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:54.65625px">10</td><td id="zN_O" class="">109</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div><div style="display:contents" dir="ltr"><tr id="2f7bdcf3-f7b4-802a-82fb-d9a7b56f00a3"><td id="loOo" class="" style="width:47px"></td><td id="g=AG" class="" style="width:169.66666666666666px">合計</td><td id="glsb" class="" style="width:165px"></td><td id="Twys" class="" style="width:54.65625px">165.5</td><td id="zN_O" class="">1800</td><td id="kGsn" class=""></td><td id="{mb_" class=""></td></tr></div></tbody></table></div><div style="display:contents" dir="auto"><h1 id="2f7bdcf3-f7b4-8021-99cd-d9844a77e459" class="">製作流程</h1></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-8000-a7e8-e93905e1be52" class="">計算</h2></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80c9-88f3-ce887651adc0" class="numbered-list" start="1"><li>依照抽中的考題計算每個材料的重量<br/>考試版本重量(g) * 數量 /0.9（耗損）/ 材料總百分比 = 材料每一百分比的克數（g）<br/>材料每一百分比的克數（g）* 每個材料的百分比 = 每個材料的克數(g)<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-8008-8055-e4c2f5ad43f6" class="numbered-list" start="1"><li>舉例：考試版本 1<div style="display:contents" dir="auto"><ol type="i" id="2f7bdcf3-f7b4-8050-8e52-c431e4c2860a" class="numbered-list" start="1"><li>布丁液 90*18/0.9/165.5=10.88<div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-801c-a953-d9aa49dd32ed" class="numbered-list" start="1"><li>使用 10.90*每個材料的百分比=每個材料的克數(g)<br/>(將每個材料的克數填入報告書中）</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><ol type="i" id="2f7bdcf3-f7b4-80e6-a034-ce11333566a6" class="numbered-list" start="2"><li>焦糖液 100（限用砂糖量）/ 100（砂糖百分比）= 1<div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-803f-afd0-e0ff9a60268b" class="numbered-list" start="1"><li>使用 1*每個材料的百分比=每個材料的克數(g)<br/>(將每個材料的克數填入報告書中）</li></ol></div></li></ol></div></li></ol></div></li></ol></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-80e1-89e6-f9cafee1c472" class="">預熱爐子</h2></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80ee-b29e-ef4937793a18" class="numbered-list" start="1"><li>上火 150 度C / 下火 150 度C</li></ol></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-8043-844a-d5226af23d66" class="">前置動作</h2></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-803d-b9fb-d96889ee80f6" class="numbered-list" start="1"><li>將每個材料秤量並擺放</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80d7-8c0d-fb324b426cf1" class="numbered-list" start="2"><li>布丁模具先擺盤（放在鐵盤上）<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80c0-be62-e49452ccb342" class="numbered-list" start="1"><li>可以選擇鐵製材料，較快熟</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><h2 id="2f7bdcf3-f7b4-8090-9fce-d3416e80462f" class="">製作流程</h2></div><div style="display:contents" dir="auto"><h3 id="2f7bdcf3-f7b4-802e-886f-f8edec4d3ee7" class="">焦糖液製作</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80d6-8810-ea5469053c6c" class="numbered-list" start="1"><li>將組合一（細砂糖（固定量）、生水）煮至咖啡色或紅褐色<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80ea-8fd6-ecfc61b430ba" class="numbered-list" start="1"><li>糖未溶解、未變色前不要搖晃</li></ol></div><div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80c9-9e3d-ebe81a5befea" class="numbered-list" start="2"><li>拿開火源搖晃後看看顏色決定是否進行下一步</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8044-88c5-d5842c3bff9d" class="numbered-list" start="2"><li>加入組合二（水）後 3 秒，攪拌至無冒泡</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80cf-bb96-cc95bfdca620" class="numbered-list" start="3"><li>盡快分裝入布丁模具</li></ol></div><div style="display:contents" dir="auto"><h3 id="2f7bdcf3-f7b4-801c-9131-f9c47aca7a5c" class="">布丁液製作</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-804f-9f60-c70db50b33ec" class="numbered-list" start="1"><li>將組合一（細砂糖、香草粉、鮮奶）煮至微溫後（砂糖溶化即可）關火</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8013-a978-f7c40c1c0bc6" class="numbered-list" start="2"><li>倒入充分拌勻的蛋液中，邊倒邊攪拌（打蛋器）<div style="display:contents" dir="auto"><ol type="a" id="31bbdcf3-f7b4-805a-a5d5-deace5c99c43" class="numbered-list" start="1"><li>充分拌勻重要</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8033-8e8d-cbda4887d5ef" class="numbered-list" start="3"><li>過篩至另外容器</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80fc-856a-e14779a74032" class="numbered-list" start="4"><li>去除表面泡沫並倒入量杯中</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-800c-aa4d-e577646af1b2" class="numbered-list" start="5"><li>到入裝有焦糖的布丁杯（ 90g / 個）（<mark class="highlight-yellow">勿多：會增加烘焙的時間</mark>）<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80ea-8d64-c0b4bde07863" class="numbered-list" start="1"><li>裝一杯即可，其他用高度判斷速度較快</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><h3 id="2f7bdcf3-f7b4-8050-a8d8-e69f64750bd5" class="">烘培</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8036-b9b7-cc2fece818a4" class="numbered-list" start="1"><li>烘培溫度：上火 150  度C / 下火 150 度C<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-8037-b39d-d827874abf7c" class="numbered-list" start="1"><li>先將烤盤放入烤箱中，接著烤盤加冷水<div style="display:contents" dir="auto"><ol type="i" id="309bdcf3-f7b4-803c-ae0b-c833d3e994b6" class="numbered-list" start="1"><li>事先準備水（以免烤箱開太久降溫）</li></ol></div><div style="display:contents" dir="auto"><ol type="i" id="2f7bdcf3-f7b4-80f8-abfc-c4e018c1767a" class="numbered-list" start="2"><li>0.5 ~ 1 cm 的深度，約 2000cc ~ 2500cc）</li></ol></div></li></ol></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-809c-a280-f5ff52f4295c" class="numbered-list" start="2"><li>烘培時間：45 分鐘左右<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80a4-be1a-d1da8dc9726b" class="numbered-list" start="1"><li>拿出翻轉 90 度，沒有要跑出來的感覺即可</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-800c-806c-c6b3f9f5572e" class="">
+</p></div><div style="display:contents" dir="auto"><h3 id="2f7bdcf3-f7b4-80dd-9048-d41aec29ada3" class="">出爐</h3></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80e3-9aa3-d9c4f51762e8" class="numbered-list" start="1"><li>使用容器裝每一個布丁（烤盤因為有裝水先放在裡面）</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80b7-90f5-c1be68daeb6d" class="numbered-list" start="2"><li>等待冷卻</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-805c-be4f-c4a4bd7ab2ae" class="numbered-list" start="3"><li>統一脫離模具 5 個</li></ol></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80ee-8955-c3dc7153f82a" class="">注意事項：清潔烤盤時先把水撈掉，再進行搬動以免燙傷</p></div><div style="display:contents" dir="auto"><h1 id="2f7bdcf3-f7b4-80b8-9c77-c7e53a7ce3e3" class="">製作注意事項</h1></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8034-989a-dbf8c7c4226f" class="numbered-list" start="1"><li>焦糖趁熱入模具，不需要填平因為烤焙時會自然融化平整</li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-80a0-9507-cc38cf836a17" class="numbered-list" start="2"><li>鮮奶與糖加熱至 50 度c 左右，不可煮滾否則蛋液會過度熟成（如果牛奶煮滾需降溫，才可以下蛋液）。<div style="display:contents" dir="auto"><ol type="a" id="2f7bdcf3-f7b4-80f2-a1b1-e3fa2b3f7f34" class="numbered-list" start="1"><li>蛋液需拌均勻，若過篩時將熟成凝固材料篩除，會影響布丁後續烤焙凝固時間和成品外觀。</li></ol></div></li></ol></div><div style="display:contents" dir="auto"><ol type="1" id="2f7bdcf3-f7b4-8076-b36c-f2388e032e39" class="numbered-list" start="3"><li>成品如未烤熟，倒扣容易崩潰而不及格</li></ol></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80eb-800b-f33206c27b31" class="">
+</p></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80ed-8136-c31af6cba213" class="">
+</p></div><div style="display:contents" dir="auto"><p id="2f7bdcf3-f7b4-80ad-9056-ea5ea152d9f4" class="">
+</p></div></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,55 @@
+[
+  { "id": "pudding-100", "name": "布丁模（標準）", "type": "fixed", "volume": 100 },
+  { "id": "pudding-120", "name": "布丁模（胖胖杯）", "type": "fixed", "volume": 120 },
+  { "id": "pudding-90", "name": "布丁模（考試用）", "type": "fixed", "volume": 90 },
+  { "id": "muffin-100", "name": "馬芬模（標準）", "type": "fixed", "volume": 100 },
+  { "id": "muffin-63", "name": "馬芬模（迷你）", "type": "fixed", "volume": 63 },
+  { "id": "muffin-242", "name": "馬芬模（巨型）", "type": "fixed", "volume": 242 },
+  { "id": "cupcake-82", "name": "杯子蛋糕紙杯（標準）", "type": "fixed", "volume": 82 },
+  { "id": "cupcake-166", "name": "杯子蛋糕紙杯（大）", "type": "fixed", "volume": 166 },
+  {
+    "id": "chiffon-17",
+    "name": "戚風模 17cm",
+    "type": "chiffon",
+    "volumes": { "small": 700, "medium": 800, "large": 900 }
+  },
+  {
+    "id": "chiffon-20",
+    "name": "戚風模 20cm",
+    "type": "chiffon",
+    "volumes": { "small": 1000, "medium": 1100, "large": 1200 }
+  },
+  {
+    "id": "round-6",
+    "name": "圓形 6吋",
+    "type": "cylinder",
+    "diameter": 15,
+    "height": 6,
+    "volume": 1060
+  },
+  {
+    "id": "round-8",
+    "name": "圓形 8吋",
+    "type": "cylinder",
+    "diameter": 20,
+    "height": 6,
+    "volume": 1885
+  },
+  {
+    "id": "round-10",
+    "name": "圓形 10吋",
+    "type": "cylinder",
+    "diameter": 25,
+    "height": 6,
+    "volume": 2945
+  },
+  {
+    "id": "loaf",
+    "name": "磅蛋糕模（標準）",
+    "type": "rectangle",
+    "length": 17,
+    "width": 8,
+    "height": 6,
+    "volume": 816
+  }
+]

@@ -11,6 +11,17 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        bakemao: {
+          accent: "#C8602A",
+          cream: "#F7F0E6",
+          ink: "#3D2918",
+        },
+      },
+      fontFamily: {
+        playfair: ["var(--font-playfair)", "serif"],
+        "dm-mono": ["var(--font-dm-mono)", "ui-monospace", "monospace"],
+        "noto-sans": ["var(--font-noto-sans)", "sans-serif"],
+        "noto-serif": ["var(--font-noto-serif)", "serif"],
       },
     },
   },

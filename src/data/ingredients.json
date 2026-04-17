@@ -1,0 +1,406 @@
+[
+  {
+    "id": "cake-flour",
+    "name": "低筋麵粉",
+    "aliases": [
+      "低粉",
+      "薄力粉"
+    ],
+    "brands": [
+      {
+        "name": "日清山茶花",
+        "protein_pct": 8.5
+      },
+      {
+        "name": "水手牌",
+        "protein_pct": 8
+      }
+    ]
+  },
+  {
+    "id": "bread-flour",
+    "name": "高筋麵粉",
+    "aliases": [
+      "高粉",
+      "強力粉"
+    ],
+    "brands": [
+      {
+        "name": "金像",
+        "protein_pct": 11.5
+      }
+    ]
+  },
+  {
+    "id": "sugar",
+    "name": "細砂糖",
+    "aliases": [
+      "白砂糖",
+      "砂糖"
+    ]
+  },
+  {
+    "id": "brown-sugar",
+    "name": "二砂"
+  },
+  {
+    "id": "powdered-sugar",
+    "name": "糖粉"
+  },
+  {
+    "id": "unsalted-butter",
+    "name": "無鹽奶油",
+    "brands": [
+      {
+        "name": "Président",
+        "water_pct": 16
+      },
+      {
+        "name": "艾許",
+        "water_pct": 18
+      }
+    ]
+  },
+  {
+    "id": "salted-butter",
+    "name": "有鹽奶油"
+  },
+  {
+    "id": "vegetable-oil",
+    "name": "植物油",
+    "aliases": [
+      "沙拉油"
+    ]
+  },
+  {
+    "id": "whole-egg",
+    "name": "全蛋",
+    "aliases": [
+      "雞蛋"
+    ]
+  },
+  {
+    "id": "egg-white",
+    "name": "蛋白"
+  },
+  {
+    "id": "egg-yolk",
+    "name": "蛋黃"
+  },
+  {
+    "id": "milk",
+    "name": "鮮奶",
+    "aliases": [
+      "牛奶"
+    ]
+  },
+  {
+    "id": "heavy-cream",
+    "name": "動物性鮮奶油",
+    "aliases": [
+      "鮮奶油"
+    ]
+  },
+  {
+    "id": "whipping-cream",
+    "name": "植物性鮮奶油"
+  },
+  {
+    "id": "vanilla-powder",
+    "name": "香草粉"
+  },
+  {
+    "id": "vanilla-extract",
+    "name": "香草精"
+  },
+  {
+    "id": "cocoa-powder",
+    "name": "可可粉"
+  },
+  {
+    "id": "matcha-powder",
+    "name": "抹茶粉"
+  },
+  {
+    "id": "baking-powder",
+    "name": "泡打粉"
+  },
+  {
+    "id": "baking-soda",
+    "name": "小蘇打粉"
+  },
+  {
+    "id": "yeast",
+    "name": "酵母"
+  },
+  {
+    "id": "salt",
+    "name": "鹽"
+  },
+  {
+    "id": "honey",
+    "name": "蜂蜜"
+  },
+  {
+    "id": "corn-starch",
+    "name": "玉米澱粉",
+    "aliases": [
+      "太白粉"
+    ]
+  },
+  {
+    "id": "cream-cheese",
+    "name": "奶油乳酪",
+    "aliases": [
+      "cream cheese"
+    ]
+  },
+  {
+    "id": "water",
+    "name": "水"
+  },
+  {
+    "id": "ing-100",
+    "name": "杏仁粉"
+  },
+  {
+    "id": "ing-101",
+    "name": "榛果粉"
+  },
+  {
+    "id": "ing-102",
+    "name": "核桃碎"
+  },
+  {
+    "id": "ing-103",
+    "name": "蔓越莓乾"
+  },
+  {
+    "id": "ing-104",
+    "name": "葡萄乾"
+  },
+  {
+    "id": "ing-105",
+    "name": "蘭姆酒"
+  },
+  {
+    "id": "ing-106",
+    "name": "白蘭地"
+  },
+  {
+    "id": "ing-107",
+    "name": "檸檬汁"
+  },
+  {
+    "id": "ing-108",
+    "name": "柳橙皮屑"
+  },
+  {
+    "id": "ing-109",
+    "name": "檸檬皮屑"
+  },
+  {
+    "id": "ing-110",
+    "name": "肉桂粉"
+  },
+  {
+    "id": "ing-111",
+    "name": "豆蔻粉"
+  },
+  {
+    "id": "ing-112",
+    "name": "薑粉"
+  },
+  {
+    "id": "ing-113",
+    "name": "丁香粉"
+  },
+  {
+    "id": "ing-114",
+    "name": "奶粉"
+  },
+  {
+    "id": "ing-115",
+    "name": "煉乳"
+  },
+  {
+    "id": "ing-116",
+    "name": "馬斯卡彭"
+  },
+  {
+    "id": "ing-117",
+    "name": "優格"
+  },
+  {
+    "id": "ing-118",
+    "name": "優格乳清"
+  },
+  {
+    "id": "ing-119",
+    "name": "鮮奶酪"
+  },
+  {
+    "id": "ing-120",
+    "name": "黑糖"
+  },
+  {
+    "id": "ing-121",
+    "name": "楓糖漿"
+  },
+  {
+    "id": "ing-122",
+    "name": "轉化糖漿"
+  },
+  {
+    "id": "ing-123",
+    "name": "珍珠糖"
+  },
+  {
+    "id": "ing-124",
+    "name": "防潮糖粉"
+  },
+  {
+    "id": "ing-125",
+    "name": "吉利丁片"
+  },
+  {
+    "id": "ing-126",
+    "name": "吉利丁粉"
+  },
+  {
+    "id": "ing-127",
+    "name": "洋菜粉"
+  },
+  {
+    "id": "ing-128",
+    "name": "可可脂"
+  },
+  {
+    "id": "ing-129",
+    "name": "大豆油"
+  },
+  {
+    "id": "ing-130",
+    "name": "橄欖油"
+  },
+  {
+    "id": "ing-131",
+    "name": "葡萄籽油"
+  },
+  {
+    "id": "ing-132",
+    "name": "起司片"
+  },
+  {
+    "id": "ing-133",
+    "name": "切達起司"
+  },
+  {
+    "id": "ing-134",
+    "name": "帕馬森起司"
+  },
+  {
+    "id": "ing-135",
+    "name": "味噌"
+  },
+  {
+    "id": "ing-136",
+    "name": "醬油"
+  },
+  {
+    "id": "ing-137",
+    "name": "味醂"
+  },
+  {
+    "id": "ing-138",
+    "name": "米酒"
+  },
+  {
+    "id": "ing-139",
+    "name": "紅茶包"
+  },
+  {
+    "id": "ing-140",
+    "name": "伯爵茶粉"
+  },
+  {
+    "id": "ing-141",
+    "name": "烏龍茶粉"
+  },
+  {
+    "id": "ing-142",
+    "name": "咖啡粉"
+  },
+  {
+    "id": "ing-143",
+    "name": "咖啡利口酒"
+  },
+  {
+    "id": "ing-144",
+    "name": "百利甜"
+  },
+  {
+    "id": "ing-145",
+    "name": "堅果醬"
+  },
+  {
+    "id": "ing-146",
+    "name": "花生醬"
+  },
+  {
+    "id": "ing-147",
+    "name": "椰漿"
+  },
+  {
+    "id": "ing-148",
+    "name": "椰蓉"
+  },
+  {
+    "id": "ing-149",
+    "name": "芝麻粒"
+  },
+  {
+    "id": "ing-150",
+    "name": "湯種"
+  },
+  {
+    "id": "ing-151",
+    "name": "老麵"
+  },
+  {
+    "id": "ing-152",
+    "name": "酸種"
+  },
+  {
+    "id": "ing-153",
+    "name": "裸麥粉"
+  },
+  {
+    "id": "ing-154",
+    "name": "中筋麵粉"
+  },
+  {
+    "id": "ing-155",
+    "name": "全麥麵粉"
+  },
+  {
+    "id": "ing-156",
+    "name": "樹薯粉"
+  },
+  {
+    "id": "ing-157",
+    "name": "馬鈴薯粉"
+  },
+  {
+    "id": "ing-158",
+    "name": "奶粉水"
+  },
+  {
+    "id": "ing-159",
+    "name": "蛋白粉"
+  },
+  {
+    "id": "ing-160",
+    "name": "海藻糖"
+  }
+]

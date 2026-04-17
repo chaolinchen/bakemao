@@ -1,0 +1,17 @@
+{
+  "name": "BakeMao 烘焙貓",
+  "short_name": "BakeMao",
+  "theme_color": "#C8602A",
+  "background_color": "#F7F0E6",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ]
+}
