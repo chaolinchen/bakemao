@@ -2,6 +2,11 @@
 
 ---
 
+## v1.1.7 — 2026-04-18
+### Feat
+- **`GET /api/version`**：回傳 `service`、`version`、`commit`（7 位）、`deployedAt`，供 Hub `smallfatmao.com/status` 使用（Edge runtime）。
+
+---
 ## v1.1.6 — 2026-04-18
 ### Fix
 - **TASK-13** 行動端鍵盤遮擋：新增 `useKeyboardOffset` 設 `--keyboard-offset`；`SaveRecipeBar` 底部 `padding-bottom` 含 safe-area 與鍵盤偏移；`NumberInput` 預設 focus 時 `scrollIntoView`；IngredientSearchSheet 搜尋框同上（PRD §21-5）。

@@ -1,9 +1,10 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.2.1 | 2026-04-18）
+## SNAPSHOT（v0.2.2 | 2026-04-18）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
+- **`GET /api/version`**：Hub 狀態頁用；prod 有 `VERCEL_GIT_COMMIT_SHA` 時 `commit` 為 7 位 SHA。
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
