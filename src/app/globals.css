@@ -5,6 +5,7 @@
 :root {
   --background: #f7f0e6;
   --foreground: #3d2918;
+  --keyboard-offset: 0px;
 }
 
 body {

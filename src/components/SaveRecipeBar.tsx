@@ -85,7 +85,13 @@ export function SaveRecipeBar() {
   }
 
   return (
-    <div className="sticky bottom-0 z-30 border-t border-[#E5D8C8] bg-[#F7F0E6]/95 py-3 backdrop-blur">
+    <div
+      className="sticky bottom-0 z-30 border-t border-[#E5D8C8] bg-[#F7F0E6]/95 pt-3 backdrop-blur"
+      style={{
+        paddingBottom:
+          'calc(0.75rem + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
+      }}
+    >
       {toast ? (
         <p className="mb-2 text-center text-sm text-[#3D2918]">{toast}</p>
       ) : null}

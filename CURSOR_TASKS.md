@@ -1,8 +1,8 @@
 # BakeMao 烘焙貓 — Cursor 工作清單
 > PRD 完整規格請見 `PRD_BakeMao_v1.0.md`（當前版本：**v1.6**）
 > 本文件供 Cursor 獨立執行，不需要頻繁詢問 Claude
-> 更新：2026-04-18 — **TASK-12／14／15 已完成**；**TASK-13**（主頁鍵盤遮擋）仍待做。  
-> **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.2.0** 為準。
+> 更新：2026-04-18 — **TASK-12 ∼ 15 已完成**（含 TASK-13 行動端鍵盤遮擋）。  
+> **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.2.1** 為準。
 
 ---
 
@@ -23,7 +23,7 @@
 | TASK-10 | ✅ 完成 | 配方管理頁（含 mold UI 還原、pointer: coarse 左滑刪除） |
 | TASK-11 | ✅ 完成 | 分享結果圖（logo.svg 浮水印 + 文字後備） |
 | TASK-12 | ✅ 完成 | 模具清單補充 + MoldSelector UX 改善（含 Segment 命名修正）|
-| TASK-13 | ⬜ 待做 | 行動端鍵盤遮擋修正（主頁輸入框）|
+| TASK-13 | ✅ 完成 | 行動端鍵盤遮擋修正（主頁輸入框）|
 | TASK-14 | ✅ 完成 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
 | TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |
 

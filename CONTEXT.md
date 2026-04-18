@@ -1,13 +1,13 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.2.0 | 2026-04-18）
+## SNAPSHOT（v0.2.1 | 2026-04-18）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
-- **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；jose／Edge 相關警告以實際 build log 為準。
-- **功能進度**：**TASK-12 / 14 / 15** 已完成（見 `CURSOR_TASKS.md`）。
+- **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
+- **功能進度**：**TASK-12 ∼ 15** 已完成（見 `CURSOR_TASKS.md`）。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 
@@ -63,10 +63,10 @@
   - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
   其他元件多為單一欄位 `useCalcStore((s) => s.x)`，無需 shallow。
 - **建置品質**：`npm run build`、`npm test` 上次執行成功；若遇 **`Cannot find module './xxx.js'`** 或怪錯，先 **`rm -rf .next`** 再 dev／build。
-- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**TASK-13**（主頁鍵盤遮擋：`useKeyboardOffset`、SaveRecipeBar、`NumberInput` scrollIntoView，見 `CURSOR_TASKS.md`）尚未實作；PRD §21 第5 點（Sheet 內搜尋框 focus 時 `scrollIntoView`）尚未實作，可與 TASK-13 一併評估。
+- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送。
 
 ## 下一步（產品向）
 
 - 本機／線上再手動確認 **首頁載入無紅屏**、模具切換與結果列正常。
 - **手機實測**：PWA、離線、分享圖；**Google OAuth**：後台只保留正式＋本機（＋選用 vercel.app）redirect。
-- **工程**：優先 **TASK-13**；BakeMao 已設為 **git push main → Vercel 自動部署**（見 `AGENTS.md`），一般無需再手動 `vercel --prod`。
+- **工程**：BakeMao 已設為 **git push main → Vercel 自動部署**（見 `AGENTS.md`），一般無需再手動 `vercel --prod`。

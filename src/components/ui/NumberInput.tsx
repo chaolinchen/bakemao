@@ -1,11 +1,15 @@
-import type { InputHTMLAttributes } from 'react'
+import type { FocusEvent, InputHTMLAttributes } from 'react'
 
 export function NumberInput(
   props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
     invalid?: boolean
   }
 ) {
-  const { className = '', invalid, ...rest } = props
+  const { className = '', invalid, onFocus, ...rest } = props
+  const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    onFocus?.(e)
+  }
   return (
     <input
       type="text"
@@ -16,6 +20,7 @@ export function NumberInput(
         invalid ? 'border-red-500' : 'border-[#D9C9B5]'
       } ${className}`}
       {...rest}
+      onFocus={handleFocus}
     />
   )
 }

@@ -117,6 +117,12 @@ export function IngredientSearchSheet({
         placeholder="\u641c\u5c0b\u98df\u6750\uff0c\u627e\u4e0d\u5230\u53ef\u76f4\u63a5\u8f38\u5165"
         value={q}
         onChange={(e) => setQ(e.target.value)}
+        onFocus={(e) =>
+          e.currentTarget.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          })
+        }
         className="mb-3 w-full rounded-lg border border-[#D9C9B5] px-3 py-2"
       />
       <ul className="max-h-[50vh] space-y-1 overflow-auto">
