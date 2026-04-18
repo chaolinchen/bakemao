@@ -12,13 +12,5 @@ export const authConfig: NextAuthConfig = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
     }),
   ],
-  callbacks: {
-    authorized({ auth, request }) {
-      const isLoggedIn = !!auth?.user
-      const isRecipes = request.nextUrl.pathname.startsWith('/recipes')
-      if (isRecipes) return isLoggedIn
-      return true
-    },
-  },
   pages: { signIn: '/api/auth/signin' },
 }
