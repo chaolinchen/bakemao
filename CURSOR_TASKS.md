@@ -1,8 +1,8 @@
 # BakeMao 烘焙貓 — Cursor 工作清單
-> PRD 完整規格請見 `PRD_BakeMao_v1.0.md`
+> PRD 完整規格請見 `PRD_BakeMao_v1.0.md`（當前版本：**v1.6**）
 > 本文件供 Cursor 獨立執行，不需要頻繁詢問 Claude
-> 更新：2026-04-17 — 資料庫 **Neon**；登入 **NextAuth v5**；**TASK-00～11 已完成**。  
-> **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.1.8** 為準。
+> 更新：2026-04-18 — TASK-12/14 補充規格修正；新增 **TASK-15（P0）**。  
+> **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.1.9** 為準。
 
 ---
 
@@ -19,9 +19,223 @@
 | TASK-06 | ✅ 完成 | CalcResult.tsx |
 | TASK-07 | ✅ 完成 | 主頁面組裝 |
 | TASK-08 | ✅ 完成 | PWA 設定 |
-| TASK-09 | ✅ 完成 | **Neon** 整合 + 登入（見下方更新規格）|
+| TASK-09 | ✅ 完成 | **Neon** 整合 + 登入 |
 | TASK-10 | ✅ 完成 | 配方管理頁（含 mold UI 還原、pointer: coarse 左滑刪除） |
 | TASK-11 | ✅ 完成 | 分享結果圖（logo.svg 浮水印 + 文字後備） |
+| TASK-12 | ⬜ 待做 | 模具清單補充 + MoldSelector UX 改善（含 Segment 命名修正）|
+| TASK-13 | ⬜ 待做 | 行動端鍵盤遮擋修正（主頁輸入框）|
+| TASK-14 | ⬜ 待做 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
+| TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |
+
+---
+
+## Post-MVP 改善
+
+### TASK-12：模具清單補充 + MoldSelector UX 改善
+
+**molds.json 補充：**
+```json
+{ "id": "loaf-450", "name": "吐司模（450g）", "type": "rectangle", "length": 20, "width": 10, "height": 10, "volume": 2000 },
+{ "id": "loaf-12", "name": "吐司模（12兩）", "type": "rectangle", "length": 24, "width": 11, "height": 11, "volume": 2904 },
+{ "id": "tart-7cm", "name": "塔模（7cm）", "type": "fixed", "volume": 35 },
+{ "id": "tart-10cm", "name": "塔模（10cm）", "type": "fixed", "volume": 100 }
+```
+
+**MoldSelector.tsx 改動：**
+1. `calcStore.ts` 預設 `presetId` 從 `pudding-90` 改為 `round-6`
+2. 下拉選單最底部加 disabled option：`── 找不到？請切換下方計算方式 ──`
+3. Segment Control 上方標題改為：「沒有合適模具？按形狀自行計算：」
+4. **Segment 的「馬芬」選項改名為「杯型×數量」**（原因：與 dropdown 的「馬芬模」重名造成混淆；「杯型×數量」意思是「輸入單杯容積 × 數量」，更精確）
+5. 模具容積顯示改為「共 XXX g（以 1cc≈1g 換算）」（原本只顯示「共 XXX g」，加括弧說明換算關係）
+
+**P1 待補（下次迭代）：**
+- 費南雪模（30cc）
+- 戚風模 15cm
+- 烤盤（28×30cm，瑞士卷/布朗尼）
+- 磅蛋糕模（迷你）
+
+---
+
+### TASK-13：行動端鍵盤遮擋修正
+
+**Step 1**：建立 `/src/hooks/useKeyboardOffset.ts`
+```ts
+import { useEffect } from 'react'
+
+export function useKeyboardOffset() {
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const handler = () => {
+      const offset = window.innerHeight - vv.height - vv.offsetTop
+      document.documentElement.style.setProperty(
+        '--keyboard-offset',
+        `${Math.max(0, offset)}px`
+      )
+    }
+    vv.addEventListener('resize', handler)
+    vv.addEventListener('scroll', handler)
+    return () => {
+      vv.removeEventListener('resize', handler)
+      vv.removeEventListener('scroll', handler)
+    }
+  }, [])
+}
+```
+
+**Step 2**：在 `src/app/layout.tsx` 呼叫 `useKeyboardOffset()`
+
+**Step 3**：`globals.css` 加：
+```css
+:root { --keyboard-offset: 0px; }
+```
+
+**Step 4**：`SaveRecipeBar`（及任何 fixed bottom 元件）加：
+```tsx
+style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))' }}
+```
+
+**Step 5**：所有 `<NumberInput>` 加：
+```tsx
+onFocus={(e) => e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+```
+
+完成後：`git add . && git commit -m "fix: 補模具清單 + 行動端鍵盤遮擋修正" && git push origin main`
+
+---
+
+### TASK-14：Middleware 500 + 儲存配方 UX + Onboarding hint
+
+#### A. Middleware 500 修正（Edge Runtime 不支援 Neon TCP）
+
+新建 `/src/auth.config.ts`：
+```ts
+import type { NextAuthConfig } from 'next-auth'
+import Google from 'next-auth/providers/google'
+
+export const authConfig: NextAuthConfig = {
+  providers: [Google],
+  callbacks: {
+    authorized({ auth, request }) {
+      const isLoggedIn = !!auth?.user
+      const isRecipes = request.nextUrl.pathname.startsWith('/recipes')
+      if (isRecipes) return isLoggedIn
+      return true
+    },
+  },
+  pages: { signIn: '/api/auth/signin' },
+}
+```
+
+修改 `src/middleware.ts`：
+```ts
+import NextAuth from 'next-auth'
+import { authConfig } from '@/auth.config'
+
+export const { auth: middleware } = NextAuth(authConfig)
+
+export const config = {
+  matcher: ['/recipes/:path*'],
+}
+```
+
+`src/auth.ts` 不動（保留 NeonAdapter）。
+
+#### B. 儲存配方 UX 修正（SaveRecipeBar.tsx）
+
+**問題 1：順序錯誤** — 未登入時先跳命名 dialog，填完才告知需登入。
+**修法**：`onClick` 先檢查 session，未登入直接開 auth sheet，已登入才開命名 dialog。
+
+```tsx
+// 把 Button onClick 改為：
+onClick={() => {
+  if (status !== 'authenticated') {
+    setAuthOpen(true)
+  } else {
+    setNameOpen(true)
+  }
+}}
+```
+
+**問題 2：Apple 登入按鈕** — 未設定 APPLE_ID，按鈕不應出現。
+**修法**：auth sheet 裡移除 Apple 登入按鈕，只保留 Google 登入。
+
+#### C. 耗損區塊預設邏輯修正（RecipeInput.tsx）
+
+**問題：** 目前顯示的是手動輸入 `%` 模式，「使用快捷」才切換到 Segment。**應該反過來。**
+
+**修法：**
+- 預設：顯示「備用 +0 / +1 / +2」三個 Segment 按鈕
+- 右側加「進階」小字按鈕（`text-xs text-muted`）
+- 點「進階」後：Segment 隱藏 → 顯示「耗損比例 0-30%」手動輸入欄
+- 進階模式下右側顯示「使用快捷」小字，可切回 Segment
+
+#### D. 首頁 Onboarding hint
+
+在 `src/app/page.tsx` 的計算頁最頂部（Header 下方）加一個可關閉的提示條，只在第一次使用時顯示（localStorage flag）：
+
+```tsx
+// 顯示條件：localStorage.getItem('bakemao_onboarded') 不存在
+// 內容：「第一次使用？選模具 → 輸入配方比例 → 即時看克數結果」
+// 右側 × 關閉，關閉後寫入 localStorage.setItem('bakemao_onboarded', '1')
+// 樣式：暖色背景（#FDF3E7），小字，不搶主畫面視覺
+```
+
+完成後：`git add . && git commit -m "fix: middleware 500 + 儲存配方流程 + 耗損預設 + onboarding hint" && git push origin main`
+
+---
+
+### TASK-15：IngredientSearchSheet 鍵盤感知修正（P0 Bug）
+
+**問題：** 開啟「新增材料」底部 Sheet 後，iOS 鍵盤彈出動畫（約 250ms）期間，鍵盤 toolbar 暫時蓋住食材列表，造成**列表閃爍消失再出現**。
+
+**根本原因：** Sheet 高度是靜態 CSS，未監聽 `visualViewport`，不感知鍵盤高度變化。
+
+**修法：在 `IngredientSearchSheet.tsx` 內加入動態高度：**
+
+```tsx
+// 在 component 頂部加入 state + effect
+const [sheetMaxHeight, setSheetMaxHeight] = useState<number | undefined>(undefined)
+
+useEffect(() => {
+  const vv = window.visualViewport
+  if (!vv) return
+  const update = () => {
+    // vv.height = 鍵盤彈出後的可見視窗高度
+    // vv.offsetTop = 頁面被往上推的距離
+    setSheetMaxHeight(vv.height + vv.offsetTop - 8) // 8px = 頂部安全邊距
+  }
+  vv.addEventListener('resize', update)
+  vv.addEventListener('scroll', update)
+  update() // 初始化
+  return () => {
+    vv.removeEventListener('resize', update)
+    vv.removeEventListener('scroll', update)
+  }
+}, [])
+```
+
+**套用到 Sheet 容器：**
+```tsx
+// Sheet 外層容器（目前可能用 fixed bottom-0 的 div）加上 style：
+<div
+  className="fixed bottom-0 left-0 right-0 bg-[#FEF9F4] rounded-t-2xl overflow-hidden flex flex-col"
+  style={sheetMaxHeight ? { maxHeight: sheetMaxHeight } : undefined}
+  // ⚠️ 不要加 transition，讓高度跟著鍵盤動畫即時更新，避免二次跳動
+>
+```
+
+**同步修正 IngredientSearchSheet 的搜尋框 hint text：**
+- `placeholder` 從「搜尋…」改為「搜尋食材，找不到可直接輸入」
+- 列表底部「直接使用「XXX」」選項：字體改為 `text-base font-medium`（比一般列表項目更顯眼）+ 左側加 ➕ icon
+
+**驗收條件：**
+- [ ] iOS Safari 實機：開啟 Sheet → 鍵盤彈出 → 列表不閃爍
+- [ ] 鍵盤收起 → Sheet 高度恢復正常，可看到更多列表項目
+- [ ] 搜尋框始終在鍵盤上方可見（不被蓋住）
+- [ ] 找不到食材時「直接使用」選項清晰可見
+
+完成後：`git add . && git commit -m "fix: IngredientSearchSheet keyboard-aware height (iOS flash bug)" && git push origin main`
 
 ---
 
@@ -357,6 +571,10 @@ type CalcResult = {
 - 輸入 0 → 欄位紅框 + 提示「請輸入大於 0 的數字」，但不阻擋其他計算
 - 模具尺寸不完整 → 容積顯示「—」，結果不更新
 - 材料清單為空 → 顯示空狀態，不計算
+
+**每次 commit 前必須更新 CHANGELOG.md：**
+- 在對應版本區塊補上這次的改動項目
+- 版本號規則：bug fix → patch（1.0.x）、新功能 → minor（1.x.0）
 
 **不需要詢問 Claude 的決策：**
 - 動畫時長、easing 細節

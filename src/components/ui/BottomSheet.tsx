@@ -1,17 +1,22 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type CSSProperties } from 'react'
 
 export function BottomSheet({
   open,
   onClose,
   title,
   children,
+  panelStyle,
+  panelClassName,
 }: {
   open: boolean
   onClose: () => void
   title?: string
   children: React.ReactNode
+  /** e.g. keyboard-aware maxHeight on mobile */
+  panelStyle?: CSSProperties
+  panelClassName?: string
 }) {
   useEffect(() => {
     if (!open) return
@@ -31,7 +36,10 @@ export function BottomSheet({
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
-      <div className="relative max-h-[85vh] overflow-auto rounded-t-2xl bg-[#F7F0E6] p-4 shadow-xl">
+      <div
+        className={`relative max-h-[85vh] overflow-auto rounded-t-2xl bg-[#F7F0E6] p-4 shadow-xl${panelClassName ? ` ${panelClassName}` : ''}`}
+        style={panelStyle}
+      >
         {title ? (
           <h2 className="mb-3 text-lg font-semibold text-[#3D2918]">{title}</h2>
         ) : null}

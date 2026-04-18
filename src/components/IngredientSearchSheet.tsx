@@ -17,6 +17,28 @@ export function IngredientSearchSheet({
 }) {
   const [q, setQ] = useState('')
   const [brandPick, setBrandPick] = useState<IngRow | null>(null)
+  const [sheetMaxHeight, setSheetMaxHeight] = useState<number | undefined>(
+    undefined
+  )
+
+  useEffect(() => {
+    if (!open) return
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      setSheetMaxHeight(vv.height + vv.offsetTop - 8)
+    }
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [open])
+
+  const sheetPanelStyle =
+    sheetMaxHeight !== undefined ? { maxHeight: sheetMaxHeight } : undefined
 
   useEffect(() => {
     if (open) {
@@ -44,7 +66,8 @@ export function IngredientSearchSheet({
       <BottomSheet
         open={open}
         onClose={onClose}
-        title={`選擇「${brandPick.name}」品牌`}
+        title={`\u9078\u64c7\u300c${brandPick.name}\u300d\u54c1\u724c`}
+        panelStyle={sheetPanelStyle}
       >
         <ul className="space-y-2">
           {brandPick.brands.map((b) => (
@@ -72,7 +95,7 @@ export function IngredientSearchSheet({
                 onClose()
               }}
             >
-              略過品牌
+              {'\u7565\u904e\u54c1\u724c'}
             </button>
           </li>
         </ul>
@@ -81,12 +104,17 @@ export function IngredientSearchSheet({
   }
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="新增材料">
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title="\u65b0\u589e\u6750\u6599"
+      panelStyle={sheetPanelStyle}
+    >
       <input
         ref={searchRef}
         inputMode="search"
         type="search"
-        placeholder="搜尋…"
+        placeholder="\u641c\u5c0b\u98df\u6750\uff0c\u627e\u4e0d\u5230\u53ef\u76f4\u63a5\u8f38\u5165"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         className="mb-3 w-full rounded-lg border border-[#D9C9B5] px-3 py-2"
@@ -109,7 +137,7 @@ export function IngredientSearchSheet({
               <span className="font-medium text-[#3D2918]">{row.name}</span>
               {row.aliases?.length ? (
                 <span className="ml-2 text-xs text-[#8A7968]">
-                  {row.aliases.join('、')}
+                  {row.aliases.join('\u3001')}
                 </span>
               ) : null}
             </button>
@@ -119,13 +147,14 @@ export function IngredientSearchSheet({
       {q.trim() && filtered.length === 0 ? (
         <button
           type="button"
-          className="mt-3 w-full rounded-lg bg-[#C8602A] py-3 text-white"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C8602A] py-3 text-base font-medium text-white"
           onClick={() => {
             onPick({ name: q.trim() })
             onClose()
           }}
         >
-          直接使用「{q.trim()}」
+          <span aria-hidden>{'\u2795'}</span>
+          {`\u76f4\u63a5\u4f7f\u7528\u300c${q.trim()}\u300d`}
         </button>
       ) : null}
     </BottomSheet>
