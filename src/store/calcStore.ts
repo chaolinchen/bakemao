@@ -11,6 +11,13 @@ import {
 import { getMoldParts } from '@/lib/moldParts'
 import type { RecipeLine } from '@/types/recipe-line'
 
+export type RecipeComponent = {
+  id: string
+  name: string
+  gramPerUnit: number
+  ingredients: RecipeLine[]
+}
+
 export type TargetKind = 'mold' | 'gram'
 
 export type MoldShape = 'cylinder' | 'rectangle' | 'muffin' | 'direct'
@@ -62,6 +69,9 @@ export interface CalcStateSlice {
   loss: LossInput
   ingredients: RecipeLine[]
   moldUi: MoldUiState
+  components?: RecipeComponent[]
+  compQuantity?: number     // 1–30, default 3
+  compLossRate?: number     // 0–0.3, default 0
 }
 
 function makeId() {
@@ -80,13 +90,14 @@ export type CalcMathSlice = Pick<
   | 'totalGram'
   | 'loss'
   | 'ingredients'
+  | 'moldUi'
 >
 
 /**
  * 模具目標一律由 moldUi + getMoldParts 推算（與畫面「共 X g」一致），
  * 不依賴 moldVolumeCC/moldQuantity 與 useEffect 同步 → 避免無限 re-render。
  */
-export function computeResult(s: CalcStateSlice) {
+export function computeResult(s: CalcMathSlice) {
   const ing: IngredientInput[] = s.ingredients.map((row) => ({
     name: row.name,
     brand: row.brand,
@@ -145,6 +156,17 @@ export const useCalcStore = create<
     replaceAll: (partial: Partial<CalcStateSlice>) => void
     clearIngredients: () => void
     resetRecipeInput: () => void
+    // multi-component actions
+    addComponent: () => void
+    removeComponent: (id: string) => void
+    updateComponentName: (id: string, name: string) => void
+    updateComponentGram: (id: string, gram: number) => void
+    updateCompLine: (compId: string, lineId: string, patch: Partial<IngredientInput>) => void
+    removeCompLine: (compId: string, lineId: string) => void
+    addCompLine: (compId: string, line: Omit<RecipeLine, 'id'>) => void
+    setCompQuantity: (q: number) => void
+    setCompLossRate: (r: number) => void
+    clearComponents: () => void
   }
 >()(
   persist(
@@ -157,6 +179,9 @@ export const useCalcStore = create<
       loss: { type: 'preset', extra: 0 },
       ingredients: [],
       moldUi: { ...defaultMoldUi },
+      components: [],
+      compQuantity: 3,
+      compLossRate: 0,
 
       setMode: (mode) => set({ mode }),
       setTargetKind: (targetKind) => set({ targetKind }),
@@ -211,6 +236,81 @@ export const useCalcStore = create<
           mode: 'percent',
           loss: { type: 'preset', extra: 0 },
         }),
+
+      // multi-component actions
+      addComponent: () =>
+        set((s) => {
+          const comps = s.components ?? []
+          const n = comps.length + 1
+          return {
+            components: [
+              ...comps,
+              {
+                id: makeId(),
+                name: `組合 ${n}`,
+                gramPerUnit: 0,
+                ingredients: [],
+              },
+            ],
+          }
+        }),
+      removeComponent: (id) =>
+        set((s) => ({
+          components: (s.components ?? []).filter((c) => c.id !== id),
+        })),
+      updateComponentName: (id, name) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, name } : c
+          ),
+        })),
+      updateComponentGram: (id, gram) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, gramPerUnit: gram } : c
+          ),
+        })),
+      updateCompLine: (compId, lineId, patch) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === compId
+              ? {
+                  ...c,
+                  ingredients: c.ingredients.map((r) =>
+                    r.id === lineId ? { ...r, ...patch } : r
+                  ),
+                }
+              : c
+          ),
+        })),
+      removeCompLine: (compId, lineId) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === compId
+              ? {
+                  ...c,
+                  ingredients: c.ingredients.filter((r) => r.id !== lineId),
+                }
+              : c
+          ),
+        })),
+      addCompLine: (compId, line) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === compId
+              ? {
+                  ...c,
+                  ingredients: [
+                    ...c.ingredients,
+                    { ...line, id: makeId() },
+                  ],
+                }
+              : c
+          ),
+        })),
+      setCompQuantity: (q) => set({ compQuantity: Math.min(30, Math.max(1, Math.floor(q))) }),
+      setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),
+      clearComponents: () => set({ components: [] }),
     }),
     {
       name: 'bakemao_calc_state',
@@ -229,6 +329,9 @@ export const useCalcStore = create<
           loss: p.loss ?? c.loss,
           ingredients: p.ingredients ?? c.ingredients,
           moldUi: { ...defaultMoldUi, ...(p.moldUi ?? {}) },
+          components: p.components ?? c.components,
+          compQuantity: Number(p.compQuantity ?? c.compQuantity),
+          compLossRate: Number(p.compLossRate ?? c.compLossRate),
         } as never
       },
       partialize: (s) => ({
@@ -240,6 +343,9 @@ export const useCalcStore = create<
         loss: s.loss,
         ingredients: s.ingredients,
         moldUi: s.moldUi,
+        components: s.components,
+        compQuantity: s.compQuantity,
+        compLossRate: s.compLossRate,
       }),
     }
   )

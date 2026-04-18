@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CalcResult } from '@/components/CalcResult'
 import { MoldSelector } from '@/components/MoldSelector'
+import { MultiComponentSection } from '@/components/MultiComponentSection'
 import { RecipeInput } from '@/components/RecipeInput'
 import { SaveRecipeBar } from '@/components/SaveRecipeBar'
 import { OfflineBanner } from '@/components/ui/Banner'
@@ -78,6 +79,7 @@ export default function Home() {
         <MoldSelector />
         <RecipeInput />
         <CalcResult />
+        <MultiComponentSection />
       </main>
 
       <SaveRecipeBar />

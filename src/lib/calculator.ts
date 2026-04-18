@@ -185,3 +185,20 @@ export function calculate(
     totalGram,
   }
 }
+
+/**
+ * 逐件計算（多組合 / 考試模式）
+ * 公式：每1%克數 = gramPerUnit × quantity ÷ 良率 ÷ totalPct
+ * 例：225 × 3 ÷ 0.9 ÷ 200 = 3.75
+ */
+export function calculateExam(
+  mode: CalcMode,
+  ingredients: IngredientInput[],
+  gramPerUnit: number,
+  quantity: number,
+  lossRate: number // 0–0.3，e.g. 0.1 代表 10%
+): CalcResult {
+  const yieldRate = Math.max(0.001, 1 - Math.min(0.3, Math.max(0, lossRate)))
+  const totalGramNeeded = (n(gramPerUnit) * Math.max(1, Math.floor(n(quantity)))) / yieldRate
+  return calculate(mode, ingredients, { type: 'gram', totalGram: totalGramNeeded }, { type: 'preset', extra: 0 })
+}

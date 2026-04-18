@@ -145,23 +145,28 @@ export function RecipeInput() {
           </button>
         </div>
         {lossAdvanced ? (
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-[#6B5A4A]">耗損比例 0–30%</label>
-            <NumberInput
-              value={
-                loss.type === 'manual'
-                  ? String(Math.round(loss.ratio * 1000) / 10)
-                  : '0'
-              }
-              onChange={(e) => {
-                const v = parseNum(e.target.value) / 100
-                const next: LossInput = {
-                  type: 'manual',
-                  ratio: Math.min(0.3, v),
+          <div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-[#6B5A4A]">耗損比例 0–30%</label>
+              <NumberInput
+                value={
+                  loss.type === 'manual'
+                    ? String(Math.round(loss.ratio * 1000) / 10)
+                    : '0'
                 }
-                setLoss(next)
-              }}
-            />
+                onChange={(e) => {
+                  const v = parseNum(e.target.value) / 100
+                  const next: LossInput = {
+                    type: 'manual',
+                    ratio: Math.min(0.3, v),
+                  }
+                  setLoss(next)
+                }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-[#8A7968]">
+              目標 × (1 − 比例)，適用於模具填充調整
+            </p>
           </div>
         ) : (
           <SegmentControl
