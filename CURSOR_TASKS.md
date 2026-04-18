@@ -22,7 +22,7 @@
 | TASK-09 | ✅ 完成 | **Neon** 整合 + 登入 |
 | TASK-10 | ✅ 完成 | 配方管理頁（含 mold UI 還原、pointer: coarse 左滑刪除） |
 | TASK-11 | ✅ 完成 | 分享結果圖（logo.svg 浮水印 + 文字後備） |
-| TASK-12 | ⬜ 待做 | 模具清單補充 + MoldSelector UX 改善（含 Segment 命名修正）|
+| TASK-12 | ✅ 完成 | 模具清單補充 + MoldSelector UX 改善（含 Segment 命名修正）|
 | TASK-13 | ⬜ 待做 | 行動端鍵盤遮擋修正（主頁輸入框）|
 | TASK-14 | ✅ 完成 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
 | TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |

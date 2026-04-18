@@ -28,13 +28,13 @@ export interface MoldUiState {
 }
 
 export const defaultMoldUi: MoldUiState = {
-  presetId: 'pudding-90',
+  presetId: 'round-6',
   chiffonKey: 'medium',
-  shape: 'direct',
+  shape: 'cylinder',
   cyl: { d: '15', h: '6' },
   box: { l: '17', w: '8', h: '6' },
   muffin: { single: '90', qty: 18 },
-  direct: '90',
+  direct: '1060',
 }
 
 function moldUiShallowEqual(a: MoldUiState, b: MoldUiState): boolean {
@@ -151,8 +151,8 @@ export const useCalcStore = create<
     (set) => ({
       mode: 'percent',
       targetKind: 'mold',
-      moldVolumeCC: 90,
-      moldQuantity: 18,
+      moldVolumeCC: 1060,
+      moldQuantity: 1,
       totalGram: 1000,
       loss: { type: 'preset', extra: 0 },
       ingredients: [],

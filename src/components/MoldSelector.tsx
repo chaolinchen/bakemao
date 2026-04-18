@@ -154,6 +154,9 @@ export function MoldSelector() {
                 {m.name}
               </option>
             ))}
+            <option disabled value="">
+              ── 找不到？請切換下方計算方式 ──
+            </option>
           </select>
 
           {preset?.type === 'chiffon' ? (
@@ -187,13 +190,15 @@ export function MoldSelector() {
           ) : null}
 
           <div className="mb-2">
-            <span className="text-sm text-[#6B5A4A]">計算方式</span>
+            <p className="text-sm text-[#6B5A4A]">
+              沒有合適模具？按形狀自行計算：
+            </p>
             <SegmentControl
               className="mt-1 block max-w-full flex-wrap"
               options={[
                 { value: 'cylinder', label: '圓柱' },
                 { value: 'rectangle', label: '長方' },
-                { value: 'muffin', label: '馬芬' },
+                { value: 'muffin', label: '杯型×數量' },
                 { value: 'direct', label: '直接 cc' },
               ]}
               value={shape}
@@ -304,7 +309,9 @@ export function MoldSelector() {
         {showDash ? (
           <span className="text-[#9A8775]">—</span>
         ) : (
-          <>{Math.round(totalCc)} g</>
+          <>
+            {Math.round(totalCc)} g（以 1cc{'\u2248'}1g 換算）
+          </>
         )}
       </p>
     </section>

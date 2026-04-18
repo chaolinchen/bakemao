@@ -2,6 +2,12 @@
 
 ---
 
+## v1.1.3 — 2026-04-18
+### Feat
+- 模具清單：吐司 450g、12兩、塔模 7cm / 10cm。
+- MoldSelector：下拉底部提示、形狀區標題、「杯型×數量」命名、容積附 1cc≈1g 說明；預設模具改為圓形 6 吋。
+
+---
 ## v1.1.2 — 2026-04-18
 ### Fix
 - Middleware: Edge 專用 `auth.config.ts`，避免 middleware 拉 Neon pool 造成 500。
