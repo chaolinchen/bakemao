@@ -2,6 +2,12 @@
 
 ---
 
+## v1.1.5 — 2026-04-18
+### Docs
+- `CONTEXT.md`：待優化與下一步對齊 TASK-13、PRD §21-5（Sheet 搜尋框 scrollIntoView）、Vercel 自動部署說明。
+- `CURSOR_TASKS.md`：頁首進度說明改為 12／14／15 已完成、TASK-13 待做。
+
+---
 ## v1.1.4 — 2026-04-18
 ### Docs
 - `PRD_BakeMao_v1.0.md` 同步至 **v1.6**（§20 多群組材料 workaround、§21 IngredientSearchSheet 鍵盤感知、模具 Segment／cc 換算、耗損、文案）。

@@ -63,10 +63,10 @@
   - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
   其他元件多為單一欄位 `useCalcStore((s) => s.x)`，無需 shallow。
 - **建置品質**：`npm run build`、`npm test` 上次執行成功；若遇 **`Cannot find module './xxx.js'`** 或怪錯，先 **`rm -rf .next`** 再 dev／build。
-- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**TASK-13**（主頁鍵盤遮擋）尚未實作。
+- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**TASK-13**（主頁鍵盤遮擋：`useKeyboardOffset`、SaveRecipeBar、`NumberInput` scrollIntoView，見 `CURSOR_TASKS.md`）尚未實作；PRD §21 第5 點（Sheet 內搜尋框 focus 時 `scrollIntoView`）尚未實作，可與 TASK-13 一併評估。
 
 ## 下一步（產品向）
 
 - 本機／線上再手動確認 **首頁載入無紅屏**、模具切換與結果列正常。
 - **手機實測**：PWA、離線、分享圖；**Google OAuth**：後台只保留正式＋本機（＋選用 vercel.app）redirect。
-- 有餘力再：**`vercel --prod`** 與 **GitHub push** 同 AGENTS 建議順序。
+- **工程**：優先 **TASK-13**；BakeMao 已設為 **git push main → Vercel 自動部署**（見 `AGENTS.md`），一般無需再手動 `vercel --prod`。

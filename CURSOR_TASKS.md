@@ -1,7 +1,7 @@
 # BakeMao 烘焙貓 — Cursor 工作清單
 > PRD 完整規格請見 `PRD_BakeMao_v1.0.md`（當前版本：**v1.6**）
 > 本文件供 Cursor 獨立執行，不需要頻繁詢問 Claude
-> 更新：2026-04-18 — TASK-12/14 補充規格修正；新增 **TASK-15（P0）**。  
+> 更新：2026-04-18 — **TASK-12／14／15 已完成**；**TASK-13**（主頁鍵盤遮擋）仍待做。  
 > **近期**：已修復首頁 **Maximum update depth**（Zustand 物件 selector → `useShallow`；模具改 **`computeResult` + `getMoldParts`**）。驗證以 `CONTEXT.md` **SNAPSHOT v0.2.0** 為準。
 
 ---
