@@ -7,7 +7,7 @@
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；build 仍有 **jose／Edge Runtime** 警告（middleware 匯入 `auth`），屬已知、與計算 UI 無關。
-- **功能進度**：**TASK-15**（IngredientSearchSheet iOS 鍵盤感知）已完成；TASK-12／14 見 `CURSOR_TASKS.md`。
+- **功能進度**：**TASK-14**與 **TASK-15** 已完成；**TASK-12** 進行中（見 `CURSOR_TASKS.md`）。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 

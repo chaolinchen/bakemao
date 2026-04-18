@@ -154,7 +154,7 @@ export const useCalcStore = create<
       moldVolumeCC: 90,
       moldQuantity: 18,
       totalGram: 1000,
-      loss: { type: 'manual', ratio: 0.1 },
+      loss: { type: 'preset', extra: 0 },
       ingredients: [],
       moldUi: { ...defaultMoldUi },
 

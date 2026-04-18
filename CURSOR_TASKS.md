@@ -24,7 +24,7 @@
 | TASK-11 | ✅ 完成 | 分享結果圖（logo.svg 浮水印 + 文字後備） |
 | TASK-12 | ⬜ 待做 | 模具清單補充 + MoldSelector UX 改善（含 Segment 命名修正）|
 | TASK-13 | ⬜ 待做 | 行動端鍵盤遮擋修正（主頁輸入框）|
-| TASK-14 | ⬜ 待做 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
+| TASK-14 | ✅ 完成 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
 | TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |
 
 ---

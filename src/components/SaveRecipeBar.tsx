@@ -89,7 +89,16 @@ export function SaveRecipeBar() {
       {toast ? (
         <p className="mb-2 text-center text-sm text-[#3D2918]">{toast}</p>
       ) : null}
-      <Button className="w-full" onClick={() => setNameOpen(true)}>
+      <Button
+        className="w-full"
+        onClick={() => {
+          if (status !== 'authenticated') {
+            setAuthOpen(true)
+          } else {
+            setNameOpen(true)
+          }
+        }}
+      >
         儲存配方
       </Button>
 
@@ -117,12 +126,6 @@ export function SaveRecipeBar() {
             onClick={() => void signIn('google', { callbackUrl: '/' })}
           >
             Google 登入
-          </Button>
-          <Button
-            className="w-full"
-            onClick={() => void signIn('apple', { callbackUrl: '/' })}
-          >
-            Apple 登入
           </Button>
         </div>
       </BottomSheet>

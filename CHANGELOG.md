@@ -2,6 +2,16 @@
 
 ---
 
+## v1.1.2 — 2026-04-18
+### Fix
+- Middleware: Edge 專用 `auth.config.ts`，避免 middleware 拉 Neon pool 造成 500。
+- 儲存配方：未登入先開登入 sheet；auth sheet 移除未設定的 Apple 按鈕。
+- 耗損預設改為備用 +0 / +1 / +2 快捷（loss preset）。
+
+### Feat
+- Onboarding 提示條（localStorage `bakemao_onboarded`，可關閉）。
+
+---
 ## v1.1.1 — 2026-04-18
 ### Fix
 - IngredientSearchSheet：以 `visualViewport` 動態 `maxHeight`（`BottomSheet` 新增 `panelStyle`）修正 iOS 鍵盤彈出時列表閃爍；placeholder 改為「搜尋食材，找不到可直接輸入」；「直接使用」列加上 ➕ 圖示、字級 `text-base font-medium`。
