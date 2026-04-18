@@ -51,11 +51,18 @@ export default function Home() {
           style={{ backgroundColor: '#FDF3E7' }}
           role="status"
         >
-          <p className="pt-0.5 leading-relaxed">
-            {
-              '\u7b2c\u4e00\u6b21\u4f7f\u7528\uff1f\u9078\u6a21\u5177 \u2192 \u8f38\u5165\u914d\u65b9\u6bd4\u4f8b \u2192 \u5373\u6642\u770b\u514b\u6578\u7d50\u679c'
-            }
-          </p>
+          <div className="min-w-0 space-y-1.5 pt-0.5 leading-relaxed">
+            <p>
+              {
+                '\u7b2c\u4e00\u6b21\u4f7f\u7528\uff1f\u9078\u6a21\u5177 \u2192 \u8f38\u5165\u914d\u65b9\u6bd4\u4f8b \u2192 \u5373\u6642\u770b\u514b\u6578\u7d50\u679c'
+              }
+            </p>
+            <p className="text-[11px] text-[#6B5A4A]">
+              {
+                '\u8907\u96dc\u914d\u65b9\u53ef\u5728\u6750\u6599\u524d\u52a0\u300c\u3010\u7fa4\u7d44\u540d\u3011\u300d\u524d\u7db4\uff0c\u4f8b\uff1a\u300c\u3010\u86cb\u7cd5\u9ad4\u3011\u4f4e\u7b4b\u9eb5\u7c89\u300d\u3002'
+              }
+            </p>
+          </div>
           <button
             type="button"
             className="shrink-0 rounded-md px-2 py-0.5 text-lg leading-none text-[#8A7968] hover:bg-black/5"

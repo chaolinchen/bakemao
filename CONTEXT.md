@@ -1,12 +1,12 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.1.9 | 2026-04-18）
+## SNAPSHOT（v0.2.0 | 2026-04-18）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
-- **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；build 仍有 **jose／Edge Runtime** 警告（middleware 匯入 `auth`），屬已知、與計算 UI 無關。
+- **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；jose／Edge 相關警告以實際 build log 為準。
 - **功能進度**：**TASK-12 / 14 / 15** 已完成（見 `CURSOR_TASKS.md`）。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
@@ -57,13 +57,13 @@
 
 ## 目前狀態（給 agent 續作）
 
-- **規格**：仍以 **`PRD_BakeMao_v1.0.md`**（v1.5.1）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **規格**：仍以 **`PRD_BakeMao_v1.0.md`**（**v1.6**，含 §20／§21）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
 - **已結案：Maximum update depth**  
   - **模具**：不再用 `useEffect` 把推導容積寫回 store；**`calcStore.computeResult`** 依 **`moldUi` + `getMoldParts`** 與畫面「共 X g」對齊。  
   - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
   其他元件多為單一欄位 `useCalcStore((s) => s.x)`，無需 shallow。
 - **建置品質**：`npm run build`、`npm test` 上次執行成功；若遇 **`Cannot find module './xxx.js'`** 或怪錯，先 **`rm -rf .next`** 再 dev／build。
-- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**middleware／jose／Edge** 警告若需消除可再評估是否拆分 Edge 專用 auth 或調整匯入（目前不影響主流程）。
+- **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送；**TASK-13**（主頁鍵盤遮擋）尚未實作。
 
 ## 下一步（產品向）
 

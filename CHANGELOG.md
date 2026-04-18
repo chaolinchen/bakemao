@@ -2,6 +2,17 @@
 
 ---
 
+## v1.1.4 — 2026-04-18
+### Docs
+- `PRD_BakeMao_v1.0.md` 同步至 **v1.6**（§20 多群組材料 workaround、§21 IngredientSearchSheet 鍵盤感知、模具 Segment／cc 換算、耗損、文案）。
+
+### Feat
+- 首頁 Onboarding 第二行：提示以「【群組名】」前綴區分材料（對齊 PRD §20）。
+
+### Chore
+- `public/sw.js`：PWA precache 清單更新（對齊最近一次 production build）。
+
+---
 ## v1.1.3 — 2026-04-18
 ### Feat
 - 模具清單：吐司 450g、12兩、塔模 7cm / 10cm。
