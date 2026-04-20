@@ -1,10 +1,11 @@
 # BakeMao 烘焙貓 PRD
-**版本：v1.7 | 日期：2026-04-20 | 狀態：確認**
+**版本：v1.8 | 日期：2026-04-20 | 狀態：確認**
 
 > **v1.5：** 後台已由 Supabase 改為 **Neon（PostgreSQL）** + **NextAuth.js v5**；配方與使用者資料表以 repo `neon/001_init.sql` 為準。  
 > **v1.5.1：** 新增 **§19 實作備註**（Zustand 選擇器與模具推導；**不變更**產品功能規格）。  
-> **v1.7（2026-04-20）：** TASK-16 多組配方整合上線（主流程重設計）；TASK-17 UX 修正（彙總卡 / 列表優化 / 清除語意）待執行；§20 多群組已從 Backlog 升為已上線功能。
-> **v1.6：** 修正 5 項規格（水溫分類、自訂食材 UX、cc 換算說明、Segment 命名、耗損預設）；新增 §20 多群組材料（v1.5 backlog）、§21 IngredientSearchSheet 鍵盤感知規格。
+> **v1.6：** 修正 5 項規格（水溫分類、自訂食材 UX、cc 換算說明、Segment 命名、耗損預設）；新增 §20 多群組材料（v1.5 backlog）、§21 IngredientSearchSheet 鍵盤感知規格。  
+> **v1.7（2026-04-20）：** TASK-16 多組配方整合上線；TASK-17 UX 修正（彙總卡 SummaryCard / Toast Undo / 新配方按鈕）✅ 已上線。  
+> **v1.8（2026-04-20）：** TASK-18 配方分享連結 ✅ 已上線；§22 分享功能新增。
 
 ---
 
@@ -392,3 +393,32 @@
 | **Zustand 多欄位選取** | `useCalcStore((s) => ({ a: s.a, b: s.b, ... }))` 每次回傳**新物件**時，預設相等性會認為 snapshot 一直變 → 可能 **Maximum update depth**。解法：**`useShallow`（`zustand/react/shallow`）** 或拆成多個單欄 selector。 |
 | **建置／chunk** | 若出現 **`Cannot find module './xxx.js'`** 等：刪除 **`.next`** 後重跑 `npm run dev` / `npm run build`。 |
 | **Auth 與 Edge** | Middleware 鏈若匯入 **NextAuth／jose**，build 可能對 **Edge Runtime** 發警告；屬部署/邊界議題，與配方計算規格無關，可另議拆分。 |
+
+---
+
+## 22. 配方分享連結（✅ v1.8 已上線）
+
+### 功能概述
+已登入用戶可為任一儲存配方產生分享連結，任何人（含未登入）可透過連結查看配方並載入計算機。
+
+### 資料庫
+```sql
+-- neon/002_add_share_token.sql
+ALTER TABLE recipes ADD COLUMN IF NOT EXISTS share_token UUID DEFAULT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS recipes_share_token_idx ON recipes(share_token) WHERE share_token IS NOT NULL;
+```
+
+### API
+| Method | Path | Auth | 說明 |
+|--------|------|------|------|
+| POST | `/api/recipes/[id]/share` | 需登入 | 懶建 token；已有則回傳相同 token |
+| GET | `/api/share/[token]` | 公開 | 回傳 `{ name, ingredients }` |
+
+### 前端頁面
+- **`/share/[token]`**：顯示配方名稱、材料比例（含多組），按鈕「在計算機中開啟」→ 載入 Zustand store → 跳首頁
+- **配方列表**：每筆右側 ↗ 按鈕 → POST 取 token → 複製連結 → Toast「已複製分享連結」
+
+### 設計規格
+- Token 為 UUID，首次分享才建立（lazy generation），分享同一配方永遠得到同一 URL
+- 分享頁無需登入，可直接在計算機中開啟
+- 連結格式：`https://bakemao.smallfatmao.com/share/{uuid}`

@@ -58,17 +58,17 @@
 
 ## 目前狀態（給 agent 續作）
 
-- **規格**：仍以 **`PRD_BakeMao_v1.0.md`**（**v1.6**，含 §20／§21）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
-- **TASK-16**：首頁已整合多組配方主流程；`RecipeComponent` 擴充欄位見 `calcStore.ts`；舊儲存（僅 `lines`）從「我的配方」開啟時會遷移為單一組合。
-- **已結案：Maximum update depth**  
-  - **模具**：不再用 `useEffect` 把推導容積寫回 store；**`calcStore.computeResult`** 依 **`moldUi` + `getMoldParts`** 與畫面「共 X g」對齊。  
-  - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
-  其他元件多為單一欄位 `useCalcStore((s) => s.x)`，無需 shallow。
-- **建置品質**：`npm run build`、`npm test` 上次執行成功；若遇 **`Cannot find module './xxx.js'`** 或怪錯，先 **`rm -rf .next`** 再 dev／build。
+- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v1.8**，含 §20／§21／§22）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **已完成 TASK-16 ～ TASK-18**：多組配方主流程、備料彙總 SummaryCard、配方分享連結（`/share/[token]`）全部上線。
+- **DB migration**：`neon/001_init.sql`（初始）、`neon/002_add_share_token.sql`（share_token）已在 dev + prod 執行完畢。
+- **已結案：Maximum update depth**（模具 / `useShallow`，詳見 §19）。
+- **建置品質**：TypeScript clean；若遇 chunk 遺失先 `rm -rf .next`。
 - **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送。
 
-## 下一步（產品向）
+## 下一步（產品向，優先順序）
 
-- 本機／線上再手動確認 **首頁多組配方**、儲存／載入、舊配方遷移。
-- **手機實測**：PWA、離線、分享圖；**Google OAuth**：後台只保留正式＋本機（＋選用 vercel.app）redirect。
-- **工程**：BakeMao 已設為 **git push main → Vercel 自動部署**（見 `AGENTS.md`），一般無需再手動 `vercel --prod`。
+1. **OG image for 分享頁**（TASK-19）：`/share/[token]` 目前無預覽圖，LINE/IG 分享只顯示空白。加 `opengraph-image.tsx` 或 Satori 動態 og:image。
+2. **SummaryCard 首次自動展開**：備料彙總預設折疊用戶找不到，首次有結果時自動展開。
+3. **新配方 Dialog 加「先儲存」快捷路徑**：目前只有「直接清空」，UX 建議加「先儲存配方」按鈕。
+4. **手機實測**：分享連結、PWA 安裝、iOS Safari 鍵盤行為。
+- **工程**：git push main → Vercel 自動部署，無需手動 `vercel --prod`。
