@@ -71,12 +71,14 @@ function RecipeListRow({
   metaLine,
   onOpen,
   onDeleteClick,
+  onShareClick,
   swipeEnabled,
 }: {
   name: string
   metaLine: string
   onOpen: () => void
   onDeleteClick: () => void
+  onShareClick: () => void
   swipeEnabled: boolean
 }) {
   const [tx, setTx] = useState(0)
@@ -93,6 +95,15 @@ function RecipeListRow({
         <button type="button" className="min-w-0 flex-1 text-left" onClick={onOpen}>
           <div className="font-medium">{name}</div>
           <div className="text-xs text-[#8A7968]">{metaLine}</div>
+        </button>
+        <button
+          type="button"
+          aria-label="分享"
+          title="複製分享連結"
+          className="shrink-0 rounded-lg px-2 text-[#8A7968] transition hover:bg-black/5 hover:text-[#C8602A]"
+          onClick={onShareClick}
+        >
+          ↗
         </button>
         <Button variant="ghost" onClick={onDeleteClick}>
           刪除
@@ -138,20 +149,33 @@ function RecipeListRow({
           )
         }}
       >
-        <button
-          type="button"
-          className="w-full p-3 text-left"
-          onClick={() => {
-            if (tx !== 0) {
-              setTx(0)
-              return
-            }
-            onOpen()
-          }}
-        >
-          <div className="font-medium">{name}</div>
-          <div className="text-xs text-[#8A7968]">{metaLine}</div>
-        </button>
+        <div className="flex items-stretch">
+          <button
+            type="button"
+            className="min-w-0 flex-1 p-3 text-left"
+            onClick={() => {
+              if (tx !== 0) {
+                setTx(0)
+                return
+              }
+              onOpen()
+            }}
+          >
+            <div className="font-medium">{name}</div>
+            <div className="text-xs text-[#8A7968]">{metaLine}</div>
+          </button>
+          <button
+            type="button"
+            aria-label="分享"
+            className="shrink-0 px-3 text-lg text-[#8A7968] active:text-[#C8602A]"
+            onClick={(e) => {
+              e.stopPropagation()
+              onShareClick()
+            }}
+          >
+            ↗
+          </button>
+        </div>
       </div>
     </li>
   )
@@ -164,6 +188,8 @@ export default function RecipesPage() {
   const [rows, setRows] = useState<Row[]>([])
   const [delId, setDelId] = useState<string | null>(null)
   const [coarsePointer, setCoarsePointer] = useState(false)
+  const [shareToast, setShareToast] = useState<string | null>(null)
+  const shareToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(pointer: coarse)')
@@ -184,6 +210,28 @@ export default function RecipesPage() {
   useEffect(() => {
     if (status === 'authenticated') void load()
   }, [status, load])
+
+  const showShareToast = (msg: string) => {
+    if (shareToastTimer.current) clearTimeout(shareToastTimer.current)
+    setShareToast(msg)
+    shareToastTimer.current = setTimeout(() => setShareToast(null), 3000)
+  }
+
+  const handleShare = async (id: string) => {
+    try {
+      const res = await fetch(`/api/recipes/${id}/share`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      if (!res.ok) throw new Error('failed')
+      const { token } = (await res.json()) as { token: string }
+      const url = `${window.location.origin}/share/${token}`
+      await navigator.clipboard.writeText(url)
+      showShareToast('已複製分享連結')
+    } catch {
+      showShareToast('複製失敗，請再試一次')
+    }
+  }
 
   const loadRecipe = (r: Row) => {
     const raw = r.ingredients
@@ -298,6 +346,7 @@ export default function RecipesPage() {
             swipeEnabled={coarsePointer}
             onOpen={() => loadRecipe(r)}
             onDeleteClick={() => setDelId(r.id)}
+            onShareClick={() => void handleShare(r.id)}
           />
         ))}
       </ul>
@@ -317,6 +366,16 @@ export default function RecipesPage() {
           void load()
         }}
       />
+
+      {shareToast ? (
+        <div
+          className="fixed bottom-6 left-4 right-4 z-40 flex items-center justify-center rounded-xl bg-[#3D2918] px-4 py-3 text-sm text-white shadow-lg"
+          style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
+          role="status"
+        >
+          {shareToast}
+        </div>
+      ) : null}
     </div>
   )
 }
