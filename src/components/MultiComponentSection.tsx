@@ -277,7 +277,7 @@ function ComponentCard({
               已自訂 × 重置
             </button>
           ) : (
-            <span className="text-xs text-[#B0A090]">繼承全局</span>
+            <span className="text-xs text-[#B0A090]">沿用 {globalQty} 份</span>
           )}
         </div>
 
