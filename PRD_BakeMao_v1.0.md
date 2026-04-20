@@ -1,11 +1,12 @@
 # BakeMao 烘焙貓 PRD
-**版本：v1.8 | 日期：2026-04-20 | 狀態：確認**
+**版本：v1.9 | 日期：2026-04-20 | 狀態：確認**
 
 > **v1.5：** 後台已由 Supabase 改為 **Neon（PostgreSQL）** + **NextAuth.js v5**；配方與使用者資料表以 repo `neon/001_init.sql` 為準。  
 > **v1.5.1：** 新增 **§19 實作備註**（Zustand 選擇器與模具推導；**不變更**產品功能規格）。  
 > **v1.6：** 修正 5 項規格（水溫分類、自訂食材 UX、cc 換算說明、Segment 命名、耗損預設）；新增 §20 多群組材料（v1.5 backlog）、§21 IngredientSearchSheet 鍵盤感知規格。  
 > **v1.7（2026-04-20）：** TASK-16 多組配方整合上線；TASK-17 UX 修正（彙總卡 SummaryCard / Toast Undo / 新配方按鈕）✅ 已上線。  
-> **v1.8（2026-04-20）：** TASK-18 配方分享連結 ✅ 已上線；§22 分享功能新增。
+> **v1.8（2026-04-20）：** TASK-18 配方分享連結 ✅ 已上線；§22 分享功能新增。  
+> **v1.9（2026-04-20）：** TASK-19 UX 三項改善 ✅ 已上線；§23 新增。
 
 ---
 
@@ -422,3 +423,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS recipes_share_token_idx ON recipes(share_token
 - Token 為 UUID，首次分享才建立（lazy generation），分享同一配方永遠得到同一 URL
 - 分享頁無需登入，可直接在計算機中開啟
 - 連結格式：`https://bakemao.smallfatmao.com/share/{uuid}`
+
+---
+
+## 23. TASK-19 UX 改善（✅ v1.9 已上線）
+
+### SummaryCard 首次自動展開
+- 首次計算出有效結果時，SummaryCard 自動展開（`autoOpenedRef` + `useEffect`）
+- 點「新配方」清空後，下次算出結果仍可再觸發自動展開
+
+### 新配方 Dialog 三按鈕
+- 原「確定 / 取消」二按鈕改為三按鈕：
+  1. **先儲存配方**（橘色主按鈕）→ 發送 `bakemao:requestSave` custom event → SaveRecipeBar 開命名 Sheet
+  2. **直接清空**（紅色文字次按鈕）→ `clearComponents()`
+  3. **取消**（ghost）→ 關閉 Dialog
+- SaveRecipeBar 新增 `useEffect` 監聽 `bakemao:requestSave`，觸發後直接開命名 Sheet（已登入）或開登入流程（未登入）
+
+### 分享頁 OG image
+- 路徑：`src/app/share/[token]/opengraph-image.tsx`（Edge runtime）
+- 從 Neon 抓取配方資料，用 Satori 生成 1200×630 PNG
+- 顯示：配方名稱（大字）、組合數/份數副標、材料列表預覽（最多 2 組 × 3 項）、bakemao.smallfatmao.com
+- LINE / IG / iMessage 分享連結時自動顯示預覽圖

@@ -58,17 +58,17 @@
 
 ## 目前狀態（給 agent 續作）
 
-- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v1.8**，含 §20／§21／§22）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
-- **已完成 TASK-16 ～ TASK-18**：多組配方主流程、備料彙總 SummaryCard、配方分享連結（`/share/[token]`）全部上線。
-- **DB migration**：`neon/001_init.sql`（初始）、`neon/002_add_share_token.sql`（share_token）已在 dev + prod 執行完畢。
+- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v1.9**，含 §20／§21／§22／§23）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **已完成 TASK-16 ～ TASK-19**：多組配方、SummaryCard、分享連結、OG image、新配方三按鈕全部上線。
+- **DB migration**：`001_init.sql`、`002_add_share_token.sql` 已在 dev + prod 執行完畢。
 - **已結案：Maximum update depth**（模具 / `useShallow`，詳見 §19）。
 - **建置品質**：TypeScript clean；若遇 chunk 遺失先 `rm -rf .next`。
 - **待優化（非阻塞）**：PWA 圖示細節、`offlineSync.ts` 連線後重送。
 
 ## 下一步（產品向，優先順序）
 
-1. **OG image for 分享頁**（TASK-19）：`/share/[token]` 目前無預覽圖，LINE/IG 分享只顯示空白。加 `opengraph-image.tsx` 或 Satori 動態 og:image。
-2. **SummaryCard 首次自動展開**：備料彙總預設折疊用戶找不到，首次有結果時自動展開。
-3. **新配方 Dialog 加「先儲存」快捷路徑**：目前只有「直接清空」，UX 建議加「先儲存配方」按鈕。
-4. **手機實測**：分享連結、PWA 安裝、iOS Safari 鍵盤行為。
+1. **手機實測**：分享連結 OG 預覽（LINE/IG）、PWA 安裝、iOS Safari 鍵盤行為。
+2. **IG 推廣**：po 第一篇使用教學，帶 bakemao.smallfatmao.com 連結。
+3. **GA4 埋點**：追蹤「儲存配方」「分享連結」「在計算機中開啟」事件，建立留存指標基線。
+4. **範本配方**（Backlog）：烘焙新手進來不知道百分比怎麼填，提供 3-5 個常見配方範本。
 - **工程**：git push main → Vercel 自動部署，無需手動 `vercel --prod`。
