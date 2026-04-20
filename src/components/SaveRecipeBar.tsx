@@ -1,7 +1,7 @@
 'use client'
 
 import { signIn, useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import { queueOfflineSave } from '@/lib/offlineSync'
 import { computeResult, useCalcStore } from '@/store/calcStore'
@@ -21,6 +21,20 @@ export function SaveRecipeBar() {
   const [name, setName] = useState(defaultRecipeName)
   const [toast, setToast] = useState<string | null>(null)
   const online = typeof navigator !== 'undefined' ? navigator.onLine : true
+
+  // 監聽「先儲存配方」custom event（從新配方 Dialog 觸發）
+  useEffect(() => {
+    const handler = () => {
+      if (status !== 'authenticated') {
+        setAuthOpen(true)
+      } else {
+        setName(defaultRecipeName())
+        setNameOpen(true)
+      }
+    }
+    window.addEventListener('bakemao:requestSave', handler)
+    return () => window.removeEventListener('bakemao:requestSave', handler)
+  }, [status])
 
   const save = async () => {
     const snapshot = useCalcStore.getState()

@@ -550,16 +550,51 @@ export function MultiComponentSection() {
         ＋ 新增組合
       </Button>
 
-      <ConfirmDialog
-        open={confirmClear}
-        title="開始新配方？"
-        message="目前的配方組合將被清除，份數設定將重置為 6。"
-        onCancel={() => setConfirmClear(false)}
-        onConfirm={() => {
-          clearComponents()
-          setConfirmClear(false)
-        }}
-      />
+      {confirmClear ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/45"
+            aria-label="背景"
+            onClick={() => setConfirmClear(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#3D2918]">開始新配方？</h3>
+            <p className="mt-2 text-sm text-[#5C4D3E]">
+              目前的配方組合將被清除。請確認已儲存。
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                className="w-full rounded-xl bg-[#C8602A] py-2.5 text-sm font-medium text-white shadow-sm transition active:scale-[0.99]"
+                onClick={() => {
+                  setConfirmClear(false)
+                  window.dispatchEvent(new CustomEvent('bakemao:requestSave'))
+                }}
+              >
+                先儲存配方
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-xl border border-[#D9C9B5] py-2.5 text-sm font-medium text-[#C45C5C] transition hover:bg-red-50 active:scale-[0.99]"
+                onClick={() => {
+                  clearComponents()
+                  setConfirmClear(false)
+                }}
+              >
+                直接清空
+              </button>
+              <button
+                type="button"
+                className="w-full rounded-xl py-2.5 text-sm font-medium text-[#6B5A4A] transition hover:bg-black/5"
+                onClick={() => setConfirmClear(false)}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={removeId !== null}

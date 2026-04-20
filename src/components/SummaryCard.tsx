@@ -1,12 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { aggregateIngredientsAcrossComponents } from '@/lib/multiComponentAggregate'
 import { useCalcStore } from '@/store/calcStore'
 
 export function SummaryCard() {
   const [open, setOpen] = useState(false)
+  const autoOpenedRef = useRef(false)
   const { components, compQuantity, compLossRate } = useCalcStore(
     useShallow((s) => ({
       components: s.components ?? [],
@@ -24,6 +25,18 @@ export function SummaryCard() {
       ),
     [components, compQuantity, compLossRate]
   )
+
+  // 首次出現結果時自動展開
+  useEffect(() => {
+    if (shouldShow && rows.length > 0 && !autoOpenedRef.current) {
+      autoOpenedRef.current = true
+      setOpen(true)
+    }
+    // 清空後重置，下次新配方算出結果還能再自動展開
+    if (!shouldShow) {
+      autoOpenedRef.current = false
+    }
+  }, [shouldShow, rows.length])
 
   if (!shouldShow || rows.length === 0) {
     return null
