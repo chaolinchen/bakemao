@@ -8,14 +8,28 @@ import {
   type LossInput,
   type TargetInput,
 } from '@/lib/calculator'
+import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
+import type { ComponentMoldType } from '@/lib/componentMoldGram'
 import { getMoldParts } from '@/lib/moldParts'
 import type { RecipeLine } from '@/types/recipe-line'
+
+export type ComponentTargetMode = 'gram' | 'mold'
 
 export type RecipeComponent = {
   id: string
   name: string
   gramPerUnit: number
   ingredients: RecipeLine[]
+  targetMode: ComponentTargetMode
+  /** 對應 molds.json id；簡化 UI 未用 preset 時為 null */
+  moldPresetId: string | null
+  moldType: ComponentMoldType
+  /** 圓模：吋；塔圈：cm；杯型時忽略 */
+  moldSize: number
+  /** 杯型：6 / 12 / 24 連 */
+  cupCount: number
+  /** null = 繼承全局 compQuantity */
+  customQty: number | null
 }
 
 export type TargetKind = 'mold' | 'gram'
@@ -74,10 +88,52 @@ export interface CalcStateSlice {
   compLossRate?: number     // 0–0.3, default 0
 }
 
-function makeId() {
+export function makeRecipeId() {
   return typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `id-${Math.random().toString(36).slice(2)}`
+}
+
+export function defaultRecipeComponent(partial: {
+  id: string
+  name: string
+  gramPerUnit?: number
+  ingredients?: RecipeLine[]
+}): RecipeComponent {
+  return {
+    id: partial.id,
+    name: partial.name,
+    gramPerUnit: partial.gramPerUnit ?? 0,
+    ingredients: partial.ingredients ?? [],
+    targetMode: 'gram',
+    moldPresetId: null,
+    moldType: 'round',
+    moldSize: 6,
+    cupCount: 6,
+    customQty: null,
+  }
+}
+
+export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
+  if (!c || typeof c !== 'object') return null
+  const o = c as Partial<RecipeComponent> & { id?: string; name?: string }
+  if (!o.id || typeof o.name !== 'string') return null
+  return {
+    id: o.id,
+    name: o.name,
+    gramPerUnit: Number(o.gramPerUnit ?? 0),
+    ingredients: Array.isArray(o.ingredients) ? o.ingredients : [],
+    targetMode: o.targetMode === 'mold' ? 'mold' : 'gram',
+    moldPresetId: o.moldPresetId ?? null,
+    moldType:
+      o.moldType === 'tart' || o.moldType === 'cup' ? o.moldType : 'round',
+    moldSize: Number.isFinite(Number(o.moldSize)) ? Number(o.moldSize) : 6,
+    cupCount: Number.isFinite(Number(o.cupCount)) ? Number(o.cupCount) : 6,
+    customQty:
+      o.customQty === null || o.customQty === undefined
+        ? null
+        : Math.min(30, Math.max(1, Math.floor(Number(o.customQty)))),
+  }
 }
 
 /** Fields used by calculator when caller builds state by hand (tests / partial spreads) */
@@ -167,6 +223,12 @@ export const useCalcStore = create<
     setCompQuantity: (q: number) => void
     setCompLossRate: (r: number) => void
     clearComponents: () => void
+    setComponentTargetMode: (id: string, mode: ComponentTargetMode) => void
+    setComponentMold: (
+      id: string,
+      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'cupCount'>>
+    ) => void
+    setComponentCustomQty: (id: string, qty: number | null) => void
   }
 >()(
   persist(
@@ -216,7 +278,7 @@ export const useCalcStore = create<
         })),
       addLine: (row) =>
         set((s) => ({
-          ingredients: [...s.ingredients, { ...row, id: makeId() }],
+          ingredients: [...s.ingredients, { ...row, id: makeRecipeId() }],
         })),
       addLineWithId: (row) =>
         set((s) => ({ ingredients: [...s.ingredients, row] })),
@@ -245,12 +307,10 @@ export const useCalcStore = create<
           return {
             components: [
               ...comps,
-              {
-                id: makeId(),
+              defaultRecipeComponent({
+                id: makeRecipeId(),
                 name: `組合 ${n}`,
-                gramPerUnit: 0,
-                ingredients: [],
-              },
+              }),
             ],
           }
         }),
@@ -302,7 +362,7 @@ export const useCalcStore = create<
                   ...c,
                   ingredients: [
                     ...c.ingredients,
-                    { ...line, id: makeId() },
+                    { ...line, id: makeRecipeId() },
                   ],
                 }
               : c
@@ -311,6 +371,52 @@ export const useCalcStore = create<
       setCompQuantity: (q) => set({ compQuantity: Math.min(30, Math.max(1, Math.floor(q))) }),
       setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),
       clearComponents: () => set({ components: [] }),
+
+      setComponentTargetMode: (id, targetMode) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) => {
+            if (c.id !== id) return c
+            if (targetMode === 'mold') {
+              const gramPerUnit = gramPerUnitFromComponentMold(
+                c.moldType,
+                c.moldSize,
+                c.cupCount
+              )
+              return { ...c, targetMode, gramPerUnit }
+            }
+            return { ...c, targetMode }
+          }),
+        })),
+
+      setComponentMold: (id, patch) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) => {
+            if (c.id !== id) return c
+            const next = { ...c, ...patch }
+            if (next.targetMode !== 'mold') return next
+            const gramPerUnit = gramPerUnitFromComponentMold(
+              next.moldType,
+              next.moldSize,
+              next.cupCount
+            )
+            return { ...next, gramPerUnit }
+          }),
+        })),
+
+      setComponentCustomQty: (id, qty) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === id
+              ? {
+                  ...c,
+                  customQty:
+                    qty === null
+                      ? null
+                      : Math.min(30, Math.max(1, Math.floor(qty))),
+                }
+              : c
+          ),
+        })),
     }),
     {
       name: 'bakemao_calc_state',
@@ -319,6 +425,13 @@ export const useCalcStore = create<
         const p = persisted as Partial<CalcStateSlice> | undefined
         if (!p) return current as never
         const c = current as unknown as CalcStateSlice
+        const rawComps = p.components
+        const mergedComponents = Array.isArray(rawComps)
+          ? rawComps
+              .map((x) => normalizeRecipeComponent(x))
+              .filter((x): x is RecipeComponent => x !== null)
+          : c.components
+
         return {
           ...(current as object),
           mode: p.mode ?? c.mode,
@@ -329,7 +442,7 @@ export const useCalcStore = create<
           loss: p.loss ?? c.loss,
           ingredients: p.ingredients ?? c.ingredients,
           moldUi: { ...defaultMoldUi, ...(p.moldUi ?? {}) },
-          components: p.components ?? c.components,
+          components: mergedComponents,
           compQuantity: Number(p.compQuantity ?? c.compQuantity),
           compLossRate: Number(p.compLossRate ?? c.compLossRate),
         } as never

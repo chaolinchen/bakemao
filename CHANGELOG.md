@@ -2,6 +2,12 @@
 
 ---
 
+## v1.2.0 — 2026-04-20
+### Feat
+- **TASK-16**：首頁改為多組配方主流程——`GlobalQtyCard`（共做幾個）+ `MultiComponentSection`；每張組合卡可切換「輸入克數／按模具算」、份數覆寫與重置；舊單組配方儲存可載入並遷移為單一組合；移除 `/design-preview` 原型頁。
+
+---
+
 ## v1.1.7 — 2026-04-18
 ### Feat
 - **`GET /api/version`**：回傳 `service`、`version`、`commit`（7 位）、`deployedAt`，供 Hub `smallfatmao.com/status` 使用（Edge runtime）。

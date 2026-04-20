@@ -2,10 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CalcResult } from '@/components/CalcResult'
-import { MoldSelector } from '@/components/MoldSelector'
+import { GlobalQtyCard } from '@/components/GlobalQtyCard'
 import { MultiComponentSection } from '@/components/MultiComponentSection'
-import { RecipeInput } from '@/components/RecipeInput'
 import { SaveRecipeBar } from '@/components/SaveRecipeBar'
 import { OfflineBanner } from '@/components/ui/Banner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -55,7 +53,7 @@ export default function Home() {
           <div className="min-w-0 space-y-1.5 pt-0.5 leading-relaxed">
             <p>
               {
-                '\u7b2c\u4e00\u6b21\u4f7f\u7528\uff1f\u9078\u6a21\u5177 \u2192 \u8f38\u5165\u914d\u65b9\u6bd4\u4f8b \u2192 \u5373\u6642\u770b\u514b\u6578\u7d50\u679c'
+                '\u7b2c\u4e00\u6b21\u4f7f\u7528\uff1f\u8a2d\u5b9a\u4efd\u6578 \u2192 \u8f38\u5165\u6bcf\u7d44\u76ee\u6a19\u91cf\u8207\u767e\u5206\u6bd4 \u2192 \u5373\u6642\u770b\u514b\u6578\u7d50\u679c'
               }
             </p>
             <p className="text-[11px] text-[#6B5A4A]">
@@ -76,9 +74,7 @@ export default function Home() {
       ) : null}
 
       <main className="mx-auto flex max-w-lg flex-col gap-4 p-4">
-        <MoldSelector />
-        <RecipeInput />
-        <CalcResult />
+        <GlobalQtyCard />
         <MultiComponentSection />
       </main>
 

@@ -1,9 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
 import type { IngredientInput } from '@/lib/calculator'
+import {
+  gramPerUnitFromComponentMold,
+  type ComponentMoldType,
+} from '@/lib/componentMoldGram'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
@@ -17,16 +21,58 @@ function parseNum(s: string | number): number {
   return Number.isFinite(v) ? Math.abs(v) : 0
 }
 
+const ROUND_SIZES = [4, 5, 6, 7, 8, 9, 10, 12]
+const TART_SIZES = [6, 7, 8, 9, 10, 12, 15]
+const CUP_COUNTS = [6, 12, 24]
+
+const MOLD_TYPE_OPTS: { value: ComponentMoldType; label: string }[] = [
+  { value: 'round', label: '圓模（吋）' },
+  { value: 'tart', label: '塔圈（cm）' },
+  { value: 'cup', label: '杯型' },
+]
+
+function SegmentedTargetMode({
+  value,
+  onChange,
+}: {
+  value: 'gram' | 'mold'
+  onChange: (v: 'gram' | 'mold') => void
+}) {
+  return (
+    <div className="flex rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] p-0.5">
+      {(
+        [
+          { value: 'gram' as const, label: '輸入克數' },
+          { value: 'mold' as const, label: '按模具算' },
+        ] as const
+      ).map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all duration-150 ${
+            value === opt.value
+              ? 'bg-white text-[#C8602A] shadow-sm'
+              : 'text-[#6B5A4A]'
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 // ─── ComponentCard ──────────────────────────────────────────────────────────
 
 function ComponentCard({
   comp,
-  quantity,
+  globalQty,
   lossRate,
   onRemove,
 }: {
   comp: RecipeComponent
-  quantity: number
+  globalQty: number
   lossRate: number
   onRemove: () => void
 }) {
@@ -35,10 +81,33 @@ function ComponentCard({
   const updateCompLine = useCalcStore((s) => s.updateCompLine)
   const removeCompLine = useCalcStore((s) => s.removeCompLine)
   const addCompLine = useCalcStore((s) => s.addCompLine)
+  const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
+  const setComponentMold = useCalcStore((s) => s.setComponentMold)
+  const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [deleteLineId, setDeleteLineId] = useState<string | null>(null)
   const [showFormula, setShowFormula] = useState(false)
+
+  const effectiveQty = comp.customQty ?? globalQty
+  const isCustomQty = comp.customQty !== null
+
+  const gramForCalc = useMemo(() => {
+    if (comp.targetMode === 'mold') {
+      return gramPerUnitFromComponentMold(
+        comp.moldType,
+        comp.moldSize,
+        comp.cupCount
+      )
+    }
+    return comp.gramPerUnit
+  }, [
+    comp.targetMode,
+    comp.moldType,
+    comp.moldSize,
+    comp.cupCount,
+    comp.gramPerUnit,
+  ])
 
   const result = useMemo(() => {
     const ing: IngredientInput[] = comp.ingredients.map((i) => ({
@@ -47,10 +116,10 @@ function ComponentCard({
       value: i.value,
       isFixed: i.isFixed,
     }))
-    return calculateExam('percent', ing, comp.gramPerUnit, quantity, lossRate)
-  }, [comp.ingredients, comp.gramPerUnit, quantity, lossRate])
+    return calculateExam('percent', ing, gramForCalc, effectiveQty, lossRate)
+  }, [comp.ingredients, gramForCalc, effectiveQty, lossRate])
 
-  const hasResult = comp.gramPerUnit > 0 && comp.ingredients.length > 0
+  const hasResult = gramForCalc > 0 && comp.ingredients.length > 0
 
   const maxGram = hasResult
     ? Math.max(...result.ingredients.map((r) => r.gram), 0.001)
@@ -61,9 +130,17 @@ function ComponentCard({
     .filter((i) => !i.isFixed)
     .reduce((s, i) => s + parseNum(i.value), 0)
 
+  const moldVolumeLabel =
+    comp.targetMode === 'mold'
+      ? gramPerUnitFromComponentMold(
+          comp.moldType,
+          comp.moldSize,
+          comp.cupCount
+        )
+      : 0
+
   return (
     <div className="rounded-2xl border border-[#E5D8C8] bg-white shadow-sm">
-      {/* 卡片 header */}
       <div className="flex items-center gap-2 border-b border-[#E5D8C8] px-4 py-3">
         <input
           className="flex-1 rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] px-3 py-1.5 text-sm font-medium text-[#3D2918] outline-none focus:border-[#C8602A]"
@@ -81,25 +158,129 @@ function ComponentCard({
       </div>
 
       <div className="px-4 pt-3">
-        {/* 每個重量 */}
+        {/* 目標量模式 */}
         <div className="mb-3">
-          <div className="mb-1 flex items-center gap-3">
-            <label className="shrink-0 text-sm text-[#6B5A4A]">每個重量</label>
-            <div className="w-28">
-              <NumberInput
-                value={comp.gramPerUnit === 0 ? '' : String(comp.gramPerUnit)}
-                onChange={(e) =>
-                  updateComponentGram(comp.id, parseNum(e.target.value))
-                }
-                placeholder="例：225"
-              />
-            </div>
-            <span className="text-sm text-[#8A7968]">g</span>
-          </div>
-          <p className="text-xs text-[#8A7968]">這組配方，每個成品的目標重量</p>
+          <p className="mb-2 text-xs text-[#6B5A4A]">目標量</p>
+          <SegmentedTargetMode
+            value={comp.targetMode}
+            onChange={(m) => setComponentTargetMode(comp.id, m)}
+          />
         </div>
 
-        {/* 材料列表 */}
+        {comp.targetMode === 'gram' ? (
+          <div className="mb-3">
+            <div className="mb-1 flex items-center gap-3">
+              <label className="shrink-0 text-sm text-[#6B5A4A]">每份</label>
+              <div className="w-28">
+                <NumberInput
+                  value={comp.gramPerUnit === 0 ? '' : String(comp.gramPerUnit)}
+                  onChange={(e) =>
+                    updateComponentGram(comp.id, parseNum(e.target.value))
+                  }
+                  placeholder="例：225"
+                />
+              </div>
+              <span className="text-sm text-[#8A7968]">g</span>
+            </div>
+            <p className="text-xs text-[#8A7968]">這組配方，每個成品的目標重量</p>
+          </div>
+        ) : (
+          <div className="mb-3 space-y-3 rounded-xl bg-[#FAF6F0] p-3">
+            <div>
+              <p className="mb-1.5 text-xs text-[#6B5A4A]">模具類型</p>
+              <div className="flex flex-wrap gap-1.5">
+                {MOLD_TYPE_OPTS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                      comp.moldType === opt.value
+                        ? 'bg-[#C8602A] text-white'
+                        : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                    }`}
+                    onClick={() => setComponentMold(comp.id, { moldType: opt.value })}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {comp.moldType !== 'cup' ? (
+              <div>
+                <p className="mb-1.5 text-xs text-[#6B5A4A]">
+                  {comp.moldType === 'round' ? '尺寸（吋）' : '尺寸（cm）'}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(comp.moldType === 'round' ? ROUND_SIZES : TART_SIZES).map(
+                    (s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                          comp.moldSize === s
+                            ? 'bg-[#C8602A] text-white'
+                            : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                        }`}
+                        onClick={() => setComponentMold(comp.id, { moldSize: s })}
+                      >
+                        {s}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="mb-1.5 text-xs text-[#6B5A4A]">杯數</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {CUP_COUNTS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                        comp.cupCount === c
+                          ? 'bg-[#C8602A] text-white'
+                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                      }`}
+                      onClick={() => setComponentMold(comp.id, { cupCount: c })}
+                    >
+                      {c} 連
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-[#8A7968]">
+              共 <span className="font-semibold text-[#3D2918]">{moldVolumeLabel}</span>{' '}
+              g（1cc≈1g）
+            </p>
+          </div>
+        )}
+
+        {/* 份數 override */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[#6B5A4A]">份數</span>
+          <Stepper
+            min={1}
+            max={30}
+            value={effectiveQty}
+            onChange={(q) => setComponentCustomQty(comp.id, q)}
+          />
+          {isCustomQty ? (
+            <button
+              type="button"
+              className="rounded-full bg-[#F5E6D0] px-2 py-0.5 text-xs font-medium text-[#C8602A]"
+              onClick={() => setComponentCustomQty(comp.id, null)}
+            >
+              已自訂 × 重置
+            </button>
+          ) : (
+            <span className="text-xs text-[#B0A090]">繼承全局</span>
+          )}
+        </div>
+
         <div className="mb-2 space-y-2">
           {comp.ingredients.map((line) => {
             const invalid = parseNum(line.value) === 0
@@ -156,22 +337,30 @@ function ComponentCard({
           總計 {totalPct.toFixed(2)} %
         </p>
 
-        {/* 結果區 */}
         {hasResult && result.totalPct > 0 ? (
           <div className="mb-4 rounded-xl border border-[#E5D8C8] bg-[#FAF6F0] p-3">
             <div className="space-y-1.5">
               {result.ingredients.map((row) => (
-                <div key={row.name + (row.brand ?? '')} className="flex items-center gap-2">
+                <div
+                  key={row.name + (row.brand ?? '')}
+                  className="flex items-center gap-2"
+                >
                   <span className="w-24 shrink-0 truncate text-sm text-[#3D2918]">
                     {row.name}
                     {row.brand ? (
-                      <span className="text-xs text-[#8A7968]"> · {row.brand}</span>
+                      <span className="text-xs text-[#8A7968]">
+                        {' '}
+                        · {row.brand}
+                      </span>
                     ) : null}
                   </span>
                   <span className="w-16 shrink-0 text-right font-mono text-base font-semibold text-[#3D2918]">
                     {row.gram.toFixed(1)} g
                   </span>
-                  <div className="flex-1 rounded-full bg-[#E5D8C8]" style={{ height: 6 }}>
+                  <div
+                    className="flex-1 rounded-full bg-[#E5D8C8]"
+                    style={{ height: 6 }}
+                  >
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -183,14 +372,15 @@ function ComponentCard({
                 </div>
               ))}
               <div className="mt-1.5 flex items-center gap-2 border-t border-[#E5D8C8] pt-1.5">
-                <span className="w-24 shrink-0 text-sm font-semibold text-[#3D2918]">合計</span>
+                <span className="w-24 shrink-0 text-sm font-semibold text-[#3D2918]">
+                  合計
+                </span>
                 <span className="w-16 shrink-0 text-right font-mono text-base font-semibold text-[#C8602A]">
                   {result.totalGram.toFixed(1)} g
                 </span>
               </div>
             </div>
 
-            {/* 計算過程（預設收折） */}
             <div className="mt-2 border-t border-[#E5D8C8] pt-2">
               <button
                 type="button"
@@ -206,7 +396,8 @@ function ComponentCard({
                     {result.unitGram.toFixed(3)} g
                   </span>
                   <span className="ml-1 text-[#8A7968]">
-                    （= {comp.gramPerUnit}g × {quantity}個 ÷ {yieldPct}%良率 ÷ 總{result.totalPct.toFixed(0)}%）
+                    （= {gramForCalc.toFixed(1)}g × {effectiveQty}個 ÷ {yieldPct}
+                    %良率 ÷ 總{result.totalPct.toFixed(0)}%）
                   </span>
                 </p>
               ) : null}
@@ -215,7 +406,6 @@ function ComponentCard({
         ) : null}
       </div>
 
-      {/* Sheets / Dialogs */}
       <IngredientSearchSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
@@ -246,7 +436,6 @@ export function MultiComponentSection() {
     compLossRate: rawCompLossRate,
     addComponent,
     removeComponent,
-    setCompQuantity,
     setCompLossRate,
     clearComponents,
   } = useCalcStore(
@@ -256,7 +445,6 @@ export function MultiComponentSection() {
       compLossRate: s.compLossRate,
       addComponent: s.addComponent,
       removeComponent: s.removeComponent,
-      setCompQuantity: s.setCompQuantity,
       setCompLossRate: s.setCompLossRate,
       clearComponents: s.clearComponents,
     }))
@@ -266,6 +454,10 @@ export function MultiComponentSection() {
   const compQuantity = rawCompQuantity ?? 3
   const compLossRate = rawCompLossRate ?? 0
 
+  useLayoutEffect(() => {
+    if (components.length === 0) addComponent()
+  }, [components.length, addComponent])
+
   const [confirmClear, setConfirmClear] = useState(false)
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [showLoss, setShowLoss] = useState(false)
@@ -273,30 +465,12 @@ export function MultiComponentSection() {
   const yieldPct = Math.round((1 - compLossRate) * 100)
   const lossDisplayPct = Math.round(compLossRate * 100)
 
-  // 啟動前：顯示按鈕
   if (components.length === 0) {
-    return (
-      <section className="rounded-2xl border border-dashed border-[#D9C9B5] bg-white/50 p-4 text-center shadow-sm">
-        <Button
-          variant="ghost"
-          className="mx-auto text-base text-[#C8602A]"
-          onClick={() => {
-            addComponent()
-            addComponent()
-          }}
-        >
-          ＋ 同時計算多組配方
-        </Button>
-        <p className="mt-1 text-xs text-[#8A7968]">
-          適合做整個品項，例：派皮 ＋ 派餡、蛋糕體 ＋ 奶油霜
-        </p>
-      </section>
-    )
+    return null
   }
 
   return (
     <section className="space-y-4">
-      {/* Section header */}
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
         <button
@@ -308,93 +482,57 @@ export function MultiComponentSection() {
         </button>
       </div>
 
-      {/* 全域設定卡 */}
       <div className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
-        {/* 數量 */}
-        <div className="mb-3">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-medium text-[#3D2918]">要做幾個？</span>
-            <span className="text-sm font-semibold text-[#C8602A]">{compQuantity} 個</span>
-          </div>
-          <div className="mb-2 flex flex-wrap gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 8, 10].map((q) => (
-              <button
-                key={q}
-                type="button"
-                className={`rounded-lg px-3 py-1 text-sm font-medium transition ${
-                  compQuantity === q
-                    ? 'bg-[#C8602A] text-white'
-                    : 'border border-[#D9C9B5] bg-[#FAF6F0] text-[#3D2918] hover:bg-[#F0E8DC]'
-                }`}
-                onClick={() => setCompQuantity(q)}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-          <Stepper
-            min={1}
-            max={30}
-            value={compQuantity}
-            onChange={setCompQuantity}
-          />
-        </div>
+        <button
+          type="button"
+          className="flex w-full items-center justify-between text-sm text-[#6B5A4A]"
+          onClick={() => setShowLoss((x) => !x)}
+        >
+          <span>進階：備料損耗比例</span>
+          <span className="text-xs text-[#8A7968]">
+            {lossDisplayPct > 0
+              ? `${lossDisplayPct}%（目前套用中）`
+              : '展開設定 ▾'}
+          </span>
+        </button>
 
-        {/* 耗損比例（進階，預設收折） */}
-        <div className="border-t border-[#F0E8DC] pt-3">
-          <button
-            type="button"
-            className="flex w-full items-center justify-between text-sm text-[#6B5A4A]"
-            onClick={() => setShowLoss((x) => !x)}
-          >
-            <span>進階：備料損耗比例</span>
-            <span className="text-xs text-[#8A7968]">
-              {lossDisplayPct > 0
-                ? `${lossDisplayPct}%（目前套用中）`
-                : '展開設定 ▾'}
-            </span>
-          </button>
-
-          {showLoss ? (
-            <div className="mt-3">
-              <div className="flex items-center gap-2">
-                <div className="w-24">
-                  <NumberInput
-                    value={lossDisplayPct === 0 ? '' : String(lossDisplayPct)}
-                    onChange={(e) => {
-                      const v = parseNum(e.target.value)
-                      setCompLossRate(Math.min(30, v) / 100)
-                    }}
-                    placeholder="0"
-                  />
-                </div>
-                <span className="text-sm text-[#6B5A4A]">%</span>
-                {lossDisplayPct > 0 ? (
-                  <span className="text-xs text-[#8A7968]">
-                    材料 = 目標 ÷ {yieldPct}%
-                  </span>
-                ) : null}
+        {showLoss ? (
+          <div className="mt-3">
+            <div className="flex items-center gap-2">
+              <div className="w-24">
+                <NumberInput
+                  value={lossDisplayPct === 0 ? '' : String(lossDisplayPct)}
+                  onChange={(e) => {
+                    const v = parseNum(e.target.value)
+                    setCompLossRate(Math.min(30, v) / 100)
+                  }}
+                  placeholder="0"
+                />
               </div>
-              <p className="mt-1.5 text-xs text-[#8A7968]">
-                備料時的預計損耗（沾鍋、試做等），不確定可不填
-              </p>
+              <span className="text-sm text-[#6B5A4A]">%</span>
+              {lossDisplayPct > 0 ? (
+                <span className="text-xs text-[#8A7968]">
+                  材料 = 目標 ÷ {yieldPct}%
+                </span>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+            <p className="mt-1.5 text-xs text-[#8A7968]">
+              備料時的預計損耗（沾鍋、試做等），不確定可不填
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      {/* 組合卡片列表 */}
       {components.map((comp) => (
         <ComponentCard
           key={comp.id}
           comp={comp}
-          quantity={compQuantity}
+          globalQty={compQuantity}
           lossRate={compLossRate}
           onRemove={() => setRemoveId(comp.id)}
         />
       ))}
 
-      {/* 新增組合按鈕 */}
       <Button
         variant="ghost"
         className="w-full border border-dashed border-[#D9C9B5]"
@@ -403,7 +541,6 @@ export function MultiComponentSection() {
         ＋ 新增組合
       </Button>
 
-      {/* 確認清除 */}
       <ConfirmDialog
         open={confirmClear}
         title="清除多組配方計算"
@@ -415,7 +552,6 @@ export function MultiComponentSection() {
         }}
       />
 
-      {/* 確認刪除單一組合 */}
       <ConfirmDialog
         open={removeId !== null}
         title="刪除組合"

@@ -26,7 +26,7 @@
 | TASK-13 | ✅ 完成 | 行動端鍵盤遮擋修正（主頁輸入框）|
 | TASK-14 | ✅ 完成 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
 | TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |
-| TASK-16 | ⏳ 待做 | **多組配方主流程整合重設計** |
+| TASK-16 | ✅ 完成 | **多組配方主流程整合重設計** |
 
 ---
 
@@ -623,8 +623,7 @@ git add . && git commit -m "feat: add /api/version endpoint" && git push origin 
 
 ## TASK-16：多組配方主流程整合重設計
 
-> 設計原型已完成，路徑：`src/app/design-preview/page.tsx`（可直接在 `/design-preview` 預覽）
-> **完成後刪除 design-preview 目錄**
+> ✅ 已整合進首頁；`src/app/design-preview/` 已刪除。
 
 ### 背景
 
@@ -723,14 +722,14 @@ Segmented control 樣式：外層 `border border-[#D9C9B5] bg-[#FAF6F0] rounded-
 
 ### 驗收條件
 
-- [ ] 主頁移除舊的 MoldSelector + RecipeInput 區塊
-- [ ] 預設顯示一張空白卡片（而非「＋ 同時計算多組配方」按鈕）
-- [ ] 每張卡片有 Segmented control 切換目標量模式
-- [ ] 按模具算模式：三種模具類型 + 尺寸按鈕 + 容積顯示
-- [ ] 份數 override：繼承全局 / 已自訂 badge 可重置
-- [ ] 既有配方儲存功能（SaveRecipeBar）不受影響
-- [ ] 既有 `/recipes` 頁面正常讀取
-- [ ] 手機版（375px）無橫向捲軸
+- [x] 主頁移除舊的 MoldSelector + RecipeInput 區塊
+- [x] 預設顯示一張空白卡片（而非「＋ 同時計算多組配方」按鈕）
+- [x] 每張卡片有 Segmented control 切換目標量模式
+- [x] 按模具算模式：三種模具類型 + 尺寸按鈕 + 容積顯示
+- [x] 份數 override：繼承全局 / 已自訂 badge 可重置
+- [x] 既有配方儲存功能（SaveRecipeBar）不受影響
+- [x] 既有 `/recipes` 頁面正常讀取（含舊 `lines` 遷移）
+- [ ] 手機版（375px）無橫向捲軸（請手動確認）
 
 ### 完成後
 

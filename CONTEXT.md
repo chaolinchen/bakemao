@@ -1,14 +1,14 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.2.2 | 2026-04-18）
+## SNAPSHOT（v0.2.3 | 2026-04-20）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **`GET /api/version`**：Hub 狀態頁用；prod 有 `VERCEL_GIT_COMMIT_SHA` 時 `commit` 為 7 位 SHA。
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 8 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
-- **功能進度**：**TASK-12 ∼ 15** 已完成（見 `CURSOR_TASKS.md`）。
+- **功能進度**：**TASK-12 ∼ 16** 已完成（見 `CURSOR_TASKS.md`）；首頁為多組配方主流程（`RecipeComponent` 含 `targetMode`／模具欄位／`customQty`）。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 
@@ -59,6 +59,7 @@
 ## 目前狀態（給 agent 續作）
 
 - **規格**：仍以 **`PRD_BakeMao_v1.0.md`**（**v1.6**，含 §20／§21）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **TASK-16**：首頁已整合多組配方主流程；`RecipeComponent` 擴充欄位見 `calcStore.ts`；舊儲存（僅 `lines`）從「我的配方」開啟時會遷移為單一組合。
 - **已結案：Maximum update depth**  
   - **模具**：不再用 `useEffect` 把推導容積寫回 store；**`calcStore.computeResult`** 依 **`moldUi` + `getMoldParts`** 與畫面「共 X g」對齊。  
   - **結果區**：**`CalcResult.tsx`** 多欄位 snapshot 已用 **`useShallow`** 包物件 selector。  
@@ -68,6 +69,6 @@
 
 ## 下一步（產品向）
 
-- 本機／線上再手動確認 **首頁載入無紅屏**、模具切換與結果列正常。
+- 本機／線上再手動確認 **首頁多組配方**、儲存／載入、舊配方遷移。
 - **手機實測**：PWA、離線、分享圖；**Google OAuth**：後台只保留正式＋本機（＋選用 vercel.app）redirect。
 - **工程**：BakeMao 已設為 **git push main → Vercel 自動部署**（見 `AGENTS.md`），一般無需再手動 `vercel --prod`。

@@ -5,12 +5,24 @@ import { useRouter } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { RecipeLine } from '@/types/recipe-line'
-import { defaultMoldUi, useCalcStore, type MoldUiState } from '@/store/calcStore'
+import {
+  computeResult,
+  defaultMoldUi,
+  defaultRecipeComponent,
+  makeRecipeId,
+  normalizeRecipeComponent,
+  useCalcStore,
+  type MoldUiState,
+  type RecipeComponent,
+} from '@/store/calcStore'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/Dialog'
 
 type Stored = {
   lines?: RecipeLine[]
+  components?: unknown[]
+  compQuantity?: number
+  compLossRate?: number
   mode?: 'percent' | 'gram'
   targetKind?: 'mold' | 'gram'
   moldVolumeCC?: number
@@ -18,6 +30,19 @@ type Stored = {
   totalGram?: number
   loss?: import('@/lib/calculator').LossInput
   moldUi?: Partial<MoldUiState>
+}
+
+function countIngredientLines(ing: Stored | null): number {
+  if (!ing) return 0
+  if (Array.isArray(ing.components) && ing.components.length > 0) {
+    let n = 0
+    for (const c of ing.components) {
+      const lines = (c as { ingredients?: RecipeLine[] }).ingredients
+      n += Array.isArray(lines) ? lines.length : 0
+    }
+    return n
+  }
+  return ing.lines?.length ?? 0
 }
 
 type Row = {
@@ -156,18 +181,67 @@ export default function RecipesPage() {
 
   const loadRecipe = (r: Row) => {
     const raw = r.ingredients
-    if (raw?.lines && Array.isArray(raw.lines)) {
+    if (!raw) {
+      router.push('/')
+      return
+    }
+
+    if (Array.isArray(raw.components) && raw.components.length > 0) {
+      const components = raw.components
+        .map(normalizeRecipeComponent)
+        .filter((x): x is RecipeComponent => x !== null)
       replaceAll({
-        ingredients: raw.lines,
+        ingredients: [],
+        components,
+        compQuantity: Number(raw.compQuantity ?? 3),
+        compLossRate: Number(raw.compLossRate ?? 0),
         mode: raw.mode ?? 'percent',
         targetKind: raw.targetKind ?? 'mold',
-        moldVolumeCC: Number(raw.moldVolumeCC ?? 90),
+        moldVolumeCC: Number(raw.moldVolumeCC ?? 1060),
         moldQuantity: Number(raw.moldQuantity ?? 1),
         totalGram: Number(raw.totalGram ?? 1000),
         loss: raw.loss ?? { type: 'preset', extra: 0 },
         moldUi: raw.moldUi
           ? { ...defaultMoldUi, ...raw.moldUi }
           : defaultMoldUi,
+      })
+      router.push('/')
+      return
+    }
+
+    if (raw.lines && Array.isArray(raw.lines)) {
+      const moldQuantity = Number(raw.moldQuantity ?? 3)
+      const slice = {
+        mode: raw.mode ?? 'percent',
+        targetKind: raw.targetKind ?? 'mold',
+        moldVolumeCC: Number(raw.moldVolumeCC ?? 1060),
+        moldQuantity,
+        totalGram: Number(raw.totalGram ?? 1000),
+        loss: raw.loss ?? { type: 'preset', extra: 0 },
+        ingredients: raw.lines,
+        moldUi: raw.moldUi ? { ...defaultMoldUi, ...raw.moldUi } : defaultMoldUi,
+      }
+      const tg = computeResult(slice).targetGram
+      const gramPerUnit = moldQuantity > 0 ? tg / moldQuantity : tg
+      replaceAll({
+        ingredients: [],
+        components: [
+          defaultRecipeComponent({
+            id: makeRecipeId(),
+            name: '組合 1',
+            gramPerUnit: Math.max(0, gramPerUnit),
+            ingredients: raw.lines,
+          }),
+        ],
+        compQuantity: moldQuantity,
+        compLossRate: 0,
+        mode: raw.mode ?? 'percent',
+        targetKind: raw.targetKind ?? 'mold',
+        moldVolumeCC: Number(raw.moldVolumeCC ?? 1060),
+        moldQuantity,
+        totalGram: Number(raw.totalGram ?? 1000),
+        loss: raw.loss ?? { type: 'preset', extra: 0 },
+        moldUi: raw.moldUi ? { ...defaultMoldUi, ...raw.moldUi } : defaultMoldUi,
       })
     }
     router.push('/')
@@ -211,7 +285,7 @@ export default function RecipesPage() {
       </header>
       <ul className="space-y-2">
         {rows.map((r) => {
-          const nIng = r.ingredients?.lines?.length ?? 0
+          const nIng = countIngredientLines(r.ingredients)
           return (
             <RecipeListRow
               key={r.id}

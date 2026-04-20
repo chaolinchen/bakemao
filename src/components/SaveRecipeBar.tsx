@@ -2,6 +2,7 @@
 
 import { signIn, useSession } from 'next-auth/react'
 import { useState } from 'react'
+import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import { queueOfflineSave } from '@/lib/offlineSync'
 import { computeResult, useCalcStore } from '@/store/calcStore'
 import { BottomSheet } from './ui/BottomSheet'
@@ -23,9 +24,35 @@ export function SaveRecipeBar() {
 
   const save = async () => {
     const snapshot = useCalcStore.getState()
-    const r = computeResult(snapshot)
+    const comps = snapshot.components ?? []
+    const globalQ = snapshot.compQuantity ?? 3
+
+    function multiApproxTargetGram(): number {
+      let sum = 0
+      for (const c of comps) {
+        const qty = c.customQty ?? globalQ
+        const g =
+          c.targetMode === 'mold'
+            ? gramPerUnitFromComponentMold(
+                c.moldType,
+                c.moldSize,
+                c.cupCount
+              )
+            : c.gramPerUnit
+        sum += Math.max(0, g) * Math.max(1, qty)
+      }
+      return sum
+    }
+
+    const legacyResult =
+      snapshot.ingredients.length > 0 ? computeResult(snapshot) : null
+    const targetGram = legacyResult?.targetGram ?? multiApproxTargetGram()
+
     const ingredientsBlob = {
       lines: snapshot.ingredients,
+      components: comps,
+      compQuantity: snapshot.compQuantity,
+      compLossRate: snapshot.compLossRate,
       mode: snapshot.mode,
       targetKind: snapshot.targetKind,
       moldVolumeCC: snapshot.moldVolumeCC,
@@ -33,16 +60,18 @@ export function SaveRecipeBar() {
       totalGram: snapshot.totalGram,
       loss: snapshot.loss,
       moldUi: snapshot.moldUi,
-      resultSnapshot: r.ingredients,
+      resultSnapshot: legacyResult?.ingredients ?? [],
     }
     const payload = {
       name: name.slice(0, 30),
       mode: snapshot.mode,
-      target_type: snapshot.targetKind,
-      target_gram: r.targetGram,
+      target_type: (legacyResult
+        ? snapshot.targetKind
+        : 'gram') as typeof snapshot.targetKind | 'gram',
+      target_gram: targetGram,
       mold_id: null as string | null,
       mold_params: snapshot.moldUi as unknown as Record<string, unknown>,
-      quantity: snapshot.moldQuantity,
+      quantity: comps.length > 0 ? globalQ : snapshot.moldQuantity,
       loss_type: snapshot.loss.type,
       loss_value:
         snapshot.loss.type === 'manual'
@@ -121,20 +150,26 @@ export function SaveRecipeBar() {
         </Button>
       </BottomSheet>
 
-      <BottomSheet
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        title="登入以儲存"
-      >
-        <div className="flex flex-col gap-2">
-          <Button
-            className="w-full"
-            onClick={() => void signIn('google', { callbackUrl: '/' })}
-          >
-            Google 登入
-          </Button>
+      {authOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <button
+            type="button"
+            aria-label="關閉"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setAuthOpen(false)}
+          />
+          <div className="relative w-full max-w-xs rounded-2xl bg-[#F7F0E6] p-6 shadow-xl">
+            <h2 className="mb-1 text-lg font-semibold text-[#3D2918]">登入以儲存配方</h2>
+            <p className="mb-5 text-sm text-[#6B5A4A]">登入後可跨裝置存取你的配方</p>
+            <Button
+              className="w-full"
+              onClick={() => void signIn('google', { callbackUrl: '/' })}
+            >
+              Google 登入
+            </Button>
+          </div>
         </div>
-      </BottomSheet>
+      )}
     </div>
   )
 }
