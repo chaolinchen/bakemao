@@ -26,6 +26,7 @@
 | TASK-13 | ✅ 完成 | 行動端鍵盤遮擋修正（主頁輸入框）|
 | TASK-14 | ✅ 完成 | Middleware 500 + 儲存配方 UX + 耗損預設修正 + Onboarding hint |
 | TASK-15 | ✅ 完成 | **IngredientSearchSheet 鍵盤感知（P0 Bug Fix）** |
+| TASK-16 | ⏳ 待做 | **多組配方主流程整合重設計** |
 
 ---
 
@@ -586,3 +587,153 @@ type CalcResult = {
 - 計算邏輯結果與預期不符
 - Supabase schema 需要調整
 - 新增 PRD 未定義的功能
+
+---
+
+## TASK：新增 `/api/version` endpoint
+
+**目的：** 讓 `smallfatmao.com/status` 狀態頁可以查詢本服務的版本與部署資訊。
+
+**新增檔案：** `src/app/api/version/route.ts`
+
+```ts
+import { NextResponse } from 'next/server'
+
+export const runtime = 'edge'
+
+export function GET() {
+  return NextResponse.json({
+    service: 'bakemao',
+    version: process.env.npm_package_version ?? 'unknown',
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA ?? 'local').slice(0, 7),
+    deployedAt: process.env.VERCEL_GIT_COMMIT_DATE ?? null,
+  })
+}
+```
+
+**驗收：**
+- `curl https://bakemao.smallfatmao.com/api/version` 回傳 JSON
+- commit 為 7 位 SHA，非 'local'
+
+```bash
+git add . && git commit -m "feat: add /api/version endpoint" && git push origin main
+```
+
+---
+
+## TASK-16：多組配方主流程整合重設計
+
+> 設計原型已完成，路徑：`src/app/design-preview/page.tsx`（可直接在 `/design-preview` 預覽）
+> **完成後刪除 design-preview 目錄**
+
+### 背景
+
+目前主頁是「MoldSelector + RecipeInput + CalcResult + MultiComponentSection（附加區塊）」四段並列。新架構整合為一套多組配方流程：單組 = 只有一張卡片的特例。
+
+### 架構變更
+
+#### 1. Store 調整（`src/store/calcStore.ts`）
+
+在 `RecipeComponent` 型別補欄位：
+
+```ts
+interface RecipeComponent {
+  // 既有欄位保留不動
+  id: string
+  name: string
+  ingredients: IngredientLine[]
+  gramPerUnit: number
+  // 新增：
+  targetMode: 'gram' | 'mold'   // 預設 'gram'
+  moldPresetId: string | null    // 對應 molds.json 的 id，null = 自訂
+  moldType: 'round' | 'tart' | 'cup'  // 按模具算時的類型
+  moldSize: number               // 吋數或 cm，杯型不用
+  cupCount: number               // 杯型用
+  customQty: number | null       // null = 繼承全局 compQuantity
+}
+```
+
+`compQuantity` 維持原有全局設定。
+
+#### 2. `MultiComponentSection.tsx` 改動
+
+**ComponentCard 新增「目標量模式」區塊**，放在「每個重量」輸入上方：
+
+```
+[輸入克數 | 按模具算]  ← Segmented control（兩個選項各佔 50%）
+
+輸入克數模式：
+  每份 [____] g
+
+按模具算模式：
+  模具類型：[圓模（吋）] [塔圈（cm）] [杯型]
+  尺寸快速按鈕：
+    圓模：4 / 5 / 6 / 7 / 8 / 9 / 10 / 12
+    塔圈：6 / 7 / 8 / 9 / 10 / 12 / 15
+    杯型：6連 / 12連 / 24連
+  容積顯示：「共 XXX g（1cc≈1g）」← 複用 MoldSelector 現有邏輯
+```
+
+Segmented control 樣式：外層 `border border-[#D9C9B5] bg-[#FAF6F0] rounded-lg p-0.5`，選中項 `bg-white text-[#C8602A] shadow-sm rounded-md`。
+
+**份數 override 區塊**（現有材料列表上方）：
+
+```
+份數 [−] [X] [＋]  繼承全局 / 已自訂 × 重置
+```
+
+- 預設繼承 `compQuantity`（顯示「繼承全局」灰字）
+- 手動改後顯示橘色 badge「已自訂 × 重置」，點擊重置回 null
+
+#### 3. 主頁 `page.tsx` 調整
+
+移除單獨的 `<MoldSelector />` 和 `<RecipeInput />` 區塊。
+
+改為：啟動時直接顯示多組配方流程（預設一張空白卡片），不再需要「＋ 同時計算多組配方」按鈕。
+
+```tsx
+// 新的 main 內容
+<main className="mx-auto flex max-w-lg flex-col gap-4 p-4">
+  <GlobalQtyCard />       {/* 全局份數，見下方 */}
+  <MultiComponentSection />
+  <SaveRecipeBar />       {/* 維持現有位置 */}
+</main>
+```
+
+#### 4. 新增 `GlobalQtyCard` 元件（或整合進 MultiComponentSection）
+
+```
+共做幾個？                    6 個
+[1] [2] [4] [6] [8] [12]
+```
+
+快速按鈕同現有 MultiComponentSection 的「要做幾個」UI，抽到獨立卡片放頂部。
+
+### 計算邏輯
+
+按模具算的 `gramPerUnit` 計算（複用 `getMoldGram` 或現有 `computeResult`）：
+
+| 模具類型 | 公式 |
+|---------|------|
+| 圓模 | π × (size/2 × 2.54)² × 高度（預設 5cm）|
+| 塔圈 | π × (size/2)² × 高度（預設 2.5cm）|
+| 杯型 | 單杯容積（預設 90cc）× 連數 |
+
+`gramPerUnit` = 容積（cc）× 1（1cc≈1g）。這個值即直接傳入 `calculateExam()`。
+
+### 驗收條件
+
+- [ ] 主頁移除舊的 MoldSelector + RecipeInput 區塊
+- [ ] 預設顯示一張空白卡片（而非「＋ 同時計算多組配方」按鈕）
+- [ ] 每張卡片有 Segmented control 切換目標量模式
+- [ ] 按模具算模式：三種模具類型 + 尺寸按鈕 + 容積顯示
+- [ ] 份數 override：繼承全局 / 已自訂 badge 可重置
+- [ ] 既有配方儲存功能（SaveRecipeBar）不受影響
+- [ ] 既有 `/recipes` 頁面正常讀取
+- [ ] 手機版（375px）無橫向捲軸
+
+### 完成後
+
+1. 刪除 `src/app/design-preview/` 目錄
+2. 更新 CHANGELOG.md（minor version，例：v1.7.0）
+3. `git add . && git commit -m "feat: integrate multi-component as main flow (TASK-16)" && git push origin main`
