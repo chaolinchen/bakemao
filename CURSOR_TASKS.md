@@ -736,3 +736,104 @@ Segmented control 樣式：外層 `border border-[#D9C9B5] bg-[#FAF6F0] rounded-
 1. 刪除 `src/app/design-preview/` 目錄
 2. 更新 CHANGELOG.md（minor version，例：v1.7.0）
 3. `git add . && git commit -m "feat: integrate multi-component as main flow (TASK-16)" && git push origin main`
+
+---
+
+## TASK-17：多組配方 UX 修正（四人評審結論）
+
+> 來源：UX 設計師 / CEO / PM / 用戶測試（小雅）四方評審
+> 執行順序：P1 → P2 → P3，每項可獨立 commit
+
+---
+
+### TASK-17-P1：全局材料彙總卡（總備料清單）
+
+**問題：** 用戶填完多組配方後，仍需手動心算各組克數加總，無法一鍵看出「這次共需幾克低筋麵粉」。
+
+**新增元件：** `src/components/SummaryCard.tsx`
+
+邏輯：
+- 遍歷所有 `components`，將每組 `result.ingredients` 依 `name + brand` 合併加總
+- 只在至少一組有有效結果時顯示
+- 預設折疊（展開才顯示詳細列表）
+
+UI 規格：
+```
+┌─────────────────────────────────┐
+│ 備料彙總                  ▼ 展開 │
+│ 共 N 種材料・{totalGram} g       │
+└─────────────────────────────────┘
+
+展開後：
+  低筋麵粉   350.0 g  ████████░░
+  奶油       175.0 g  ████░░░░░░
+  細砂糖     120.0 g  ███░░░░░░░
+  ...
+  合計       XXX.X g
+```
+
+放置位置：`page.tsx` 的 `<MultiComponentSection />` 下方、`<SaveRecipeBar />` 上方。
+
+**驗收：**
+- [ ] 跨組同名材料正確合併（例：兩組都有「低筋麵粉」→ 加總顯示）
+- [ ] 只有一組且無結果時不顯示
+- [ ] 折疊/展開動作正常
+- [ ] 任一組材料或份數變動後即時更新
+
+---
+
+### TASK-17-P2：配方列表顯示優化 + 儲存/載入驗證
+
+**問題 A：配方列表無法辨識多組格式**
+
+`src/components/recipes/RecipeCard.tsx`（或列表頁）現在顯示「N 項材料」，應改為：
+- 多組配方：`{N} 個組合・{M} 項材料`
+- 舊格式單組：維持「{M} 項材料」
+
+**問題 B：刪除單行材料的確認彈窗摩擦過高**
+
+`MultiComponentSection.tsx` 的刪除材料目前觸發 `ConfirmDialog`，改為：
+- 直接刪除（無確認彈窗）
+- 刪除後在底部顯示 Toast「已刪除 {材料名稱}」+ 可 Undo（3 秒內）
+
+**問題 C：mode 切換來回，手填克數被靜默覆蓋**
+
+確認 `setComponentTargetMode` 切換至 `mold` 再切回 `gram` 時，`gramPerUnit` 是否保留原本手填的值。若會被清空，修改邏輯：切換 mode 時不修改 `gramPerUnit`，由 `gramForCalc` 的 useMemo 決定使用哪個值。
+
+**驗收：**
+- [ ] 配方列表：多組顯示「X 個組合・N 項材料」
+- [ ] 刪除材料：無彈窗，有 Toast + Undo
+- [ ] gram → mold → gram 來回切換，原本填的克數不消失
+- [ ] 至少載入 3 筆舊格式配方確認克數正確
+
+---
+
+### TASK-17-P3：清除改為「開始新配方」
+
+**問題：** 「清除」後立刻補一張空白卡，視覺幾乎沒有回饋；份數和損耗率也沒重置，語意不一致。
+
+**改動：**
+
+1. `MultiComponentSection.tsx` section header 的「清除」按鈕文字改為「新配方」
+2. 確認彈窗文字改為：
+   - 標題：「開始新配方？」
+   - 說明：「目前的配方組合將被清除，份數設定將重置為 6。」
+3. `clearComponents()` 動作同時執行：
+   - 清空 `components`
+   - 重置 `compQuantity` 為 6（預設）
+   - 重置 `compLossRate` 為 0
+
+**驗收：**
+- [ ] 按鈕文字為「新配方」
+- [ ] 確認後份數回到 6、損耗率回到 0
+- [ ] `useLayoutEffect` 補一張空白卡的行為不變
+
+---
+
+### 完成後
+
+更新 CHANGELOG.md（patch version，例：v1.7.1）
+
+```bash
+git add . && git commit -m "fix: multi-component UX improvements (TASK-17)" && git push origin main
+```
