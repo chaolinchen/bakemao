@@ -45,6 +45,18 @@ function countIngredientLines(ing: Stored | null): number {
   return ing.lines?.length ?? 0
 }
 
+/** 列表第二行：多組為「X 個組合・N 項材料」，舊單組為「N 項材料」 */
+function recipeListIngredientSummary(ing: Stored | null): string {
+  if (!ing) return '0 項材料'
+  if (Array.isArray(ing.components) && ing.components.length > 0) {
+    const nCombos = ing.components.length
+    const nLines = countIngredientLines(ing)
+    return `${nCombos} 個組合・${nLines} 項材料`
+  }
+  const n = ing.lines?.length ?? 0
+  return `${n} 項材料`
+}
+
 type Row = {
   id: string
   name: string
@@ -56,15 +68,13 @@ const SWIPE_DELETE_PX = 76
 
 function RecipeListRow({
   name,
-  nIng,
-  updatedAt,
+  metaLine,
   onOpen,
   onDeleteClick,
   swipeEnabled,
 }: {
   name: string
-  nIng: number
-  updatedAt: string
+  metaLine: string
   onOpen: () => void
   onDeleteClick: () => void
   swipeEnabled: boolean
@@ -82,9 +92,7 @@ function RecipeListRow({
       <li className="flex items-stretch justify-between gap-2 rounded-xl border border-[#E5D8C8] bg-white p-3">
         <button type="button" className="min-w-0 flex-1 text-left" onClick={onOpen}>
           <div className="font-medium">{name}</div>
-          <div className="text-xs text-[#8A7968]">
-            {nIng} 項材料 · {new Date(updatedAt).toLocaleString('zh-TW')}
-          </div>
+          <div className="text-xs text-[#8A7968]">{metaLine}</div>
         </button>
         <Button variant="ghost" onClick={onDeleteClick}>
           刪除
@@ -142,9 +150,7 @@ function RecipeListRow({
           }}
         >
           <div className="font-medium">{name}</div>
-          <div className="text-xs text-[#8A7968]">
-            {nIng} 項材料 · {new Date(updatedAt).toLocaleString('zh-TW')}
-          </div>
+          <div className="text-xs text-[#8A7968]">{metaLine}</div>
         </button>
       </div>
     </li>
@@ -193,7 +199,7 @@ export default function RecipesPage() {
       replaceAll({
         ingredients: [],
         components,
-        compQuantity: Number(raw.compQuantity ?? 3),
+        compQuantity: Number(raw.compQuantity ?? 6),
         compLossRate: Number(raw.compLossRate ?? 0),
         mode: raw.mode ?? 'percent',
         targetKind: raw.targetKind ?? 'mold',
@@ -284,20 +290,16 @@ export default function RecipesPage() {
         <h1 className="font-serif text-xl">我的配方</h1>
       </header>
       <ul className="space-y-2">
-        {rows.map((r) => {
-          const nIng = countIngredientLines(r.ingredients)
-          return (
-            <RecipeListRow
-              key={r.id}
-              name={r.name}
-              nIng={nIng}
-              updatedAt={r.updated_at}
-              swipeEnabled={coarsePointer}
-              onOpen={() => loadRecipe(r)}
-              onDeleteClick={() => setDelId(r.id)}
-            />
-          )
-        })}
+        {rows.map((r) => (
+          <RecipeListRow
+            key={r.id}
+            name={r.name}
+            metaLine={`${recipeListIngredientSummary(r.ingredients)} · ${new Date(r.updated_at).toLocaleString('zh-TW')}`}
+            swipeEnabled={coarsePointer}
+            onOpen={() => loadRecipe(r)}
+            onDeleteClick={() => setDelId(r.id)}
+          />
+        ))}
       </ul>
 
       <ConfirmDialog

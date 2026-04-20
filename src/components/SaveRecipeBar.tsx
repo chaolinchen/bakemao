@@ -25,7 +25,7 @@ export function SaveRecipeBar() {
   const save = async () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
-    const globalQ = snapshot.compQuantity ?? 3
+    const globalQ = snapshot.compQuantity ?? 6
 
     function multiApproxTargetGram(): number {
       let sum = 0

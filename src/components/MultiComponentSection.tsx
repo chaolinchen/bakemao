@@ -1,15 +1,14 @@
 'use client'
 
-import { useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
 import type { IngredientInput } from '@/lib/calculator'
-import {
-  gramPerUnitFromComponentMold,
-  type ComponentMoldType,
-} from '@/lib/componentMoldGram'
+import type { ComponentMoldType } from '@/lib/componentMoldGram'
+import { effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
+import type { RecipeLine } from '@/types/recipe-line'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
 import { Button } from './ui/Button'
 import { ConfirmDialog } from './ui/Dialog'
@@ -70,44 +69,29 @@ function ComponentCard({
   globalQty,
   lossRate,
   onRemove,
+  onRemoveIngredient,
 }: {
   comp: RecipeComponent
   globalQty: number
   lossRate: number
   onRemove: () => void
+  onRemoveIngredient: (line: RecipeLine) => void
 }) {
   const updateComponentName = useCalcStore((s) => s.updateComponentName)
   const updateComponentGram = useCalcStore((s) => s.updateComponentGram)
   const updateCompLine = useCalcStore((s) => s.updateCompLine)
-  const removeCompLine = useCalcStore((s) => s.removeCompLine)
   const addCompLine = useCalcStore((s) => s.addCompLine)
   const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
   const setComponentMold = useCalcStore((s) => s.setComponentMold)
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
 
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [deleteLineId, setDeleteLineId] = useState<string | null>(null)
   const [showFormula, setShowFormula] = useState(false)
 
   const effectiveQty = comp.customQty ?? globalQty
   const isCustomQty = comp.customQty !== null
 
-  const gramForCalc = useMemo(() => {
-    if (comp.targetMode === 'mold') {
-      return gramPerUnitFromComponentMold(
-        comp.moldType,
-        comp.moldSize,
-        comp.cupCount
-      )
-    }
-    return comp.gramPerUnit
-  }, [
-    comp.targetMode,
-    comp.moldType,
-    comp.moldSize,
-    comp.cupCount,
-    comp.gramPerUnit,
-  ])
+  const gramForCalc = useMemo(() => effectiveGramPerUnit(comp), [comp])
 
   const result = useMemo(() => {
     const ing: IngredientInput[] = comp.ingredients.map((i) => ({
@@ -131,13 +115,7 @@ function ComponentCard({
     .reduce((s, i) => s + parseNum(i.value), 0)
 
   const moldVolumeLabel =
-    comp.targetMode === 'mold'
-      ? gramPerUnitFromComponentMold(
-          comp.moldType,
-          comp.moldSize,
-          comp.cupCount
-        )
-      : 0
+    comp.targetMode === 'mold' ? effectiveGramPerUnit(comp) : 0
 
   return (
     <div className="rounded-2xl border border-[#E5D8C8] bg-white shadow-sm">
@@ -316,7 +294,7 @@ function ComponentCard({
                 <button
                   type="button"
                   className="text-sm text-red-700 underline"
-                  onClick={() => setDeleteLineId(line.id)}
+                  onClick={() => onRemoveIngredient(line)}
                 >
                   刪除
                 </button>
@@ -413,16 +391,6 @@ function ComponentCard({
           addCompLine(comp.id, { name, brand, value: 0, isFixed: false })
         }
       />
-      <ConfirmDialog
-        open={deleteLineId !== null}
-        title="刪除材料"
-        message="確定刪除此列？"
-        onCancel={() => setDeleteLineId(null)}
-        onConfirm={() => {
-          if (deleteLineId) removeCompLine(comp.id, deleteLineId)
-          setDeleteLineId(null)
-        }}
-      />
     </div>
   )
 }
@@ -436,6 +404,8 @@ export function MultiComponentSection() {
     compLossRate: rawCompLossRate,
     addComponent,
     removeComponent,
+    removeCompLine,
+    addCompLineWithId,
     setCompLossRate,
     clearComponents,
   } = useCalcStore(
@@ -445,13 +415,15 @@ export function MultiComponentSection() {
       compLossRate: s.compLossRate,
       addComponent: s.addComponent,
       removeComponent: s.removeComponent,
+      removeCompLine: s.removeCompLine,
+      addCompLineWithId: s.addCompLineWithId,
       setCompLossRate: s.setCompLossRate,
       clearComponents: s.clearComponents,
     }))
   )
 
   const components = rawComponents ?? []
-  const compQuantity = rawCompQuantity ?? 3
+  const compQuantity = rawCompQuantity ?? 6
   const compLossRate = rawCompLossRate ?? 0
 
   useLayoutEffect(() => {
@@ -461,6 +433,41 @@ export function MultiComponentSection() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [showLoss, setShowLoss] = useState(false)
+  const [lineToast, setLineToast] = useState<{
+    msg: string
+    onUndo: () => void
+  } | null>(null)
+  const lineToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (lineToastTimerRef.current) clearTimeout(lineToastTimerRef.current)
+    }
+  }, [])
+
+  const deleteIngredientLine = (compId: string, line: RecipeLine) => {
+    removeCompLine(compId, line.id)
+    const label = line.name + (line.brand ? ` · ${line.brand}` : '')
+    if (lineToastTimerRef.current) {
+      clearTimeout(lineToastTimerRef.current)
+      lineToastTimerRef.current = null
+    }
+    setLineToast({
+      msg: `已刪除 ${label}`,
+      onUndo: () => {
+        addCompLineWithId(compId, line)
+        setLineToast(null)
+        if (lineToastTimerRef.current) {
+          clearTimeout(lineToastTimerRef.current)
+          lineToastTimerRef.current = null
+        }
+      },
+    })
+    lineToastTimerRef.current = setTimeout(() => {
+      setLineToast(null)
+      lineToastTimerRef.current = null
+    }, 3000)
+  }
 
   const yieldPct = Math.round((1 - compLossRate) * 100)
   const lossDisplayPct = Math.round(compLossRate * 100)
@@ -470,6 +477,7 @@ export function MultiComponentSection() {
   }
 
   return (
+    <>
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
@@ -478,7 +486,7 @@ export function MultiComponentSection() {
           className="text-sm text-red-700 underline"
           onClick={() => setConfirmClear(true)}
         >
-          清除
+          新配方
         </button>
       </div>
 
@@ -530,6 +538,7 @@ export function MultiComponentSection() {
           globalQty={compQuantity}
           lossRate={compLossRate}
           onRemove={() => setRemoveId(comp.id)}
+          onRemoveIngredient={(line) => deleteIngredientLine(comp.id, line)}
         />
       ))}
 
@@ -543,8 +552,8 @@ export function MultiComponentSection() {
 
       <ConfirmDialog
         open={confirmClear}
-        title="清除多組配方計算"
-        message="確定要清除所有組合嗎？"
+        title="開始新配方？"
+        message="目前的配方組合將被清除，份數設定將重置為 6。"
         onCancel={() => setConfirmClear(false)}
         onConfirm={() => {
           clearComponents()
@@ -563,5 +572,26 @@ export function MultiComponentSection() {
         }}
       />
     </section>
+
+    {lineToast ? (
+      <div
+        className="fixed bottom-24 left-4 right-4 z-40 flex items-center justify-between gap-3 rounded-xl border border-[#E5D8C8] bg-[#3D2918] px-4 py-3 text-sm text-white shadow-lg"
+        style={{
+          paddingBottom:
+            'calc(0.5rem + env(safe-area-inset-bottom, 0px))',
+        }}
+        role="status"
+      >
+        <span className="min-w-0 flex-1">{lineToast.msg}</span>
+        <button
+          type="button"
+          className="shrink-0 font-medium text-[#F5E6D0] underline underline-offset-2"
+          onClick={() => lineToast.onUndo()}
+        >
+          復原
+        </button>
+      </div>
+    ) : null}
+    </>
   )
 }

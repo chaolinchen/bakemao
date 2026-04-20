@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { GlobalQtyCard } from '@/components/GlobalQtyCard'
 import { MultiComponentSection } from '@/components/MultiComponentSection'
 import { SaveRecipeBar } from '@/components/SaveRecipeBar'
+import { SummaryCard } from '@/components/SummaryCard'
 import { OfflineBanner } from '@/components/ui/Banner'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useWakeLock } from '@/hooks/useWakeLock'
@@ -76,6 +77,7 @@ export default function Home() {
       <main className="mx-auto flex max-w-lg flex-col gap-4 p-4">
         <GlobalQtyCard />
         <MultiComponentSection />
+        <SummaryCard />
       </main>
 
       <SaveRecipeBar />

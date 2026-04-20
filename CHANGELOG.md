@@ -2,6 +2,14 @@
 
 ---
 
+## v1.2.1 — 2026-04-20
+### Fix
+- **TASK-17-P1**：`SummaryCard` 備料彙總（跨組 `name+brand` 合併克數，預設折疊）。
+- **TASK-17-P2**：配方列表顯示「X 個組合・N 項材料」；刪除材料改 Toast + 3 秒內復原；`gram ↔ mold` 切換不再覆寫手填 `gramPerUnit`。
+- **TASK-17-P3**：「新配方」取代「清除」；確認後重置份數為 6、損耗為 0（`clearComponents`）。
+
+---
+
 ## v1.2.0 — 2026-04-20
 ### Feat
 - **TASK-16**：首頁改為多組配方主流程——`GlobalQtyCard`（共做幾個）+ `MultiComponentSection`；每張組合卡可切換「輸入克數／按模具算」、份數覆寫與重置；舊單組配方儲存可載入並遷移為單一組合；移除 `/design-preview` 原型頁。

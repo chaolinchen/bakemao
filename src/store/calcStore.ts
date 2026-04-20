@@ -8,7 +8,6 @@ import {
   type LossInput,
   type TargetInput,
 } from '@/lib/calculator'
-import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import type { ComponentMoldType } from '@/lib/componentMoldGram'
 import { getMoldParts } from '@/lib/moldParts'
 import type { RecipeLine } from '@/types/recipe-line'
@@ -220,6 +219,7 @@ export const useCalcStore = create<
     updateCompLine: (compId: string, lineId: string, patch: Partial<IngredientInput>) => void
     removeCompLine: (compId: string, lineId: string) => void
     addCompLine: (compId: string, line: Omit<RecipeLine, 'id'>) => void
+    addCompLineWithId: (compId: string, line: RecipeLine) => void
     setCompQuantity: (q: number) => void
     setCompLossRate: (r: number) => void
     clearComponents: () => void
@@ -242,7 +242,7 @@ export const useCalcStore = create<
       ingredients: [],
       moldUi: { ...defaultMoldUi },
       components: [],
-      compQuantity: 3,
+      compQuantity: 6,
       compLossRate: 0,
 
       setMode: (mode) => set({ mode }),
@@ -368,39 +368,35 @@ export const useCalcStore = create<
               : c
           ),
         })),
+      addCompLineWithId: (compId, row) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === compId
+              ? { ...c, ingredients: [...c.ingredients, { ...row }] }
+              : c
+          ),
+        })),
       setCompQuantity: (q) => set({ compQuantity: Math.min(30, Math.max(1, Math.floor(q))) }),
       setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),
-      clearComponents: () => set({ components: [] }),
+      clearComponents: () =>
+        set({
+          components: [],
+          compQuantity: 6,
+          compLossRate: 0,
+        }),
 
       setComponentTargetMode: (id, targetMode) =>
         set((s) => ({
-          components: (s.components ?? []).map((c) => {
-            if (c.id !== id) return c
-            if (targetMode === 'mold') {
-              const gramPerUnit = gramPerUnitFromComponentMold(
-                c.moldType,
-                c.moldSize,
-                c.cupCount
-              )
-              return { ...c, targetMode, gramPerUnit }
-            }
-            return { ...c, targetMode }
-          }),
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, targetMode } : c
+          ),
         })),
 
       setComponentMold: (id, patch) =>
         set((s) => ({
-          components: (s.components ?? []).map((c) => {
-            if (c.id !== id) return c
-            const next = { ...c, ...patch }
-            if (next.targetMode !== 'mold') return next
-            const gramPerUnit = gramPerUnitFromComponentMold(
-              next.moldType,
-              next.moldSize,
-              next.cupCount
-            )
-            return { ...next, gramPerUnit }
-          }),
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, ...patch } : c
+          ),
         })),
 
       setComponentCustomQty: (id, qty) =>
