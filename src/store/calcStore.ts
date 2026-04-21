@@ -213,6 +213,7 @@ export const useCalcStore = create<
     resetRecipeInput: () => void
     // multi-component actions
     addComponent: () => void
+    addComponentFromTemplate: (name: string, ingredients: Omit<RecipeLine, 'id'>[], gramPerUnit?: number) => void
     removeComponent: (id: string) => void
     updateComponentName: (id: string, name: string) => void
     updateComponentGram: (id: string, gram: number) => void
@@ -313,6 +314,17 @@ export const useCalcStore = create<
               }),
             ],
           }
+        }),
+      addComponentFromTemplate: (name, ingredients, gramPerUnit) =>
+        set((s) => {
+          const comps = s.components ?? []
+          const newComp = defaultRecipeComponent({
+            id: makeRecipeId(),
+            name,
+            gramPerUnit,
+            ingredients: ingredients.map((ing) => ({ ...ing, id: makeRecipeId() })),
+          })
+          return { components: [...comps, newComp] }
         }),
       removeComponent: (id) =>
         set((s) => ({

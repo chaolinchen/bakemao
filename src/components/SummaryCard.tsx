@@ -56,7 +56,7 @@ export function SummaryCard() {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-serif text-base font-semibold text-[#3D2918]">
-              備料彙總
+              {open ? '備料彙總' : `▸ 備料彙總（${nKind} 項）`}
             </span>
             <span className="text-xs text-[#8A7968]">
               {open ? '▲ 收起' : '▼ 展開'}

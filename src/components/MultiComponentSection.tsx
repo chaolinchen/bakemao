@@ -250,12 +250,18 @@ function ComponentCard({
             <button
               type="button"
               className="rounded-full bg-[#F5E6D0] px-2 py-0.5 text-xs font-medium text-[#C8602A]"
+              title="每組可以獨立設定份數，不設定則沿用全局份數。點此重置為全局份數。"
               onClick={() => setComponentCustomQty(comp.id, null)}
             >
               已自訂 × 重置
             </button>
           ) : (
-            <span className="text-xs text-[#B0A090]">沿用 {globalQty} 份</span>
+            <span
+              className="text-xs text-[#B0A090]"
+              title="每組可以獨立設定份數，不設定則沿用全局份數"
+            >
+              沿用 {globalQty} 份
+            </span>
           )}
         </div>
 
@@ -395,6 +401,116 @@ function ComponentCard({
   )
 }
 
+// ─── Template recipes ────────────────────────────────────────────────────────
+
+type TemplateIngredient = { name: string; value: number }
+type RecipeTemplate = {
+  id: string
+  label: string
+  description: string
+  gramPerUnit: number
+  ingredients: TemplateIngredient[]
+}
+
+const RECIPE_TEMPLATES: RecipeTemplate[] = [
+  {
+    id: 'pound-cake',
+    label: '法式磅蛋糕',
+    description: '1:1:0.8:0.8 黃金比例，適合初學者',
+    gramPerUnit: 450,
+    ingredients: [
+      { name: '中筋麵粉', value: 100 },
+      { name: '無鹽奶油', value: 100 },
+      { name: '細砂糖', value: 80 },
+      { name: '全蛋', value: 80 },
+    ],
+  },
+  {
+    id: 'chiffon-cake',
+    label: '戚風蛋糕',
+    description: '蛋黃糊＋蛋白霜，輕盈口感',
+    gramPerUnit: 600,
+    ingredients: [
+      { name: '低筋麵粉', value: 100 },
+      { name: '蛋黃', value: 60 },
+      { name: '沙拉油', value: 50 },
+      { name: '牛奶', value: 50 },
+      { name: '蛋白', value: 180 },
+      { name: '細砂糖', value: 100 },
+    ],
+  },
+]
+
+function TemplateDialog({
+  open,
+  onClose,
+  onApply,
+}: {
+  open: boolean
+  onClose: () => void
+  onApply: (tpl: RecipeTemplate) => void
+}) {
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/45"
+        aria-label="關閉"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+        <h3 className="text-lg font-semibold text-[#3D2918]">範本配方</h3>
+        <p className="mt-1 text-xs text-[#8A7968]">
+          套用後會新增一組配方，你可以繼續修改比例。
+        </p>
+        <div className="mt-4 space-y-3">
+          {RECIPE_TEMPLATES.map((tpl) => (
+            <div
+              key={tpl.id}
+              className="rounded-xl border border-[#E5D8C8] bg-[#FAF6F0] p-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-[#3D2918]">{tpl.label}</p>
+                  <p className="mt-0.5 text-xs text-[#8A7968]">{tpl.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {tpl.ingredients.map((ing) => (
+                      <span
+                        key={ing.name}
+                        className="rounded-full bg-[#E5D8C8] px-2 py-0.5 text-xs text-[#5C4D3E]"
+                      >
+                        {ing.name} {ing.value}%
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-lg bg-[#C8602A] px-3 py-1.5 text-xs font-medium text-white transition active:scale-95"
+                  onClick={() => {
+                    onApply(tpl)
+                    onClose()
+                  }}
+                >
+                  套用
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          className="mt-4 w-full rounded-xl py-2.5 text-sm font-medium text-[#6B5A4A] transition hover:bg-black/5"
+          onClick={onClose}
+        >
+          取消
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── MultiComponentSection ───────────────────────────────────────────────────
 
 export function MultiComponentSection() {
@@ -403,6 +519,7 @@ export function MultiComponentSection() {
     compQuantity: rawCompQuantity,
     compLossRate: rawCompLossRate,
     addComponent,
+    addComponentFromTemplate,
     removeComponent,
     removeCompLine,
     addCompLineWithId,
@@ -414,6 +531,7 @@ export function MultiComponentSection() {
       compQuantity: s.compQuantity,
       compLossRate: s.compLossRate,
       addComponent: s.addComponent,
+      addComponentFromTemplate: s.addComponentFromTemplate,
       removeComponent: s.removeComponent,
       removeCompLine: s.removeCompLine,
       addCompLineWithId: s.addCompLineWithId,
@@ -433,6 +551,7 @@ export function MultiComponentSection() {
   const [confirmClear, setConfirmClear] = useState(false)
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [showLoss, setShowLoss] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
   const [lineToast, setLineToast] = useState<{
     msg: string
     onUndo: () => void
@@ -481,13 +600,22 @@ export function MultiComponentSection() {
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
-        <button
-          type="button"
-          className="text-sm text-red-700 underline"
-          onClick={() => setConfirmClear(true)}
-        >
-          新配方
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="text-sm text-[#C8602A] underline underline-offset-2"
+            onClick={() => setShowTemplates(true)}
+          >
+            範本配方
+          </button>
+          <button
+            type="button"
+            className="text-sm text-red-700 underline"
+            onClick={() => setConfirmClear(true)}
+          >
+            新配方
+          </button>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
@@ -577,20 +705,20 @@ export function MultiComponentSection() {
               </button>
               <button
                 type="button"
-                className="w-full rounded-xl border border-[#D9C9B5] py-2.5 text-sm font-medium text-[#C45C5C] transition hover:bg-red-50 active:scale-[0.99]"
+                className="w-full rounded-xl py-2.5 text-sm font-medium text-[#6B5A4A] transition hover:bg-black/5"
+                onClick={() => setConfirmClear(false)}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="w-full py-1.5 text-xs font-medium text-[#C45C5C] transition hover:underline active:scale-[0.99]"
                 onClick={() => {
                   clearComponents()
                   setConfirmClear(false)
                 }}
               >
                 直接清空
-              </button>
-              <button
-                type="button"
-                className="w-full rounded-xl py-2.5 text-sm font-medium text-[#6B5A4A] transition hover:bg-black/5"
-                onClick={() => setConfirmClear(false)}
-              >
-                取消
               </button>
             </div>
           </div>
@@ -605,6 +733,22 @@ export function MultiComponentSection() {
         onConfirm={() => {
           if (removeId) removeComponent(removeId)
           setRemoveId(null)
+        }}
+      />
+
+      <TemplateDialog
+        open={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onApply={(tpl) => {
+          addComponentFromTemplate(
+            tpl.label,
+            tpl.ingredients.map((ing) => ({
+              name: ing.name,
+              value: ing.value,
+              isFixed: false,
+            })),
+            tpl.gramPerUnit
+          )
         }}
       />
     </section>
