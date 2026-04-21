@@ -561,7 +561,8 @@ export function MultiComponentSection() {
           <div className="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
             <h3 className="text-lg font-semibold text-[#3D2918]">開始新配方？</h3>
             <p className="mt-2 text-sm text-[#5C4D3E]">
-              目前的配方組合將被清除。請確認已儲存。
+              目前的配方組合將被清除，份數設定將重置為 6，備料損耗比例將重置為
+              0%。請確認已儲存，或先點下方「先儲存配方」。
             </p>
             <div className="mt-5 flex flex-col gap-2">
               <button
