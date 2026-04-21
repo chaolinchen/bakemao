@@ -1,14 +1,14 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.2.5 | 2026-04-21）
+## SNAPSHOT（v0.2.6 | 2026-04-21）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **`GET /api/version`**：Hub 狀態頁用；prod 有 `VERCEL_GIT_COMMIT_SHA` 時 `commit` 為 7 位 SHA。
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 13 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
-- **功能進度**：**TASK-12 ∼ 17** 已完成（見 `CURSOR_TASKS.md`）；首頁含 **備料彙總**（`SummaryCard`）、多組配方卡；「新配方」會重置份數 6／損耗 0。
+- **功能進度**：**TASK-12 ∼ 19 + v2.0 UX** 全部完成；最新功能：SummaryCard 折疊顯示材料數（N 項）、新配方 Dialog 按鈕順序調整（主/取消/清空）、範本配方（法式磅蛋糕／戚風蛋糕）、份數 badge tooltip。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 
@@ -58,8 +58,8 @@
 
 ## 目前狀態（給 agent 續作）
 
-- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v1.9**，含 §20／§21／§22／§23）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
-- **已完成 TASK-16 ～ TASK-19**：多組配方、SummaryCard、分享連結、OG image、新配方三按鈕全部上線。
+- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v2.0**，含 §20～§24）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **已完成 TASK-16 ～ TASK-19 + v2.0 UX**：多組配方、SummaryCard、分享連結、OG image、新配方三按鈕、折疊提示、範本配方、Dialog 按鈕順序全部上線。
 - **DB migration**：`001_init.sql`、`002_add_share_token.sql` 已在 dev + prod 執行完畢。
 - **已結案：Maximum update depth**（模具 / `useShallow`，詳見 §19）。
 - **建置品質**：TypeScript clean；若遇 chunk 遺失先 `rm -rf .next`。
@@ -70,5 +70,5 @@
 1. **手機實測**：分享連結 OG 預覽（LINE/IG）、PWA 安裝、iOS Safari 鍵盤行為。
 2. **IG 推廣**：po 第一篇使用教學，帶 bakemao.smallfatmao.com 連結。
 3. **GA4 埋點**：追蹤「儲存配方」「分享連結」「在計算機中開啟」事件，建立留存指標基線。
-4. **範本配方**（Backlog）：烘焙新手進來不知道百分比怎麼填，提供 3-5 個常見配方範本。
+4. **GA4 埋點**：追蹤「儲存配方」「分享連結」「在計算機中開啟」「套用範本」事件，建立留存指標基線。
 - **工程**：git push main → Vercel 自動部署，無需手動 `vercel --prod`。

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
 import type { IngredientInput } from '@/lib/calculator'
@@ -208,9 +208,28 @@ function ComponentCard({
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-[#8A7968]">
-                每杯容積約 <span className="font-semibold text-[#3D2918]">90</span> g（1cc≈1g）；份數設定做幾個
-              </p>
+              <div>
+                <p className="mb-1.5 text-xs text-[#6B5A4A]">每杯容積（cc）</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {([63, 80, 90, 100, 120, 166] as const).map((cc) => (
+                    <button
+                      key={cc}
+                      type="button"
+                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                        comp.cupCount === cc
+                          ? 'bg-[#C8602A] text-white'
+                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                      }`}
+                      onClick={() => setComponentMold(comp.id, { cupCount: cc })}
+                    >
+                      {cc} cc
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-xs text-[#8A7968]">
+                  每杯 <span className="font-semibold text-[#3D2918]">{comp.cupCount}</span> g；份數設定做幾個
+                </p>
+              </div>
             )}
 
             {comp.moldType !== 'cup' && (
@@ -322,7 +341,7 @@ function ComponentCard({
                       </span>
                     ) : null}
                   </span>
-                  <span className="w-16 shrink-0 text-right font-mono text-base font-semibold text-[#3D2918]">
+                  <span className="w-20 shrink-0 whitespace-nowrap text-right font-mono text-base font-semibold text-[#3D2918]">
                     {row.gram.toFixed(1)} g
                   </span>
                   <div
@@ -343,7 +362,7 @@ function ComponentCard({
                 <span className="w-24 shrink-0 text-sm font-semibold text-[#3D2918]">
                   合計
                 </span>
-                <span className="w-16 shrink-0 text-right font-mono text-base font-semibold text-[#C8602A]">
+                <span className="w-20 shrink-0 whitespace-nowrap text-right font-mono text-base font-semibold text-[#C8602A]">
                   {result.totalGram.toFixed(1)} g
                 </span>
               </div>
@@ -545,9 +564,20 @@ export function MultiComponentSection() {
   const compQuantity = rawCompQuantity ?? 6
   const compLossRate = rawCompLossRate ?? 0
 
-  useLayoutEffect(() => {
-    if (components.length === 0) addComponent()
-  }, [components.length, addComponent])
+  // 等 Zustand persist rehydration 完成後，若仍為空才補一個預設組合
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    // client-only：persist 在 SSR 不存在
+    if (useCalcStore.persist?.hasHydrated?.()) {
+      setHydrated(true)
+      return
+    }
+    const unsub = useCalcStore.persist?.onFinishHydration?.(() => setHydrated(true))
+    return unsub ?? undefined
+  }, [])
+  useEffect(() => {
+    if (hydrated && components.length === 0) addComponent()
+  }, [hydrated, components.length, addComponent])
 
   const [confirmClear, setConfirmClear] = useState(false)
   const [removeId, setRemoveId] = useState<string | null>(null)

@@ -25,7 +25,7 @@ export type RecipeComponent = {
   moldType: ComponentMoldType
   /** 圓模：吋；塔圈：cm；杯型時忽略 */
   moldSize: number
-  /** 杯型：6 / 12 / 24 連 */
+  /** 杯型：每杯容積（cc），常見值 63/80/90/100/120/166 */
   cupCount: number
   /** null = 繼承全局 compQuantity */
   customQty: number | null
@@ -108,7 +108,7 @@ export function defaultRecipeComponent(partial: {
     moldPresetId: null,
     moldType: 'round',
     moldSize: 6,
-    cupCount: 6,
+    cupCount: 90,
     customQty: null,
   }
 }
@@ -117,6 +117,10 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
   if (!c || typeof c !== 'object') return null
   const o = c as Partial<RecipeComponent> & { id?: string; name?: string }
   if (!o.id || typeof o.name !== 'string') return null
+  const rawCupCount = Number(o.cupCount)
+  // 舊版 cupCount 儲存的是「連數」(6/12/24)，遷移到每杯容積（cc）
+  const cupCount =
+    Number.isFinite(rawCupCount) && rawCupCount >= 30 ? rawCupCount : 90
   return {
     id: o.id,
     name: o.name,
@@ -127,7 +131,7 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     moldType:
       o.moldType === 'tart' || o.moldType === 'cup' ? o.moldType : 'round',
     moldSize: Number.isFinite(Number(o.moldSize)) ? Number(o.moldSize) : 6,
-    cupCount: Number.isFinite(Number(o.cupCount)) ? Number(o.cupCount) : 6,
+    cupCount,
     customQty:
       o.customQty === null || o.customQty === undefined
         ? null

@@ -6,7 +6,8 @@
 > **v1.6：** 修正 5 項規格（水溫分類、自訂食材 UX、cc 換算說明、Segment 命名、耗損預設）；新增 §20 多群組材料（v1.5 backlog）、§21 IngredientSearchSheet 鍵盤感知規格。  
 > **v1.7（2026-04-20）：** TASK-16 多組配方整合上線；TASK-17 UX 修正（彙總卡 SummaryCard / Toast Undo / 新配方按鈕）✅ 已上線。  
 > **v1.8（2026-04-20）：** TASK-18 配方分享連結 ✅ 已上線；§22 分享功能新增。  
-> **v1.9（2026-04-20）：** TASK-19 UX 三項改善 ✅ 已上線；§23 新增。
+> **v1.9（2026-04-20）：** TASK-19 UX 三項改善 ✅ 已上線；§23 新增。  
+> **v2.0（2026-04-21）：** UX 修正四項 ✅ 已上線（SummaryCard 折疊提示、新配方 Dialog 按鈕順序、範本配方、份數 badge tooltip）；§24 新增。
 
 ---
 
@@ -423,6 +424,35 @@ CREATE UNIQUE INDEX IF NOT EXISTS recipes_share_token_idx ON recipes(share_token
 - Token 為 UUID，首次分享才建立（lazy generation），分享同一配方永遠得到同一 URL
 - 分享頁無需登入，可直接在計算機中開啟
 - 連結格式：`https://bakemao.smallfatmao.com/share/{uuid}`
+
+---
+
+## 24. v2.0 UX 修正（✅ 2026-04-21 已上線）
+
+### SummaryCard 折疊狀態文字提示
+- 折疊時：「▸ 備料彙總（N 項）」（N = 彙總後不重複材料數）
+- 展開時：「備料彙總」
+
+### 新配方 Dialog 按鈕順序
+| 順序 | 按鈕 | 樣式 |
+|------|------|------|
+| 1 | 先儲存配方 | 橘色主按鈕 |
+| 2 | 取消 | 中性文字 |
+| 3 | 直接清空 | 紅色 ghost，`text-xs` |
+
+目的：降低誤觸「直接清空」的風險。
+
+### 範本配方
+- 入口：MultiComponentSection 標題列「範本配方」文字按鈕
+- 開啟 `TemplateDialog`，提供兩組範本：
+  - **法式磅蛋糕**：麵粉 100%、奶油 100%、糖 80%、蛋 80%
+  - **戚風蛋糕**：低筋麵粉 100%、蛋黃 60%、沙拉油 50%、牛奶 50%、蛋白 180%、糖 100%
+- 套用後在列表底部新增一個組合（名稱預設「法式磅蛋糕」等），可繼續修改
+- Store：新增 `addComponentFromTemplate(name, ingredients, gramPerUnit)` action
+
+### 份數 badge tooltip
+- 「沿用 N 份」span：`title="每組可以獨立設定份數，不設定則沿用全局份數"`
+- 「已自訂 × 重置」button：`title="每組可以獨立設定份數，不設定則沿用全局份數。點此重置為全局份數"`
 
 ---
 
