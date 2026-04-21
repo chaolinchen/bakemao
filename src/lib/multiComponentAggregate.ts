@@ -1,15 +1,28 @@
 import { calculateExam } from './calculator'
 import type { IngredientInput } from './calculator'
-import { gramPerUnitFromComponentMold } from './componentMoldGram'
+import { CAKE_TYPE_PRESETS, gramPerUnitFromComponentMold } from './componentMoldGram'
 import type { RecipeComponent } from '../store/calcStore'
 
 /** 與首頁 ComponentCard 的 gramForCalc 一致 */
 export function effectiveGramPerUnit(comp: RecipeComponent): number {
   if (comp.targetMode === 'mold') {
+    let gravity = 1.0
+    let fillRate = 0.95
+    const cakeType = comp.cakeType ?? 'mousse'
+    if (cakeType === 'custom') {
+      gravity = comp.customGravity ?? 0.85
+      fillRate = comp.customFillRate ?? 0.8
+    } else if (cakeType in CAKE_TYPE_PRESETS) {
+      const preset = CAKE_TYPE_PRESETS[cakeType as keyof typeof CAKE_TYPE_PRESETS]
+      gravity = preset.gravity
+      fillRate = preset.fillRate
+    }
     return gramPerUnitFromComponentMold(
       comp.moldType,
       comp.moldSize,
-      comp.cupCount
+      comp.cupCount,
+      gravity,
+      fillRate
     )
   }
   return comp.gramPerUnit

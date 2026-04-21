@@ -8,7 +8,7 @@ import {
   type LossInput,
   type TargetInput,
 } from '@/lib/calculator'
-import type { ComponentMoldType } from '@/lib/componentMoldGram'
+import type { CakeType, ComponentMoldType } from '@/lib/componentMoldGram'
 import { getMoldParts } from '@/lib/moldParts'
 import type { RecipeLine } from '@/types/recipe-line'
 
@@ -29,6 +29,12 @@ export type RecipeComponent = {
   cupCount: number
   /** null = 繼承全局 compQuantity */
   customQty: number | null
+  /** 按模具算時的蛋糕類型（決定比重+填充率） */
+  cakeType: CakeType
+  /** 自訂比重（cakeType=custom 時生效） */
+  customGravity: number
+  /** 自訂填充率 0-1（cakeType=custom 時生效） */
+  customFillRate: number
 }
 
 export type TargetKind = 'mold' | 'gram'
@@ -110,6 +116,9 @@ export function defaultRecipeComponent(partial: {
     moldSize: 6,
     cupCount: 90,
     customQty: null,
+    cakeType: 'mousse',
+    customGravity: 0.85,
+    customFillRate: 0.8,
   }
 }
 
@@ -136,6 +145,17 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
       o.customQty === null || o.customQty === undefined
         ? null
         : Math.min(30, Math.max(1, Math.floor(Number(o.customQty)))),
+    cakeType: (['mousse', 'pound', 'sponge', 'chiffon', 'custom'] as CakeType[]).includes(
+      o.cakeType as CakeType
+    )
+      ? (o.cakeType as CakeType)
+      : 'mousse',
+    customGravity: Number.isFinite(Number(o.customGravity)) && Number(o.customGravity) > 0
+      ? Number(o.customGravity)
+      : 0.85,
+    customFillRate: Number.isFinite(Number(o.customFillRate)) && Number(o.customFillRate) > 0
+      ? Number(o.customFillRate)
+      : 0.8,
   }
 }
 
@@ -217,7 +237,7 @@ export const useCalcStore = create<
     resetRecipeInput: () => void
     // multi-component actions
     addComponent: () => void
-    addComponentFromTemplate: (name: string, ingredients: Omit<RecipeLine, 'id'>[], gramPerUnit?: number) => void
+    addComponentFromTemplate: (name: string, ingredients: Omit<RecipeLine, 'id'>[], gramPerUnit?: number, cakeType?: CakeType) => void
     removeComponent: (id: string) => void
     updateComponentName: (id: string, name: string) => void
     updateComponentGram: (id: string, gram: number) => void
@@ -231,7 +251,7 @@ export const useCalcStore = create<
     setComponentTargetMode: (id: string, mode: ComponentTargetMode) => void
     setComponentMold: (
       id: string,
-      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'cupCount'>>
+      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
   }
@@ -319,15 +339,18 @@ export const useCalcStore = create<
             ],
           }
         }),
-      addComponentFromTemplate: (name, ingredients, gramPerUnit) =>
+      addComponentFromTemplate: (name, ingredients, gramPerUnit, cakeType) =>
         set((s) => {
           const comps = s.components ?? []
-          const newComp = defaultRecipeComponent({
-            id: makeRecipeId(),
-            name,
-            gramPerUnit,
-            ingredients: ingredients.map((ing) => ({ ...ing, id: makeRecipeId() })),
-          })
+          const newComp = {
+            ...defaultRecipeComponent({
+              id: makeRecipeId(),
+              name,
+              gramPerUnit,
+              ingredients: ingredients.map((ing) => ({ ...ing, id: makeRecipeId() })),
+            }),
+            ...(cakeType ? { cakeType } : {}),
+          }
           return { components: [...comps, newComp] }
         }),
       removeComponent: (id) =>
