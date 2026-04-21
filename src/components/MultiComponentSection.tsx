@@ -22,7 +22,6 @@ function parseNum(s: string | number): number {
 
 const ROUND_SIZES = [4, 5, 6, 7, 8, 9, 10, 12]
 const TART_SIZES = [6, 7, 8, 9, 10, 12, 15]
-const CUP_COUNTS = [6, 12, 24]
 
 const MOLD_TYPE_OPTS: { value: ComponentMoldType; label: string }[] = [
   { value: 'round', label: '圓模（吋）' },
@@ -209,31 +208,17 @@ function ComponentCard({
                 </div>
               </div>
             ) : (
-              <div>
-                <p className="mb-1.5 text-xs text-[#6B5A4A]">杯數</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {CUP_COUNTS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                        comp.cupCount === c
-                          ? 'bg-[#C8602A] text-white'
-                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
-                      }`}
-                      onClick={() => setComponentMold(comp.id, { cupCount: c })}
-                    >
-                      {c} 連
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <p className="text-xs text-[#8A7968]">
+                每杯容積約 <span className="font-semibold text-[#3D2918]">90</span> g（1cc≈1g）；份數設定做幾個
+              </p>
             )}
 
-            <p className="text-xs text-[#8A7968]">
-              共 <span className="font-semibold text-[#3D2918]">{moldVolumeLabel}</span>{' '}
-              g（1cc≈1g）
-            </p>
+            {comp.moldType !== 'cup' && (
+              <p className="text-xs text-[#8A7968]">
+                共 <span className="font-semibold text-[#3D2918]">{moldVolumeLabel}</span>{' '}
+                g（1cc≈1g）
+              </p>
+            )}
           </div>
         )}
 
@@ -274,7 +259,6 @@ function ComponentCard({
                 className="flex flex-wrap items-end gap-2 rounded-xl bg-[#FAF6F0] px-3 py-2"
               >
                 <div className="min-w-[90px] flex-1">
-                  <span className="text-xs text-[#6B5A4A]">材料</span>
                   <p className="text-sm font-medium text-[#3D2918]">
                     {line.name}
                     {line.brand ? (
@@ -757,6 +741,7 @@ export function MultiComponentSection() {
         open={showTemplates}
         onClose={() => setShowTemplates(false)}
         onApply={(tpl) => {
+          clearComponents()
           addComponentFromTemplate(
             tpl.label,
             tpl.ingredients.map((ing) => ({

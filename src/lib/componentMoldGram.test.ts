@@ -12,8 +12,8 @@ describe('gramPerUnitFromComponentMold', () => {
     expect(g).toBeGreaterThan(0)
   })
 
-  it('杯型 6 連 = 90×6 cc', () => {
-    expect(gramPerUnitFromComponentMold('cup', 0, 6)).toBe(540)
-    expect(gramPerUnitFromComponentMold('cup', 0, 12)).toBe(1080)
+  it('杯型：單杯 90cc，cupCount 不影響結果', () => {
+    expect(gramPerUnitFromComponentMold('cup', 0, 6)).toBe(90)
+    expect(gramPerUnitFromComponentMold('cup', 0, 12)).toBe(90)
   })
 })
