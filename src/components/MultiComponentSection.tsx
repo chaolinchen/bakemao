@@ -439,6 +439,23 @@ const RECIPE_TEMPLATES: RecipeTemplate[] = [
       { name: '細砂糖', value: 100 },
     ],
   },
+  {
+    id: 'sponge-cake',
+    label: '海綿蛋糕',
+    description: '全蛋打發，合計 410%，共五組材料',
+    gramPerUnit: 600,
+    ingredients: [
+      { name: '全蛋', value: 150 },
+      { name: '蛋黃', value: 25 },
+      { name: '砂糖', value: 93 },
+      { name: '鹽', value: 1 },
+      { name: '低筋麵粉', value: 100 },
+      { name: '香草粉', value: 1 },
+      { name: '奶粉', value: 2 },
+      { name: '熱水', value: 18 },
+      { name: '沙拉油', value: 20 },
+    ],
+  },
 ]
 
 function TemplateDialog({
