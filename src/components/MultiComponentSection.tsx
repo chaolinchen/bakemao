@@ -31,12 +31,40 @@ const MOLD_TYPE_OPTS: { value: ComponentMoldType; label: string }[] = [
 ]
 
 const CAKE_TYPE_OPTS: { value: CakeType; label: string }[] = [
-  { value: 'mousse', label: '慕斯/生乳酪' },
+  { value: 'mousse', label: '慕斯類' },
   { value: 'pound', label: '磅蛋糕' },
   { value: 'sponge', label: '海綿蛋糕' },
   { value: 'chiffon', label: '戚風蛋糕' },
   { value: 'custom', label: '自訂' },
 ]
+
+const CAKE_TYPE_INFO: Record<CakeType, { whip: string; desc: string; examples: string }> = {
+  mousse: {
+    whip: '不打發',
+    desc: '直接混合或融化後倒入模具，麵糊密度接近水，幾乎填滿模具。',
+    examples: '慕斯、生乳酪蛋糕、義式奶酪、布丁',
+  },
+  pound: {
+    whip: '奶油打發',
+    desc: '奶油加糖打發至蓬鬆泛白，麵糊濃稠，進爐後適度膨脹。',
+    examples: '磅蛋糕、瑪德蓮、費南雪',
+  },
+  sponge: {
+    whip: '全蛋打發',
+    desc: '全蛋加糖隔水打發，呈現濃稠緞帶狀，充滿細緻氣泡，膨脹顯著。',
+    examples: '海綿蛋糕、蛋糕捲、草莓蛋糕底',
+  },
+  chiffon: {
+    whip: '蛋白打發',
+    desc: '蛋白打發至乾性發泡，麵糊最輕盈，需中空模才能支撐組織攀爬。',
+    examples: '戚風蛋糕、天使蛋糕',
+  },
+  custom: {
+    whip: '自訂',
+    desc: '適合特殊配方或參考烘焙書數值，自行輸入比重與填充率。',
+    examples: '',
+  },
+}
 
 function SegmentedTargetMode({
   value,
@@ -196,68 +224,86 @@ function ComponentCard({
               <div>
                 <p className="mb-1.5 text-xs text-[#6B5A4A]">蛋糕類型</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {CAKE_TYPE_OPTS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                        (comp.cakeType ?? 'mousse') === opt.value
-                          ? 'bg-[#7B5E3A] text-white'
-                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
-                      }`}
-                      onClick={() => setComponentMold(comp.id, { cakeType: opt.value })}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                  {CAKE_TYPE_OPTS.map((opt) => {
+                    const active = (comp.cakeType ?? 'mousse') === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                          active
+                            ? 'bg-[#7B5E3A] text-white'
+                            : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                        }`}
+                        onClick={() => setComponentMold(comp.id, { cakeType: opt.value })}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
                 </div>
-                {(comp.cakeType ?? 'mousse') === 'custom' ? (
-                  <div className="mt-2 flex flex-wrap gap-3">
-                    <div className="flex items-center gap-1.5">
-                      <label className="text-xs text-[#6B5A4A]">比重</label>
-                      <div className="w-20">
-                        <NumberInput
-                          value={String(comp.customGravity ?? 0.85)}
-                          onChange={(e) => {
-                            const v = parseFloat(e.target.value)
-                            if (Number.isFinite(v) && v > 0 && v <= 1.0) {
-                              setComponentMold(comp.id, { customGravity: v })
-                            }
-                          }}
-                          placeholder="0.85"
-                        />
+
+                {/* 選中類型展開說明 */}
+                {(() => {
+                  const ct = comp.cakeType ?? 'mousse'
+                  const info = CAKE_TYPE_INFO[ct]
+                  if (ct === 'custom') {
+                    return (
+                      <div className="mt-2 rounded-xl bg-[#F0E8DC] p-3 text-xs text-[#5C4A3A]">
+                        <p className="mb-2 text-[#8A7968]">{info.desc}</p>
+                        <div className="flex flex-wrap gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-[#6B5A4A]">比重</label>
+                            <div className="w-20">
+                              <NumberInput
+                                value={String(comp.customGravity ?? 0.85)}
+                                onChange={(e) => {
+                                  const v = parseFloat(e.target.value)
+                                  if (Number.isFinite(v) && v > 0 && v <= 1.0) {
+                                    setComponentMold(comp.id, { customGravity: v })
+                                  }
+                                }}
+                                placeholder="0.85"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <label className="text-[#6B5A4A]">填充率 %</label>
+                            <div className="w-20">
+                              <NumberInput
+                                value={String(Math.round((comp.customFillRate ?? 0.8) * 100))}
+                                onChange={(e) => {
+                                  const v = parseFloat(e.target.value)
+                                  if (Number.isFinite(v) && v > 0 && v <= 100) {
+                                    setComponentMold(comp.id, { customFillRate: v / 100 })
+                                  }
+                                }}
+                                placeholder="80"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <label className="text-xs text-[#6B5A4A]">填充率 %</label>
-                      <div className="w-20">
-                        <NumberInput
-                          value={String(Math.round((comp.customFillRate ?? 0.8) * 100))}
-                          onChange={(e) => {
-                            const v = parseFloat(e.target.value)
-                            if (Number.isFinite(v) && v > 0 && v <= 100) {
-                              setComponentMold(comp.id, { customFillRate: v / 100 })
-                            }
-                          }}
-                          placeholder="80"
-                        />
+                    )
+                  }
+                  const preset = CAKE_TYPE_PRESETS[ct as keyof typeof CAKE_TYPE_PRESETS]
+                  return (
+                    <div className="mt-2 rounded-xl bg-[#F0E8DC] p-3 text-xs text-[#5C4A3A]">
+                      <div className="mb-1.5 flex items-center gap-2">
+                        <span className="rounded-md bg-[#C8602A]/15 px-2 py-0.5 text-[#7B3A1A] font-medium">
+                          {info.whip}
+                        </span>
+                        <span className="text-[#8A7968]">
+                          比重 {preset.gravity.toFixed(2)}　填充率 {Math.round(preset.fillRate * 100)}%
+                        </span>
                       </div>
+                      <p className="mb-1 text-[#5C4A3A]">{info.desc}</p>
+                      {info.examples && (
+                        <p className="text-[#8A7968]">例：{info.examples}</p>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  (() => {
-                    const ct = (comp.cakeType ?? 'mousse') as keyof typeof CAKE_TYPE_PRESETS
-                    if (ct in CAKE_TYPE_PRESETS) {
-                      const p = CAKE_TYPE_PRESETS[ct]
-                      return (
-                        <p className="mt-1.5 text-xs text-[#8A7968]">
-                          比重 {p.gravity.toFixed(2)}，填充率 {Math.round(p.fillRate * 100)}%
-                        </p>
-                      )
-                    }
-                    return null
-                  })()
-                )}
+                  )
+                })()}
               </div>
             )}
 
@@ -627,6 +673,7 @@ export function MultiComponentSection() {
     addCompLineWithId,
     setCompLossRate,
     clearComponents,
+    setComponentTargetMode,
   } = useCalcStore(
     useShallow((s) => ({
       components: s.components,
@@ -639,6 +686,7 @@ export function MultiComponentSection() {
       addCompLineWithId: s.addCompLineWithId,
       setCompLossRate: s.setCompLossRate,
       clearComponents: s.clearComponents,
+      setComponentTargetMode: s.setComponentTargetMode,
     }))
   )
 
@@ -864,6 +912,13 @@ export function MultiComponentSection() {
             tpl.gramPerUnit,
             tpl.cakeType
           )
+          // 打發類範本自動切到「按模具算」模式，讓比重生效
+          if (tpl.cakeType && tpl.cakeType !== 'mousse') {
+            const comps = useCalcStore.getState().components ?? []
+            if (comps.length > 0) {
+              setComponentTargetMode(comps[comps.length - 1].id, 'mold')
+            }
+          }
         }}
       />
     </section>
