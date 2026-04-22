@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { calculateExam } from '@/lib/calculator'
-import { effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
+import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import {
   defaultMoldUi,
   defaultRecipeComponent,
@@ -41,6 +41,11 @@ type PreviewLine =
   | { kind: 'ingredient'; label: string; pct: string; gram: string | null }
 
 const SHARE_QUICK_QTY = [1, 2, 4, 6, 12, 24, 48]
+
+function fmtG(g: number): string {
+  if (g >= 1000) return `${(g / 1000).toFixed(2).replace(/\.?0+$/, '')} kg`
+  return `${g.toFixed(1)} g`
+}
 
 function IngredientPreview({
   ingredients,
@@ -89,7 +94,7 @@ function IngredientPreview({
           kind: 'ingredient',
           label: item.name + (item.brand ? ` · ${item.brand}` : ''),
           pct: `${item.value}%`,
-          gram: gram != null ? `${gram.toFixed(1)} g` : null,
+          gram: gram != null ? fmtG(gram) : null,
         })
       }
     }
@@ -216,6 +221,27 @@ export default function SharePage({
     router.push('/')
   }
 
+  const normalizedComponents = useMemo(
+    () =>
+      Array.isArray(recipe?.ingredients.components)
+        ? recipe.ingredients.components
+            .map(normalizeRecipeComponent)
+            .filter((x): x is RecipeComponent => x !== null)
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recipe]
+  )
+
+  const aggregate = useMemo(
+    () =>
+      aggregateIngredientsAcrossComponents(
+        normalizedComponents,
+        shareQty || 1,
+        Number(recipe?.ingredients.compLossRate ?? 0)
+      ),
+    [normalizedComponents, shareQty, recipe]
+  )
+
   const copyLink = async () => {
     await navigator.clipboard.writeText(window.location.href)
     setCopied(true)
@@ -249,8 +275,8 @@ export default function SharePage({
       : null
 
   return (
-    <div className="min-h-screen bg-[#F7F0E6]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D8C8] bg-[#F7F0E6]/90 px-4 py-3 backdrop-blur">
+    <div className="min-h-screen bg-[#FDF8F2]">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D8C8] bg-[#FDF8F2]/90 px-4 py-3 backdrop-blur">
         <span
           className="font-serif text-xl font-semibold text-[#3D2918]"
           style={{ fontFamily: 'var(--font-playfair)' }}
@@ -312,10 +338,34 @@ export default function SharePage({
           <IngredientPreview ingredients={recipe.ingredients} overrideQty={shareQty || undefined} />
         </section>
 
+        {/* 備料彙總 */}
+        {aggregate.shouldShow && aggregate.rows.length > 0 && nCombos !== null && nCombos > 1 && (
+          <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
+            <h2 className="mb-3 text-sm font-semibold text-[#6B5A4A]">
+              備料彙總・{fmtG(aggregate.totalGram)}
+            </h2>
+            <ul className="space-y-1.5">
+              {aggregate.rows.map((row) => (
+                <li key={row.key} className="flex items-center justify-between gap-2">
+                  <span className="min-w-0 flex-1 truncate text-sm text-[#3D2918]">
+                    {row.name}
+                    {row.brand ? (
+                      <span className="text-xs text-[#8A7968]"> · {row.brand}</span>
+                    ) : null}
+                  </span>
+                  <span className="shrink-0 font-mono text-sm font-semibold text-[#3D2918]">
+                    {fmtG(row.gram)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Actions */}
         <div className="flex flex-col gap-2">
           <Button className="w-full py-3 text-base" onClick={() => setConfirmLoad(true)}>
-            在計算機中開啟
+            用 BakeMao 開啟
           </Button>
           <button
             type="button"

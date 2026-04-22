@@ -1,6 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+
+function fmtG(g: number): string {
+  if (g >= 1000) return `${(g / 1000).toFixed(2).replace(/\.?0+$/, '')} kg`
+  return `${g.toFixed(1)} g`
+}
 import { useShallow } from 'zustand/react/shallow'
 import { aggregateIngredientsAcrossComponents } from '@/lib/multiComponentAggregate'
 import { useCalcStore } from '@/store/calcStore'
@@ -63,7 +68,7 @@ export function SummaryCard() {
             </span>
           </div>
           <p className="mt-0.5 text-sm text-[#6B5A4A]">
-            共 {nKind} 種材料・{totalGram.toFixed(1)} g
+            共 {nKind} 種材料・{fmtG(totalGram)}
           </p>
         </div>
       </button>
@@ -79,7 +84,7 @@ export function SummaryCard() {
                 ) : null}
               </span>
               <span className="w-16 shrink-0 text-right font-mono text-sm font-semibold text-[#3D2918]">
-                {row.gram.toFixed(1)} g
+                {fmtG(row.gram)}
               </span>
               <div
                 className="min-w-0 flex-1 rounded-full bg-[#E5D8C8]"
@@ -99,7 +104,7 @@ export function SummaryCard() {
               合計
             </span>
             <span className="w-16 shrink-0 text-right font-mono text-base font-bold text-[#C8602A]">
-              {totalGram.toFixed(1)} g
+              {fmtG(totalGram)}
             </span>
           </div>
         </div>

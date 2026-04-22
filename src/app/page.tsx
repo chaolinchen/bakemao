@@ -28,15 +28,47 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F0E6] pb-36 text-[#3D2918]">
+    <div className="min-h-screen bg-[#FDF8F2] pb-36 text-[#3D2918]">
       <OfflineBanner show={!online} />
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D8C8] bg-[#F7F0E6]/90 px-4 py-3 backdrop-blur">
-        <span
-          className="font-serif text-xl font-semibold"
-          style={{ fontFamily: 'var(--font-playfair)' }}
-        >
-          BakeMao
-        </span>
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D8C8] bg-[#FDF8F2]/90 px-4 py-3 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            {/* 貓臉底色 */}
+            <ellipse cx="14" cy="16" rx="11" ry="10" fill="#F5DEB3"/>
+            {/* 左耳（橘色色塊） */}
+            <polygon points="4,9 7,3 10,9" fill="#E8955A"/>
+            {/* 右耳（深色） */}
+            <polygon points="18,9 21,3 24,9" fill="#6B4C3B"/>
+            {/* 左耳內 */}
+            <polygon points="5,9 7,5 9,9" fill="#F7C09A"/>
+            {/* 右耳內 */}
+            <polygon points="19,9 21,5 23,9" fill="#C08070"/>
+            {/* 橘色左側毛斑 */}
+            <ellipse cx="9" cy="14" rx="4.5" ry="5.5" fill="#E8955A" opacity="0.7"/>
+            {/* 深色右側毛斑 */}
+            <ellipse cx="20" cy="13" rx="4" ry="5" fill="#6B4C3B" opacity="0.6"/>
+            {/* 鼻子 */}
+            <ellipse cx="14" cy="18" rx="1.2" ry="0.8" fill="#E88080"/>
+            {/* 左眼（瞇眼） */}
+            <path d="M10 14.5 Q11 13.5 12 14.5" stroke="#3D2918" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            {/* 右眼（瞇眼） */}
+            <path d="M16 14.5 Q17 13.5 18 14.5" stroke="#3D2918" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+            {/* 嘴巴 */}
+            <path d="M12.8 19 Q14 20 15.2 19" stroke="#3D2918" strokeWidth="0.8" strokeLinecap="round" fill="none"/>
+            {/* 鬍鬚左 */}
+            <line x1="5" y1="17" x2="11" y2="17.5" stroke="#3D2918" strokeWidth="0.6" opacity="0.5"/>
+            <line x1="5" y1="18.5" x2="11" y2="18.5" stroke="#3D2918" strokeWidth="0.6" opacity="0.5"/>
+            {/* 鬍鬚右 */}
+            <line x1="17" y1="17.5" x2="23" y2="17" stroke="#3D2918" strokeWidth="0.6" opacity="0.5"/>
+            <line x1="17" y1="18.5" x2="23" y2="18.5" stroke="#3D2918" strokeWidth="0.6" opacity="0.5"/>
+          </svg>
+          <span
+            className="font-serif text-xl font-semibold"
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            BakeMao
+          </span>
+        </div>
         <Link
           href="/recipes"
           className="text-sm font-medium text-[#C8602A] underline underline-offset-4"

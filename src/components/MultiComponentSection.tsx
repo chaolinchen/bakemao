@@ -1054,7 +1054,7 @@ export function MultiComponentSection() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="text-sm text-[#8A7968] underline underline-offset-2"
+            className="hidden text-sm text-[#8A7968] underline underline-offset-2 sm:inline"
             onClick={handleExportCsv}
           >
             匯出 CSV
