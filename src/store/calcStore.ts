@@ -249,6 +249,7 @@ export const useCalcStore = create<
     removeCompLine: (compId: string, lineId: string) => void
     addCompLine: (compId: string, line: Omit<RecipeLine, 'id'>) => void
     addCompLineWithId: (compId: string, line: RecipeLine) => void
+    insertCompLineAfter: (compId: string, afterLineId: string, line: Omit<RecipeLine, 'id'>) => void
     setCompQuantity: (q: number) => void
     setCompLossRate: (r: number) => void
     clearComponents: () => void
@@ -418,6 +419,21 @@ export const useCalcStore = create<
               ? { ...c, ingredients: [...c.ingredients, { ...row }] }
               : c
           ),
+        })),
+      insertCompLineAfter: (compId, afterLineId, line) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) => {
+            if (c.id !== compId) return c
+            const idx = c.ingredients.findIndex((r) => r.id === afterLineId)
+            const newLine = { ...line, id: makeRecipeId() }
+            const next = [...c.ingredients]
+            if (idx === -1) {
+              next.push(newLine)
+            } else {
+              next.splice(idx + 1, 0, newLine)
+            }
+            return { ...c, ingredients: next }
+          }),
         })),
       setCompQuantity: (q) => set({ compQuantity: Math.min(30, Math.max(1, Math.floor(q))) }),
       setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),

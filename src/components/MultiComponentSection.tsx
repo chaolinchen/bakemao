@@ -119,6 +119,7 @@ function ComponentCard({
   const updateComponentGram = useCalcStore((s) => s.updateComponentGram)
   const updateCompLine = useCalcStore((s) => s.updateCompLine)
   const addCompLine = useCalcStore((s) => s.addCompLine)
+  const insertCompLineAfter = useCalcStore((s) => s.insertCompLineAfter)
   const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
   const setComponentMold = useCalcStore((s) => s.setComponentMold)
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
@@ -294,18 +295,23 @@ function ComponentCard({
                   const preset = CAKE_TYPE_PRESETS[ct as keyof typeof CAKE_TYPE_PRESETS]
                   return (
                     <div className="mt-2 rounded-xl bg-[#F0E8DC] p-3 text-xs text-[#5C4A3A]">
-                      <div className="mb-1.5 flex items-center gap-2">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#C8602A]/15 px-2 py-0.5 text-[#7B3A1A] font-medium">
                           {info.whip}
                         </span>
-                        <span className="text-[#8A7968]">
-                          比重 {preset.gravity.toFixed(2)}　填充率 {Math.round(preset.fillRate * 100)}%
-                        </span>
+                        {gramForCalc > 0 && (
+                          <span className="font-semibold text-[#3D2918]">
+                            此設定約需 {gramForCalc.toFixed(0)} g 麵糊
+                          </span>
+                        )}
                       </div>
                       <p className="mb-1 text-[#5C4A3A]">{info.desc}</p>
                       {info.examples && (
-                        <p className="text-[#8A7968]">例：{info.examples}</p>
+                        <p className="mb-1 text-[#8A7968]">例：{info.examples}</p>
                       )}
+                      <p className="text-[10px] text-[#B0A090]">
+                        比重 {preset.gravity.toFixed(2)} · 填充率 {Math.round(preset.fillRate * 100)}%
+                      </p>
                     </div>
                   )
                 })()}
@@ -334,7 +340,7 @@ function ComponentCard({
                           onClick={() =>
                             setComponentMold(comp.id, {
                               roundUnit: u,
-                              moldSize: u === 'cm' ? 20 : 8,
+                              moldSize: u === 'cm' ? 17 : 8,
                             })
                           }
                         >
@@ -463,7 +469,7 @@ function ComponentCard({
                   type="button"
                   className="text-xs text-[#8A7968] underline underline-offset-2"
                   onClick={() =>
-                    addCompLine(comp.id, {
+                    insertCompLineAfter(comp.id, line.id, {
                       name: line.name,
                       brand: line.brand,
                       value: line.value,
@@ -771,6 +777,7 @@ export function MultiComponentSection() {
   const [showLoss, setShowLoss] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const [screenshotting, setScreenshotting] = useState(false)
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
 
   const handleScreenshot = async () => {
     const el = document.querySelector('main')
@@ -782,15 +789,42 @@ export function MultiComponentSection() {
         scale: 2,
         useCORS: true,
         scrollY: -window.scrollY,
+        onclone: (_doc, cloned) => {
+          // 隱藏輸入框邊框，讓截圖像乾淨備料單
+          cloned.querySelectorAll('input').forEach((inp) => {
+            inp.style.border = 'none'
+            inp.style.background = 'transparent'
+            inp.style.outline = 'none'
+          })
+          // 隱藏按鈕類（刪除/複製/展開）
+          cloned.querySelectorAll('button').forEach((btn) => {
+            const t = btn.textContent?.trim() ?? ''
+            if (['刪除', '複製', '復原', '收起計算過程', '顯示計算過程'].includes(t)) {
+              btn.style.display = 'none'
+            }
+          })
+        },
       })
-      const url = canvas.toDataURL('image/png')
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `bakemao-配方.png`
-      a.click()
+      // 加 watermark
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.font = `${28}px sans-serif`
+        ctx.fillStyle = 'rgba(200, 96, 42, 0.25)'
+        ctx.textAlign = 'right'
+        ctx.fillText('BakeMao 烘焙貓', canvas.width - 24, canvas.height - 24)
+      }
+      setScreenshotUrl(canvas.toDataURL('image/png'))
     } finally {
       setScreenshotting(false)
     }
+  }
+
+  const downloadScreenshot = () => {
+    if (!screenshotUrl) return
+    const a = document.createElement('a')
+    a.href = screenshotUrl
+    a.download = 'bakemao-配方.png'
+    a.click()
   }
   const [lineToast, setLineToast] = useState<{
     msg: string
@@ -1024,6 +1058,41 @@ export function MultiComponentSection() {
         }}
       />
     </section>
+
+    {screenshotUrl && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <button
+          type="button"
+          aria-label="關閉"
+          className="absolute inset-0 bg-black/60"
+          onClick={() => setScreenshotUrl(null)}
+        />
+        <div className="relative flex w-full max-w-sm flex-col gap-3 rounded-2xl bg-white p-4 shadow-xl">
+          <h3 className="text-base font-semibold text-[#3D2918]">配方截圖</h3>
+          <div className="max-h-[50vh] overflow-auto rounded-xl border border-[#E5D8C8]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={screenshotUrl} alt="配方截圖" className="w-full" />
+          </div>
+          <p className="text-center text-xs text-[#8A7968]">
+            行動裝置：長按圖片可儲存到相冊
+          </p>
+          <button
+            type="button"
+            className="w-full rounded-xl bg-[#C8602A] py-2.5 text-sm font-medium text-white transition active:scale-[0.99]"
+            onClick={downloadScreenshot}
+          >
+            下載圖片
+          </button>
+          <button
+            type="button"
+            className="w-full rounded-xl py-2 text-sm text-[#6B5A4A] transition hover:bg-black/5"
+            onClick={() => setScreenshotUrl(null)}
+          >
+            關閉
+          </button>
+        </div>
+      </div>
+    )}
 
     {lineToast ? (
       <div
