@@ -45,7 +45,6 @@ function countIngredientLines(ing: Stored | null): number {
   return ing.lines?.length ?? 0
 }
 
-/** 列表第二行：多組為「X 個組合・N 項材料」，舊單組為「N 項材料」 */
 function recipeListIngredientSummary(ing: Stored | null): string {
   if (!ing) return '0 項材料'
   if (Array.isArray(ing.components) && ing.components.length > 0) {
@@ -91,16 +90,16 @@ function RecipeListRow({
 
   if (!swipeEnabled) {
     return (
-      <li className="flex items-stretch justify-between gap-2 rounded-xl border border-[#E5D8C8] bg-white p-3">
+      <li className="mao-card flex items-stretch justify-between gap-2 p-3">
         <button type="button" className="min-w-0 flex-1 text-left" onClick={onOpen}>
-          <div className="font-medium">{name}</div>
-          <div className="text-xs text-[#8A7968]">{metaLine}</div>
+          <div className="font-extrabold text-[#4A3322]">{name}</div>
+          <div className="text-xs text-[#9E8672]">{metaLine}</div>
         </button>
         <button
           type="button"
           aria-label="分享"
           title="複製分享連結"
-          className="shrink-0 rounded-lg px-2 text-[#8A7968] transition hover:bg-black/5 hover:text-[#C8602A]"
+          className="shrink-0 rounded-lg px-2 text-[#9E8672] transition hover:bg-black/5 hover:text-[#C8602A]"
           onClick={onShareClick}
         >
           ↗
@@ -113,18 +112,18 @@ function RecipeListRow({
   }
 
   return (
-    <li className="relative list-none overflow-hidden rounded-xl">
+    <li className="relative list-none overflow-hidden rounded-3xl">
       <div className="absolute inset-y-0 right-0 z-0 flex w-[76px] bg-[#C45C5C]">
         <button
           type="button"
-          className="w-full text-xs font-medium text-white active:bg-[#B04A4A]"
+          className="w-full text-xs font-extrabold text-white active:bg-[#B04A4A]"
           onClick={onDeleteClick}
         >
           刪除
         </button>
       </div>
       <div
-        className="relative z-[1] rounded-xl border border-[#E5D8C8] bg-white"
+        className="mao-card relative z-[1]"
         style={{
           transform: `translateX(${tx}px)`,
           transition:
@@ -161,13 +160,13 @@ function RecipeListRow({
               onOpen()
             }}
           >
-            <div className="font-medium">{name}</div>
-            <div className="text-xs text-[#8A7968]">{metaLine}</div>
+            <div className="font-extrabold text-[#4A3322]">{name}</div>
+            <div className="text-xs text-[#9E8672]">{metaLine}</div>
           </button>
           <button
             type="button"
             aria-label="分享"
-            className="shrink-0 px-3 text-lg text-[#8A7968] active:text-[#C8602A]"
+            className="shrink-0 px-3 text-lg text-[#9E8672] active:text-[#C8602A]"
             onClick={(e) => {
               e.stopPropagation()
               onShareClick()
@@ -303,18 +302,20 @@ export default function RecipesPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F7F0E6]">
-        <p className="text-[#6B5A4A]">檢查登入…</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#E6EEF5]">
+        <p className="text-[#9E8672]">檢查登入…</p>
       </div>
     )
   }
 
   if (status === 'unauthenticated') {
     return (
-      <div className="mx-auto max-w-lg p-6 text-center">
-        <h1 className="mb-4 font-serif text-xl">我的配方</h1>
-        <p className="mb-4 text-[#6B5A4A]">請先登入以管理配方。</p>
-        <div className="flex flex-col gap-2">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#E6EEF5] p-6 text-center"
+      >
+        <h1 className="text-xl font-extrabold text-[#4A3322]">我的配方</h1>
+        <p className="text-[#6B5A4A]">請先登入以管理配方。</p>
+        <div className="flex w-full max-w-xs flex-col gap-2">
           <Button onClick={() => void signIn('google', { callbackUrl: '/recipes' })}>
             Google 登入
           </Button>
@@ -322,7 +323,7 @@ export default function RecipesPage() {
             Apple 登入
           </Button>
         </div>
-        <Link className="mt-4 inline-block text-[#C8602A] underline" href="/">
+        <Link className="mt-2 text-[#C8602A] underline" href="/">
           返回首頁
         </Link>
       </div>
@@ -330,14 +331,20 @@ export default function RecipesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F0E6] p-4">
+    <div
+      className="min-h-screen p-4"
+      style={{ background: '#E6EEF5' }}
+    >
       <header className="mb-6 flex items-center justify-between">
-        <Link href="/" className="text-[#C8602A] underline">
+        <Link
+          href="/"
+          className="flex items-center gap-1.5 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-3.5 py-1.5 text-[13px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
+        >
           ← 返回
         </Link>
-        <h1 className="font-serif text-xl">我的配方</h1>
+        <h1 className="text-xl font-extrabold text-[#4A3322]">我的配方</h1>
       </header>
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {rows.map((r) => (
           <RecipeListRow
             key={r.id}
@@ -369,7 +376,7 @@ export default function RecipesPage() {
 
       {shareToast ? (
         <div
-          className="fixed bottom-6 left-4 right-4 z-40 flex items-center justify-center rounded-xl bg-[#3D2918] px-4 py-3 text-sm text-white shadow-lg"
+          className="fixed bottom-6 left-4 right-4 z-40 flex items-center justify-center rounded-2xl border-2 border-[#6B4A2F] bg-[#4A3322] px-4 py-3 text-sm font-extrabold text-white shadow-lg"
           style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
           role="status"
         >

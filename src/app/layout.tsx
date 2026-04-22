@@ -1,37 +1,26 @@
 import type { Metadata, Viewport } from 'next'
-import {
-  DM_Mono,
-  Noto_Sans_TC,
-  Noto_Serif_TC,
-  Playfair_Display,
-} from 'next/font/google'
+import { Baloo_2, Noto_Sans_TC, Roboto_Mono } from 'next/font/google'
 import { Providers } from '@/components/Providers'
 import './globals.css'
 
-const playfair = Playfair_Display({
+const baloo = Baloo_2({
   subsets: ['latin'],
-  variable: '--font-playfair',
+  variable: '--font-baloo',
+  weight: ['700', '800'],
   display: 'swap',
 })
 
-const dmMono = DM_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ['latin'],
-  variable: '--font-dm-mono',
-  weight: ['400', '500'],
+  variable: '--font-roboto-mono',
+  weight: ['400', '600', '700'],
   display: 'swap',
 })
 
 const notoSans = Noto_Sans_TC({
   subsets: ['latin'],
   variable: '--font-noto-sans',
-  weight: ['400', '500'],
-  display: 'swap',
-})
-
-const notoSerif = Noto_Serif_TC({
-  subsets: ['latin'],
-  variable: '--font-noto-serif',
-  weight: ['400', '600'],
+  weight: ['400', '500', '700', '800'],
   display: 'swap',
 })
 
@@ -53,10 +42,8 @@ export default function RootLayout({
   return (
     <html lang="zh-Hant">
       <body
-        className={`${playfair.variable} ${dmMono.variable} ${notoSans.variable} ${notoSerif.variable} min-h-screen antialiased`}
-        style={{
-          fontFamily: 'var(--font-noto-sans), system-ui, sans-serif',
-        }}
+        className={`${baloo.variable} ${robotoMono.variable} ${notoSans.variable} min-h-screen antialiased`}
+        style={{ fontFamily: "'Baloo 2', 'Noto Sans TC', system-ui, sans-serif" }}
       >
         <Providers>{children}</Providers>
       </body>

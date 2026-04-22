@@ -12,9 +12,9 @@ import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
-import { Button } from './ui/Button'
 import { ConfirmDialog } from './ui/Dialog'
 import { NumberInput } from './ui/NumberInput'
+import { Sparkle } from './ui/Sparkle'
 import { Stepper } from './ui/Stepper'
 
 function parseNum(s: string | number): number {
@@ -76,7 +76,7 @@ function SegmentedTargetMode({
   onChange: (v: 'gram' | 'mold') => void
 }) {
   return (
-    <div className="flex rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] p-0.5">
+    <div className="flex gap-1 rounded-[14px] border-2 border-[#6B4A2F] bg-[#FFE1C7] p-1">
       {(
         [
           { value: 'gram' as const, label: '輸入克數' },
@@ -87,10 +87,10 @@ function SegmentedTargetMode({
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all duration-150 ${
+          className={`flex-1 rounded-[10px] py-2 text-[13px] font-extrabold transition-all duration-150 ${
             value === opt.value
-              ? 'bg-white text-[#C8602A] shadow-sm'
-              : 'text-[#6B5A4A]'
+              ? 'border-2 border-[#6B4A2F] bg-white text-[#C8602A]'
+              : 'text-[#9E8672]'
           }`}
         >
           {opt.label}
@@ -184,17 +184,26 @@ function ComponentCard({
     comp.targetMode === 'mold' ? effectiveGramPerUnit(comp) : 0
 
   return (
-    <div className="rounded-2xl border border-[#E5D8C8] bg-white shadow-sm">
-      <div className="flex items-center gap-2 border-b border-[#E5D8C8] px-4 py-3">
+    <div className="overflow-hidden rounded-3xl border-[2.5px] border-[#6B4A2F] bg-[#FFFBF2] shadow-[0_4px_0_#6B4A2F]">
+      {/* 三花貓 tricolor tab */}
+      <div
+        className="border-b-[2.5px] border-[#6B4A2F]"
+        style={{
+          height: 10,
+          background:
+            'linear-gradient(90deg, #E8955A 0 33.33%, #FFFBF2 33.33% 66.66%, #3D2918 66.66% 100%)',
+        }}
+      />
+      <div className="flex items-center gap-2 border-b-2 border-dashed border-[#D0A578] px-3.5 py-3">
         <input
-          className="flex-1 rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] px-3 py-1.5 text-sm font-medium text-[#3D2918] outline-none focus:border-[#C8602A]"
+          className="flex-1 rounded-xl border-2 border-[#6B4A2F] bg-[#FFE1C7] px-3 py-2 text-[15px] font-extrabold text-[#4A3322] outline-none"
           value={comp.name}
           onChange={(e) => updateComponentName(comp.id, e.target.value)}
           placeholder="例：派皮、蛋糕體、奶油霜"
         />
         <button
           type="button"
-          className="shrink-0 text-xs text-[#8A7968] underline underline-offset-2"
+          className="shrink-0 flex h-8 items-center rounded-[10px] border-2 border-[#6B4A2F] bg-white px-2 text-[11.5px] font-extrabold text-[#6B4A2F]"
           title="複製此組合"
           onClick={() => duplicateComponent(comp.id)}
         >
@@ -202,7 +211,7 @@ function ComponentCard({
         </button>
         <button
           type="button"
-          className="shrink-0 rounded-md px-1.5 py-0.5 text-lg leading-none text-[#B0A090] transition hover:bg-red-50 hover:text-red-600"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px] border-2 border-[#6B4A2F] bg-white text-base font-extrabold text-[#B54728]"
           title="刪除此組合"
           onClick={onRemove}
         >
@@ -213,7 +222,7 @@ function ComponentCard({
       <div className="px-4 pt-3">
         {/* 輸入模式切換 */}
         <div className="mb-3">
-          <div className="flex rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] p-0.5">
+          <div className="flex gap-1 rounded-[14px] border-2 border-[#6B4A2F] bg-[#FFE1C7] p-1">
             {(
               [
                 { value: false, label: '% 比例輸入' },
@@ -224,10 +233,10 @@ function ComponentCard({
                 key={String(opt.value)}
                 type="button"
                 onClick={() => setComponentGramMode(comp.id, opt.value)}
-                className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all duration-150 ${
+                className={`flex-1 rounded-[10px] py-2 text-[13px] font-extrabold transition-all duration-150 ${
                   isGramMode === opt.value
-                    ? 'bg-white text-[#C8602A] shadow-sm'
-                    : 'text-[#6B5A4A]'
+                    ? 'border-2 border-[#6B4A2F] bg-white text-[#C8602A]'
+                    : 'text-[#9E8672]'
                 }`}
               >
                 {opt.label}
@@ -270,7 +279,7 @@ function ComponentCard({
             <p className="text-xs text-[#8A7968]">這組配方，每個成品的目標重量</p>
           </div>
         ) : (
-          <div className="mb-3 space-y-3 rounded-xl bg-[#FAF6F0] p-3">
+          <div className="mb-3 space-y-3 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFE1C7] p-3">
             <div>
               <p className="mb-1.5 text-xs text-[#6B5A4A]">模具類型</p>
               <div className="flex flex-wrap gap-1.5">
@@ -278,10 +287,10 @@ function ComponentCard({
                   <button
                     key={opt.value}
                     type="button"
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                    className={`rounded-[10px] border-2 border-[#6B4A2F] px-3 py-1.5 text-xs font-extrabold transition-all ${
                       comp.moldType === opt.value
                         ? 'bg-[#C8602A] text-white'
-                        : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                        : 'bg-[#FFFBF2] text-[#6B4A2F]'
                     }`}
                     onClick={() => setComponentMold(comp.id, { moldType: opt.value })}
                   >
@@ -301,10 +310,10 @@ function ComponentCard({
                       <button
                         key={opt.value}
                         type="button"
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                        className={`rounded-[10px] border-2 border-[#6B4A2F] px-3 py-1.5 text-xs font-extrabold transition-all ${
                           active
-                            ? 'bg-[#7B5E3A] text-white'
-                            : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                            ? 'bg-[#6B4A2F] text-white'
+                            : 'bg-[#FFFBF2] text-[#6B4A2F]'
                         }`}
                         onClick={() => setComponentMold(comp.id, { cakeType: opt.value })}
                       >
@@ -320,7 +329,7 @@ function ComponentCard({
                   const info = CAKE_TYPE_INFO[ct]
                   if (ct === 'custom') {
                     return (
-                      <div className="mt-2 rounded-xl bg-[#F0E8DC] p-3 text-xs text-[#5C4A3A]">
+                      <div className="mt-2 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] p-3 text-xs text-[#5C4A3A]">
                         <p className="mb-2 text-[#8A7968]">{info.desc}</p>
                         <div className="flex flex-wrap gap-3">
                           <div className="flex items-center gap-1.5">
@@ -359,9 +368,9 @@ function ComponentCard({
                   }
                   const preset = CAKE_TYPE_PRESETS[ct as keyof typeof CAKE_TYPE_PRESETS]
                   return (
-                    <div className="mt-2 rounded-xl bg-[#F0E8DC] p-3 text-xs text-[#5C4A3A]">
+                    <div className="mt-2 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] p-3 text-xs text-[#5C4A3A]">
                       <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-[#C8602A]/15 px-2 py-0.5 text-[#7B3A1A] font-medium">
+                        <span className="rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-0.5 text-[12px] font-extrabold text-[#8B3B1C]">
                           {info.whip}
                         </span>
                         {gramForCalc > 0 && (
@@ -392,15 +401,15 @@ function ComponentCard({
                       : '尺寸（cm）'}
                   </p>
                   {comp.moldType === 'round' && (
-                    <div className="flex rounded-md border border-[#D9C9B5] bg-white text-xs overflow-hidden">
+                    <div className="flex overflow-hidden rounded-[10px] border-2 border-[#6B4A2F]">
                       {(['inch', 'cm'] as const).map((u) => (
                         <button
                           key={u}
                           type="button"
-                          className={`px-2 py-0.5 transition-all ${
+                          className={`px-2 py-0.5 text-xs font-extrabold transition-all ${
                             roundUnit === u
                               ? 'bg-[#C8602A] text-white'
-                              : 'text-[#6B5A4A]'
+                              : 'bg-white text-[#6B4A2F]'
                           }`}
                           onClick={() =>
                             setComponentMold(comp.id, {
@@ -425,10 +434,10 @@ function ComponentCard({
                     <button
                       key={s}
                       type="button"
-                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                      className={`rounded-[10px] border-2 border-[#6B4A2F] px-2.5 py-1 text-xs font-extrabold transition-all ${
                         comp.moldSize === s
                           ? 'bg-[#C8602A] text-white'
-                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                          : 'bg-[#FFFBF2] text-[#6B4A2F]'
                       }`}
                       onClick={() => setComponentMold(comp.id, { moldSize: s })}
                     >
@@ -445,10 +454,10 @@ function ComponentCard({
                     <button
                       key={cc}
                       type="button"
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
+                      className={`rounded-[10px] border-2 border-[#6B4A2F] px-3 py-1.5 text-xs font-extrabold transition-all ${
                         comp.cupCount === cc
                           ? 'bg-[#C8602A] text-white'
-                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                          : 'bg-[#FFFBF2] text-[#6B4A2F]'
                       }`}
                       onClick={() => setComponentMold(comp.id, { cupCount: cc })}
                     >
@@ -501,7 +510,7 @@ function ComponentCard({
           {isCustomQty ? (
             <button
               type="button"
-              className="rounded-full bg-[#F5E6D0] px-2 py-0.5 text-xs font-medium text-[#C8602A]"
+              className="rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-0.5 text-xs font-extrabold text-[#C8602A]"
               title="每組可以獨立設定份數，不設定則沿用全局份數。點此重置為全局份數。"
               onClick={() => setComponentCustomQty(comp.id, null)}
             >
@@ -531,7 +540,7 @@ function ComponentCard({
             return (
               <div
                 key={line.id}
-                className="flex flex-wrap items-end gap-2 rounded-xl bg-[#FAF6F0] px-3 py-2"
+                className={`flex flex-wrap items-end gap-2 rounded-2xl border-2 border-[#6B4A2F] px-3 py-3 shadow-[0_2px_0_#6B4A2F] ${isBase ? 'bg-[#FFE1C7]' : 'bg-white'}`}
               >
                 <div className="min-w-[90px] flex-1">
                   <p className="text-sm font-medium text-[#3D2918]">
@@ -543,7 +552,7 @@ function ComponentCard({
                       </span>
                     ) : null}
                     {isBase && (
-                      <span className="ml-1.5 rounded-full bg-[#C8602A]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#C8602A]">
+                      <span className="ml-1.5 rounded-full border border-[#6B4A2F] bg-[#C8602A] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
                         基底
                       </span>
                     )}
@@ -605,13 +614,13 @@ function ComponentCard({
           })}
         </div>
 
-        <Button
-          variant="ghost"
-          className="mb-1 w-full border border-dashed border-[#D9C9B5]"
+        <button
+          type="button"
+          className="mb-1 flex w-full items-center justify-center gap-1.5 rounded-2xl border-[2.5px] border-dashed border-[#6B4A2F] bg-[#FFFBF2] py-3 text-[13.5px] font-extrabold text-[#6B4A2F]"
           onClick={() => setSheetOpen(true)}
         >
           + 新增材料
-        </Button>
+        </button>
 
         <div className="mb-3 flex items-center justify-end gap-1.5">
           {isGramMode ? (
@@ -634,7 +643,7 @@ function ComponentCard({
         </div>
 
         {hasResult && result.totalPct > 0 ? (
-          <div className="mb-4 rounded-xl border border-[#E5D8C8] bg-[#FAF6F0] p-3">
+          <div className="mb-4 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] p-3">
             <div className="space-y-1.5">
               {result.ingredients.map((row) => (
                 <div
@@ -654,24 +663,23 @@ function ComponentCard({
                     {row.gram.toFixed(1)} g
                   </span>
                   <div
-                    className="flex-1 rounded-full bg-[#E5D8C8]"
-                    style={{ height: 6 }}
+                    className="min-w-0 flex-1 rounded-full border-[1.5px] border-[#6B4A2F] bg-[#E6D3BF]"
+                    style={{ height: 8 }}
                   >
                     <div
-                      className="h-full rounded-full"
+                      className="h-full rounded-full bg-[#C8602A]"
                       style={{
                         width: `${Math.min(100, (row.gram / maxGram) * 100).toFixed(1)}%`,
-                        backgroundColor: '#C8602A',
                       }}
                     />
                   </div>
                 </div>
               ))}
-              <div className="mt-1.5 flex items-center gap-2 border-t border-[#E5D8C8] pt-1.5">
-                <span className="w-24 shrink-0 text-sm font-semibold text-[#3D2918]">
+              <div className="mt-1.5 flex items-center gap-2 border-t-2 border-[#6B4A2F] pt-1.5">
+                <span className="w-24 shrink-0 text-sm font-extrabold text-[#4A3322]">
                   合計
                 </span>
-                <span className="w-20 shrink-0 whitespace-nowrap text-right font-mono text-base font-semibold text-[#C8602A]">
+                <span className="w-20 shrink-0 whitespace-nowrap text-right font-[family-name:var(--font-roboto-mono)] text-base font-extrabold text-[#C8602A]">
                   {result.totalGram.toFixed(1)} g
                 </span>
               </div>
@@ -792,16 +800,16 @@ function TemplateDialog({
         aria-label="關閉"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-        <h3 className="text-lg font-semibold text-[#3D2918]">範本配方</h3>
-        <p className="mt-1 text-xs text-[#8A7968]">
+      <div className="mao-card relative w-full max-w-sm p-5">
+        <h3 className="text-lg font-extrabold text-[#4A3322]">範本配方</h3>
+        <p className="mt-1 text-xs text-[#9E8672]">
           套用後會新增一組配方，你可以繼續修改比例。
         </p>
         <div className="mt-4 space-y-3">
           {RECIPE_TEMPLATES.map((tpl) => (
             <div
               key={tpl.id}
-              className="rounded-xl border border-[#E5D8C8] bg-[#FAF6F0] p-3"
+              className="rounded-2xl border-2 border-[#6B4A2F] bg-[#FFE9D1] p-3"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -811,7 +819,7 @@ function TemplateDialog({
                     {tpl.ingredients.map((ing) => (
                       <span
                         key={ing.name}
-                        className="rounded-full bg-[#E5D8C8] px-2 py-0.5 text-xs text-[#5C4D3E]"
+                        className="rounded-full border border-[#6B4A2F] bg-[#FFFBF2] px-2 py-0.5 text-xs font-extrabold text-[#6B4A2F]"
                       >
                         {ing.name} {ing.value}%
                       </span>
@@ -820,7 +828,7 @@ function TemplateDialog({
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-lg bg-[#C8602A] px-3 py-1.5 text-xs font-medium text-white transition active:scale-95"
+                  className="shrink-0 rounded-xl border-2 border-[#6B4A2F] bg-[#C8602A] px-3 py-1.5 text-xs font-extrabold text-white shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
                   onClick={() => {
                     onApply(tpl)
                     onClose()
@@ -1049,19 +1057,24 @@ export function MultiComponentSection() {
   return (
     <>
     <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-1">
+        <h2 className="flex items-center gap-2 text-[17px] font-extrabold text-[#4A3322]">
+          <span className="inline-flex rounded-full border-2 border-[#6B4A2F] bg-[#FFD089] p-1 shadow-[0_2px_0_#6B4A2F]">
+            <Sparkle size={12} color="#C8602A" />
+          </span>
+          多組配方計算
+        </h2>
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
-            className="hidden text-sm text-[#8A7968] underline underline-offset-2 sm:inline"
+            className="hidden items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] sm:flex"
             onClick={handleExportCsv}
           >
             匯出 CSV
           </button>
           <button
             type="button"
-            className="text-sm text-[#8A7968] underline underline-offset-2 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] disabled:opacity-50"
             onClick={() => void handleScreenshot()}
             disabled={screenshotting}
           >
@@ -1069,25 +1082,25 @@ export function MultiComponentSection() {
           </button>
           <button
             type="button"
-            className="text-sm text-[#C8602A] underline underline-offset-2"
+            className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
             onClick={() => setShowTemplates(true)}
           >
-            範本配方
+            範本
           </button>
           <button
             type="button"
-            className="text-sm text-red-700 underline"
+            className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-2.5 py-1 text-[12.5px] font-extrabold text-white shadow-[0_2px_0_#6B4A2F]"
             onClick={() => setConfirmClear(true)}
           >
-            新配方
+            + 新配方
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
+      <div className="rounded-2xl border-2 border-[#6B4A2F] bg-white px-3.5 py-3 shadow-[0_3px_0_#6B4A2F]">
         <button
           type="button"
-          className="flex w-full items-center justify-between text-sm text-[#6B5A4A]"
+          className="flex w-full items-center justify-between text-[13.5px] text-[#6B5A4A]"
           onClick={() => setShowLoss((x) => !x)}
         >
           <span>進階：備料損耗比例</span>
@@ -1127,12 +1140,12 @@ export function MultiComponentSection() {
 
       {/* 空狀態：唯一組合且無材料時，顯示範本入口 */}
       {components.length === 1 && components[0].ingredients.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-[#C8602A]/40 bg-[#FDF3E7] p-4 text-center">
-          <p className="mb-1 text-sm font-medium text-[#3D2918]">第一次使用？</p>
-          <p className="mb-3 text-xs text-[#6B5A4A]">套用範本配方快速開始，或直接加材料自行輸入。</p>
+        <div className="rounded-3xl border-[2.5px] border-dashed border-[#6B4A2F] bg-[#FFFBF2] p-4 text-center">
+          <p className="mb-1 text-sm font-extrabold text-[#4A3322]">第一次使用？</p>
+          <p className="mb-3 text-xs text-[#9E8672]">套用範本配方快速開始，或直接加材料自行輸入。</p>
           <button
             type="button"
-            className="rounded-xl bg-[#C8602A] px-4 py-2 text-sm font-medium text-white transition active:scale-95"
+            className="rounded-2xl border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-2 text-sm font-extrabold text-white shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
             onClick={() => setShowTemplates(true)}
           >
             套用範本配方
@@ -1151,13 +1164,13 @@ export function MultiComponentSection() {
         />
       ))}
 
-      <Button
-        variant="ghost"
-        className="w-full border border-dashed border-[#D9C9B5]"
+      <button
+        type="button"
+        className="flex w-full items-center justify-center gap-2 rounded-[20px] border-[2.5px] border-dashed border-[#6B4A2F] bg-transparent py-3 text-[14px] font-extrabold text-[#6B4A2F]"
         onClick={addComponent}
       >
         ＋ 新增組合
-      </Button>
+      </button>
 
       {confirmClear ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -1167,8 +1180,8 @@ export function MultiComponentSection() {
             aria-label="背景"
             onClick={() => setConfirmClear(false)}
           />
-          <div className="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#3D2918]">開始新配方？</h3>
+          <div className="mao-card relative w-full max-w-sm p-5">
+            <h3 className="text-lg font-extrabold text-[#4A3322]">開始新配方？</h3>
             <p className="mt-2 text-sm text-[#5C4D3E]">
               目前的配方組合將被清除，份數設定將重置為 6，備料損耗比例將重置為
               0%。請確認已儲存，或先點下方「先儲存配方」。
@@ -1176,7 +1189,7 @@ export function MultiComponentSection() {
             <div className="mt-5 flex flex-col gap-2">
               <button
                 type="button"
-                className="w-full rounded-xl bg-[#C8602A] py-2.5 text-sm font-medium text-white shadow-sm transition active:scale-[0.99]"
+                className="w-full rounded-2xl border-2 border-[#6B4A2F] bg-[#C8602A] py-2.5 text-sm font-extrabold text-white shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
                 onClick={() => {
                   setConfirmClear(false)
                   window.dispatchEvent(new CustomEvent('bakemao:requestSave'))
@@ -1251,8 +1264,8 @@ export function MultiComponentSection() {
           className="absolute inset-0 bg-black/60"
           onClick={() => setScreenshotUrl(null)}
         />
-        <div className="relative flex w-full max-w-sm flex-col gap-3 rounded-2xl bg-white p-4 shadow-xl">
-          <h3 className="text-base font-semibold text-[#3D2918]">配方截圖</h3>
+        <div className="mao-card relative flex w-full max-w-sm flex-col gap-3 p-4">
+          <h3 className="text-base font-extrabold text-[#4A3322]">配方截圖</h3>
           <div className="max-h-[50vh] overflow-auto rounded-xl border border-[#E5D8C8]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={screenshotUrl} alt="配方截圖" className="w-full" />
@@ -1262,7 +1275,7 @@ export function MultiComponentSection() {
           </p>
           <button
             type="button"
-            className="w-full rounded-xl bg-[#C8602A] py-2.5 text-sm font-medium text-white transition active:scale-[0.99]"
+            className="w-full rounded-2xl border-2 border-[#6B4A2F] bg-[#C8602A] py-2.5 text-sm font-extrabold text-white shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
             onClick={downloadScreenshot}
           >
             下載圖片

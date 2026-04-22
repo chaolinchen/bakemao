@@ -110,7 +110,7 @@ function IngredientPreview({
   }
 
   if (lines.length === 0) {
-    return <p className="text-sm text-[#8A7968]">無材料資料</p>
+    return <p className="text-sm text-[#9E8672]">無材料資料</p>
   }
 
   return (
@@ -118,21 +118,21 @@ function IngredientPreview({
       {lines.map((l, i) =>
         l.kind === 'header' ? (
           <li key={i} className="flex items-baseline gap-2 pt-2">
-            <span className="text-xs font-semibold text-[#6B5A4A]">【{l.label}】</span>
+            <span className="text-xs font-extrabold text-[#6B4A2F]">【{l.label}】</span>
             {l.meta && <span className="text-[10px] text-[#B0A090]">{l.meta}</span>}
           </li>
         ) : (
           <li key={i} className="flex items-center justify-between gap-2">
-            <span className="min-w-0 flex-1 truncate text-sm text-[#3D2918]">
+            <span className="min-w-0 flex-1 truncate text-sm text-[#4A3322]">
               {l.label}
             </span>
             <div className="flex shrink-0 items-center gap-2">
               {l.gram && (
-                <span className="font-mono text-sm font-semibold text-[#3D2918]">
+                <span className="font-[family-name:var(--font-roboto-mono)] text-sm font-extrabold text-[#4A3322]">
                   {l.gram}
                 </span>
               )}
-              <span className="w-10 text-right font-mono text-xs text-[#8A7968]">
+              <span className="w-10 text-right font-[family-name:var(--font-roboto-mono)] text-xs text-[#9E8672]">
                 {l.pct}
               </span>
             </div>
@@ -155,6 +155,27 @@ export default function SharePage({
   const [copied, setCopied] = useState(false)
   const [confirmLoad, setConfirmLoad] = useState(false)
   const [shareQty, setShareQty] = useState<number>(0)
+
+  const normalizedComponents = useMemo(
+    () =>
+      Array.isArray(recipe?.ingredients.components)
+        ? recipe.ingredients.components
+            .map(normalizeRecipeComponent)
+            .filter((x): x is RecipeComponent => x !== null)
+        : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [recipe]
+  )
+
+  const aggregate = useMemo(
+    () =>
+      aggregateIngredientsAcrossComponents(
+        normalizedComponents,
+        shareQty || 1,
+        Number(recipe?.ingredients.compLossRate ?? 0)
+      ),
+    [normalizedComponents, shareQty, recipe]
+  )
 
   useEffect(() => {
     fetch(`/api/share/${params.token}`)
@@ -221,27 +242,6 @@ export default function SharePage({
     router.push('/')
   }
 
-  const normalizedComponents = useMemo(
-    () =>
-      Array.isArray(recipe?.ingredients.components)
-        ? recipe.ingredients.components
-            .map(normalizeRecipeComponent)
-            .filter((x): x is RecipeComponent => x !== null)
-        : [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [recipe]
-  )
-
-  const aggregate = useMemo(
-    () =>
-      aggregateIngredientsAcrossComponents(
-        normalizedComponents,
-        shareQty || 1,
-        Number(recipe?.ingredients.compLossRate ?? 0)
-      ),
-    [normalizedComponents, shareQty, recipe]
-  )
-
   const copyLink = async () => {
     await navigator.clipboard.writeText(window.location.href)
     setCopied(true)
@@ -250,17 +250,17 @@ export default function SharePage({
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F7F0E6]">
-        <p className="text-[#6B5A4A]">載入中…</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#E6EEF5]">
+        <p className="text-[#9E8672]">載入中…</p>
       </div>
     )
   }
 
   if (status === 'error' || !recipe) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#F7F0E6] p-6 text-center">
-        <p className="text-lg font-medium text-[#3D2918]">找不到這份配方</p>
-        <p className="text-sm text-[#8A7968]">連結可能已失效或被刪除。</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#E6EEF5] p-6 text-center">
+        <p className="text-lg font-extrabold text-[#4A3322]">找不到這份配方</p>
+        <p className="text-sm text-[#9E8672]">連結可能已失效或被刪除。</p>
         <Link href="/" className="text-sm text-[#C8602A] underline underline-offset-4">
           前往 BakeMao
         </Link>
@@ -275,43 +275,52 @@ export default function SharePage({
       : null
 
   return (
-    <div className="min-h-screen bg-[#FDF8F2]">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-[#E5D8C8] bg-[#FDF8F2]/90 px-4 py-3 backdrop-blur">
-        <span
-          className="font-serif text-xl font-semibold text-[#3D2918]"
-          style={{ fontFamily: 'var(--font-playfair)' }}
-        >
-          BakeMao
+    <div
+      className="min-h-screen pb-8"
+      style={{ background: '#E6EEF5' }}
+    >
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b-2 border-[#6B4A2F] bg-[#E6EEF5]/92 px-4 py-3 backdrop-blur">
+        <div className="flex items-center gap-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/maologo.png" width={36} height={36} alt="BakeMao logo" />
+          <div>
+            <div className="text-[18px] font-extrabold leading-none text-[#6B4A2F]">BakeMao</div>
+            <div className="text-[9px] font-bold tracking-[3px] text-[#C8602A]">烘 焙 貓</div>
+          </div>
+        </div>
+        <span className="rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-3 py-1 text-xs font-extrabold text-[#6B4A2F]">
+          分享配方
         </span>
-        <span className="text-xs text-[#8A7968]">分享配方</span>
       </header>
 
       <main className="mx-auto max-w-lg space-y-4 p-4">
         {/* Recipe title card */}
-        <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
-          <h1 className="font-serif text-xl font-semibold text-[#3D2918]">
+        <section className="mao-card p-4">
+          <h1 className="text-xl font-extrabold text-[#4A3322]">
             {recipe.name}
           </h1>
           {nCombos !== null && (
-            <p className="mt-1 text-sm text-[#8A7968]">{nCombos} 個組合</p>
+            <p className="mt-1 text-sm text-[#9E8672]">{nCombos} 個組合</p>
           )}
         </section>
 
         {/* 份數調整 */}
-        <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
+        <section className="mao-card p-4">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-semibold text-[#3D2918]">調整份數</span>
-            <span className="text-sm font-bold text-[#C8602A]">{shareQty} 個</span>
+            <span className="text-sm font-extrabold text-[#4A3322]">調整份數</span>
+            <span className="rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-3 py-0.5 text-sm font-extrabold text-white shadow-[0_2px_0_#6B4A2F]">
+              {shareQty} 個
+            </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {SHARE_QUICK_QTY.map((q) => (
               <button
                 key={q}
                 type="button"
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                className={`min-w-[40px] rounded-[12px] border-2 border-[#6B4A2F] px-2.5 py-1.5 text-sm font-extrabold transition ${
                   shareQty === q
-                    ? 'bg-[#C8602A] text-white shadow-sm'
-                    : 'border border-[#D9C9B5] bg-[#FAF6F0] text-[#3D2918]'
+                    ? 'translate-y-px bg-[#C8602A] text-white shadow-[0_1px_0_#6B4A2F]'
+                    : 'bg-[#FFFBF2] text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]'
                 }`}
                 onClick={() => setShareQty(q)}
               >
@@ -327,38 +336,42 @@ export default function SharePage({
                 const v = Math.min(999, Math.max(1, parseInt(e.target.value) || 1))
                 setShareQty(v)
               }}
-              className="w-16 rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] px-2 py-1.5 text-center text-sm"
+              className="w-16 rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2 py-1.5 text-center text-sm font-extrabold"
             />
           </div>
         </section>
 
         {/* Ingredient list */}
-        <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
-          <h2 className="mb-3 text-sm font-semibold text-[#6B5A4A]">材料比例</h2>
+        <section className="mao-card p-4">
+          <h2 className="mb-3 text-sm font-extrabold text-[#6B4A2F]">材料比例</h2>
           <IngredientPreview ingredients={recipe.ingredients} overrideQty={shareQty || undefined} />
         </section>
 
         {/* 備料彙總 */}
         {aggregate.shouldShow && aggregate.rows.length > 0 && nCombos !== null && nCombos > 1 && (
-          <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
-            <h2 className="mb-3 text-sm font-semibold text-[#6B5A4A]">
-              備料彙總・{fmtG(aggregate.totalGram)}
-            </h2>
-            <ul className="space-y-1.5">
-              {aggregate.rows.map((row) => (
-                <li key={row.key} className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 flex-1 truncate text-sm text-[#3D2918]">
-                    {row.name}
-                    {row.brand ? (
-                      <span className="text-xs text-[#8A7968]"> · {row.brand}</span>
-                    ) : null}
-                  </span>
-                  <span className="shrink-0 font-mono text-sm font-semibold text-[#3D2918]">
-                    {fmtG(row.gram)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          <section className="mao-card overflow-hidden">
+            <div className="border-b-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-2.5">
+              <h2 className="text-sm font-extrabold text-white">
+                備料彙總・{fmtG(aggregate.totalGram)}
+              </h2>
+            </div>
+            <div className="p-4">
+              <ul className="space-y-1.5">
+                {aggregate.rows.map((row) => (
+                  <li key={row.key} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 flex-1 truncate text-sm text-[#4A3322]">
+                      {row.name}
+                      {row.brand ? (
+                        <span className="text-xs text-[#9E8672]"> · {row.brand}</span>
+                      ) : null}
+                    </span>
+                    <span className="shrink-0 font-[family-name:var(--font-roboto-mono)] text-sm font-extrabold text-[#4A3322]">
+                      {fmtG(row.gram)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         )}
 
@@ -370,13 +383,13 @@ export default function SharePage({
           <button
             type="button"
             onClick={copyLink}
-            className="w-full rounded-xl border border-[#D9C9B5] bg-white py-3 text-sm font-medium text-[#3D2918] transition active:bg-[#F0E8DC]"
+            className="w-full rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] py-3 text-sm font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px active:shadow-[0_1px_0_#6B4A2F]"
           >
             {copied ? '✓ 已複製連結' : '複製分享連結'}
           </button>
         </div>
 
-        <p className="text-center text-xs text-[#8A7968]">
+        <p className="text-center text-xs text-[#9E8672]">
           由{' '}
           <Link href="/" className="text-[#C8602A] underline underline-offset-2">
             BakeMao 烘焙貓
@@ -393,8 +406,8 @@ export default function SharePage({
             className="absolute inset-0 bg-black/40"
             onClick={() => setConfirmLoad(false)}
           />
-          <div className="relative w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl">
-            <h3 className="text-lg font-semibold text-[#3D2918]">載入此配方？</h3>
+          <div className="mao-card relative w-full max-w-xs p-5">
+            <h3 className="text-lg font-extrabold text-[#4A3322]">載入此配方？</h3>
             <p className="mt-2 text-sm text-[#5C4D3E]">
               計算機目前的內容將被覆蓋，請確認已儲存或不需保留。
             </p>

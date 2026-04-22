@@ -16,8 +16,8 @@ export function NumberInput(
       inputMode="decimal"
       pattern="[0-9]*"
       autoComplete="off"
-      className={`w-full rounded-lg border px-3 py-2 text-base outline-none ring-[#C8602A]/30 focus:ring-2 ${
-        invalid ? 'border-red-500' : 'border-[#D9C9B5]'
+      className={`w-full rounded-xl border-2 bg-[#FFFBF2] px-3 py-2 text-base font-extrabold outline-none focus:ring-2 focus:ring-[#C8602A]/30 font-[family-name:var(--font-roboto-mono)] ${
+        invalid ? 'border-red-500' : 'border-[#6B4A2F]'
       } ${className}`}
       {...rest}
       onFocus={handleFocus}

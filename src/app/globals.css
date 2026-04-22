@@ -3,9 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #f7f0e6;
-  --foreground: #3d2918;
+  --background: #E6EEF5;
+  --foreground: #4A3322;
   --keyboard-offset: 0px;
+  --mao-choco: #6B4A2F;
+  --mao-orange: #C8602A;
+  --mao-cream: #FFFBF2;
+  --mao-cream2: #FFE1C7;
 }
 
 body {
@@ -13,8 +17,40 @@ body {
   background: var(--background);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  /* Sticker card — cream bg + chocolate outline + offset shadow */
+  .mao-card {
+    background: #FFFBF2;
+    border-radius: 24px;
+    border: 2.5px solid #6B4A2F;
+    box-shadow: 0 4px 0 #6B4A2F;
+    position: relative;
   }
+
+  /* Pill / action button base */
+  .mao-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 800;
+    padding: 6px 14px;
+    border: 2px solid #6B4A2F;
+    box-shadow: 0 2px 0 #6B4A2F;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .mao-pill:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #6B4A2F;
+  }
+  .mao-pill-cream  { background: #FFE1C7; color: #6B4A2F; }
+  .mao-pill-dark   { background: #6B4A2F; color: #fff; }
+  .mao-pill-orange { background: #C8602A; color: #fff; }
+  .mao-pill-white  { background: #FFFBF2; color: #6B4A2F; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .font-mono-num { font-variant-numeric: tabular-nums; }
 }

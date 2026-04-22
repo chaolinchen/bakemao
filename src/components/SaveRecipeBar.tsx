@@ -7,6 +7,7 @@ import { queueOfflineSave } from '@/lib/offlineSync'
 import { computeResult, useCalcStore } from '@/store/calcStore'
 import { BottomSheet } from './ui/BottomSheet'
 import { Button } from './ui/Button'
+import { Sparkle } from './ui/Sparkle'
 
 function defaultRecipeName() {
   const d = new Date()
@@ -45,7 +46,6 @@ export function SaveRecipeBar() {
     }
   }, [hasAnyResult, status])
 
-  // 監聽「先儲存配方」custom event（從新配方 Dialog 觸發）
   useEffect(() => {
     const handler = () => {
       if (status !== 'authenticated') {
@@ -152,10 +152,11 @@ export function SaveRecipeBar() {
 
   return (
     <div
-      className="sticky bottom-0 z-30 border-t border-[#E5D8C8] bg-[#F7F0E6]/95 pt-3 backdrop-blur"
+      className="sticky bottom-0 z-30 px-4"
       style={{
+        paddingTop: '14px',
         paddingBottom:
-          'calc(0.75rem + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
+          'calc(14px + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
       }}
     >
       {nudge && !toast ? (
@@ -166,18 +167,23 @@ export function SaveRecipeBar() {
       {toast ? (
         <p className="mb-2 text-center text-sm text-[#3D2918]">{toast}</p>
       ) : null}
-      <Button
-        className="w-full"
-        onClick={() => {
-          if (status !== 'authenticated') {
-            setAuthOpen(true)
-          } else {
-            setNameOpen(true)
-          }
-        }}
-      >
-        儲存配方
-      </Button>
+
+      <div className="mx-auto max-w-lg">
+        <button
+          type="button"
+          className="flex w-full items-center justify-center gap-2.5 rounded-[20px] border-[2.5px] border-[#6B4A2F] bg-[#C8602A] py-4 text-base font-extrabold tracking-[2px] text-white shadow-[0_5px_0_#6B4A2F,0_10px_20px_rgba(107,74,47,0.25)] transition active:translate-y-[2px] active:shadow-[0_3px_0_#6B4A2F,0_5px_10px_rgba(107,74,47,0.15)]"
+          onClick={() => {
+            if (status !== 'authenticated') {
+              setAuthOpen(true)
+            } else {
+              setNameOpen(true)
+            }
+          }}
+        >
+          <Sparkle size={14} color="#fff" />
+          儲存配方
+        </button>
+      </div>
 
       <BottomSheet open={nameOpen} onClose={() => setNameOpen(false)} title="命名">
         <label className="text-xs text-[#6B5A4A]">名稱（最多 30 字）</label>
@@ -185,7 +191,7 @@ export function SaveRecipeBar() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value.slice(0, 30))}
-          className="mb-4 w-full rounded-lg border border-[#D9C9B5] px-3 py-2"
+          className="mb-4 w-full rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2"
         />
         <Button className="w-full" onClick={() => void save()}>
           確認儲存
@@ -200,8 +206,8 @@ export function SaveRecipeBar() {
             className="absolute inset-0 bg-black/40"
             onClick={() => setAuthOpen(false)}
           />
-          <div className="relative w-full max-w-xs rounded-2xl bg-[#F7F0E6] p-6 shadow-xl">
-            <h2 className="mb-1 text-lg font-semibold text-[#3D2918]">登入以儲存配方</h2>
+          <div className="mao-card relative w-full max-w-xs p-6">
+            <h2 className="mb-1 text-lg font-extrabold text-[#4A3322]">登入以儲存配方</h2>
             <p className="mb-5 text-sm text-[#6B5A4A]">登入後可跨裝置存取你的配方</p>
             <Button
               className="w-full"
