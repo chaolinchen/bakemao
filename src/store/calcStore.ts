@@ -27,6 +27,8 @@ export type RecipeComponent = {
   moldSize: number
   /** 圓模尺寸單位，預設 'inch' */
   roundUnit: 'inch' | 'cm'
+  /** 圓模高度 cm，預設 6 */
+  roundHeight: number
   /** 杯型：每杯容積（cc），常見值 63/80/90/100/120/166 */
   cupCount: number
   /** null = 繼承全局 compQuantity */
@@ -117,6 +119,7 @@ export function defaultRecipeComponent(partial: {
     moldType: 'round',
     moldSize: 6,
     roundUnit: 'inch',
+    roundHeight: 6,
     cupCount: 90,
     customQty: null,
     cakeType: 'mousse',
@@ -144,6 +147,10 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
       o.moldType === 'tart' || o.moldType === 'cup' ? o.moldType : 'round',
     moldSize: Number.isFinite(Number(o.moldSize)) ? Number(o.moldSize) : 6,
     roundUnit: o.roundUnit === 'cm' ? 'cm' : 'inch',
+    roundHeight:
+      Number.isFinite(Number(o.roundHeight)) && Number(o.roundHeight) > 0
+        ? Number(o.roundHeight)
+        : 6,
     cupCount,
     customQty:
       o.customQty === null || o.customQty === undefined
@@ -243,6 +250,7 @@ export const useCalcStore = create<
     addComponent: () => void
     addComponentFromTemplate: (name: string, ingredients: Omit<RecipeLine, 'id'>[], gramPerUnit?: number, cakeType?: CakeType) => void
     removeComponent: (id: string) => void
+    duplicateComponent: (id: string) => void
     updateComponentName: (id: string, name: string) => void
     updateComponentGram: (id: string, gram: number) => void
     updateCompLine: (compId: string, lineId: string, patch: Partial<IngredientInput>) => void
@@ -256,7 +264,7 @@ export const useCalcStore = create<
     setComponentTargetMode: (id: string, mode: ComponentTargetMode) => void
     setComponentMold: (
       id: string,
-      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'roundUnit' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
+      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'roundUnit' | 'roundHeight' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
   }
@@ -362,6 +370,22 @@ export const useCalcStore = create<
         set((s) => ({
           components: (s.components ?? []).filter((c) => c.id !== id),
         })),
+      duplicateComponent: (id) =>
+        set((s) => {
+          const comps = s.components ?? []
+          const idx = comps.findIndex((c) => c.id === id)
+          if (idx === -1) return s
+          const orig = comps[idx]
+          const copy: RecipeComponent = {
+            ...orig,
+            id: makeRecipeId(),
+            name: orig.name + '（複製）',
+            ingredients: orig.ingredients.map((ing) => ({ ...ing, id: makeRecipeId() })),
+          }
+          const next = [...comps]
+          next.splice(idx + 1, 0, copy)
+          return { components: next }
+        }),
       updateComponentName: (id, name) =>
         set((s) => ({
           components: (s.components ?? []).map((c) =>

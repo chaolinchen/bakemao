@@ -23,7 +23,8 @@ export function effectiveGramPerUnit(comp: RecipeComponent): number {
       comp.cupCount,
       gravity,
       fillRate,
-      comp.roundUnit ?? 'inch'
+      comp.roundUnit ?? 'inch',
+      comp.roundHeight ?? 6
     )
   }
   return comp.gramPerUnit

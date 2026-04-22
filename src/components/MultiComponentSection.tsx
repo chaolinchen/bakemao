@@ -7,7 +7,7 @@ import { calculateExam } from '@/lib/calculator'
 import type { IngredientInput } from '@/lib/calculator'
 import { CAKE_TYPE_PRESETS } from '@/lib/componentMoldGram'
 import type { CakeType, ComponentMoldType } from '@/lib/componentMoldGram'
-import { effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
+import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
@@ -120,11 +120,13 @@ function ComponentCard({
   const updateCompLine = useCalcStore((s) => s.updateCompLine)
   const addCompLine = useCalcStore((s) => s.addCompLine)
   const insertCompLineAfter = useCalcStore((s) => s.insertCompLineAfter)
+  const duplicateComponent = useCalcStore((s) => s.duplicateComponent)
   const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
   const setComponentMold = useCalcStore((s) => s.setComponentMold)
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
 
   const roundUnit = comp.roundUnit ?? 'inch'
+  const roundHeight = comp.roundHeight ?? 6
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showFormula, setShowFormula] = useState(false)
@@ -167,6 +169,14 @@ function ComponentCard({
           onChange={(e) => updateComponentName(comp.id, e.target.value)}
           placeholder="例：派皮、蛋糕體、奶油霜"
         />
+        <button
+          type="button"
+          className="shrink-0 text-xs text-[#8A7968] underline underline-offset-2"
+          title="複製此組合"
+          onClick={() => duplicateComponent(comp.id)}
+        >
+          複製
+        </button>
         <button
           type="button"
           className="shrink-0 rounded-md px-1.5 py-0.5 text-lg leading-none text-[#B0A090] transition hover:bg-red-50 hover:text-red-600"
@@ -397,6 +407,24 @@ function ComponentCard({
               </div>
             )}
 
+            {comp.moldType === 'round' && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-[#6B5A4A]">模具高度</label>
+                <div className="w-16">
+                  <NumberInput
+                    value={String(roundHeight)}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value)
+                      if (Number.isFinite(v) && v > 0 && v <= 25) {
+                        setComponentMold(comp.id, { roundHeight: v })
+                      }
+                    }}
+                    placeholder="6"
+                  />
+                </div>
+                <span className="text-xs text-[#8A7968]">cm</span>
+              </div>
+            )}
             {comp.moldType !== 'cup' && (
               <p className="text-xs text-[#8A7968]">
                 共 <span className="font-semibold text-[#3D2918]">{moldVolumeLabel}</span>{' '}
@@ -813,10 +841,10 @@ export function MultiComponentSection() {
       // 加 watermark
       const ctx = canvas.getContext('2d')
       if (ctx) {
-        ctx.font = `${28}px sans-serif`
-        ctx.fillStyle = 'rgba(200, 96, 42, 0.25)'
+        ctx.font = `bold ${30}px sans-serif`
+        ctx.fillStyle = 'rgba(200, 96, 42, 0.55)'
         ctx.textAlign = 'right'
-        ctx.fillText('BakeMao 烘焙貓', canvas.width - 24, canvas.height - 24)
+        ctx.fillText('BakeMao 烘焙貓', canvas.width - 32, canvas.height - 32)
       }
       setScreenshotUrl(canvas.toDataURL('image/png'))
     } finally {
@@ -830,6 +858,61 @@ export function MultiComponentSection() {
     a.href = screenshotUrl
     a.download = 'bakemao-配方.png'
     a.click()
+  }
+
+  const handleExportCsv = () => {
+    const snapshot = useCalcStore.getState()
+    const comps = snapshot.components ?? []
+    const globalQty = snapshot.compQuantity ?? 6
+    const lossRate = snapshot.compLossRate ?? 0
+
+    const rows: string[][] = [['組合', '材料', '烘焙百分比', '克數']]
+
+    for (const comp of comps) {
+      const gramForCalc = effectiveGramPerUnit(comp)
+      const qty = comp.customQty ?? globalQty
+      const gramMap = new Map<string, number>()
+      if (gramForCalc > 0 && comp.ingredients.length > 0) {
+        const result = calculateExam(
+          'percent',
+          comp.ingredients.map((i) => ({ name: i.name, brand: i.brand, value: i.value, isFixed: i.isFixed })),
+          gramForCalc,
+          qty,
+          lossRate
+        )
+        for (const r of result.ingredients) {
+          gramMap.set(`${r.name}\0${r.brand ?? ''}`, r.gram)
+        }
+      }
+      for (const ing of comp.ingredients) {
+        const key = `${ing.name}\0${ing.brand ?? ''}`
+        const gram = gramMap.get(key)
+        const label = ing.name + (ing.brand ? ` · ${ing.brand}` : '')
+        rows.push([comp.name, label, `${ing.value}%`, gram != null ? `${gram.toFixed(1)}` : ''])
+      }
+    }
+
+    // 備料彙總
+    const { rows: summaryRows, totalGram } = aggregateIngredientsAcrossComponents(comps, globalQty, lossRate)
+    if (summaryRows.length > 0) {
+      rows.push([])
+      rows.push(['備料彙總（跨組合加總）', '', '', ''])
+      for (const r of summaryRows) {
+        const label = r.name + (r.brand ? ` · ${r.brand}` : '')
+        rows.push(['', label, '', r.gram.toFixed(1)])
+      }
+      rows.push(['', '合計', '', totalGram.toFixed(1)])
+    }
+
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(',')).join('\n')
+    const bom = '\uFEFF' // UTF-8 BOM for Excel
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'bakemao-配方.csv'
+    a.click()
+    URL.revokeObjectURL(url)
   }
   const [lineToast, setLineToast] = useState<{
     msg: string
@@ -880,6 +963,13 @@ export function MultiComponentSection() {
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="text-sm text-[#8A7968] underline underline-offset-2"
+            onClick={handleExportCsv}
+          >
+            匯出 CSV
+          </button>
           <button
             type="button"
             className="text-sm text-[#8A7968] underline underline-offset-2 disabled:opacity-50"

@@ -99,6 +99,12 @@
     "name": "動物性鮮奶油",
     "aliases": [
       "鮮奶油"
+    ],
+    "brands": [
+      { "name": "Anchor 安佳" },
+      { "name": "Elle & Vire" },
+      { "name": "Président" },
+      { "name": "Emborg" }
     ]
   },
   {
@@ -115,7 +121,12 @@
   },
   {
     "id": "cocoa-powder",
-    "name": "可可粉"
+    "name": "可可粉",
+    "brands": [
+      { "name": "Valrhona" },
+      { "name": "Cacao Barry" },
+      { "name": "法芙娜" }
+    ]
   },
   {
     "id": "matcha-powder",
@@ -407,17 +418,33 @@
   {
     "id": "ing-161",
     "name": "黑巧克力",
-    "aliases": ["苦甜巧克力", "dark chocolate", "調溫黑巧克力"]
+    "aliases": ["苦甜巧克力", "dark chocolate", "調溫黑巧克力"],
+    "brands": [
+      { "name": "Valrhona 法芙娜" },
+      { "name": "Callebaut" },
+      { "name": "Cacao Barry" },
+      { "name": "Michel Cluizel" }
+    ]
   },
   {
     "id": "ing-162",
     "name": "牛奶巧克力",
-    "aliases": ["milk chocolate", "調溫牛奶巧克力"]
+    "aliases": ["milk chocolate", "調溫牛奶巧克力"],
+    "brands": [
+      { "name": "Valrhona 法芙娜" },
+      { "name": "Callebaut" },
+      { "name": "Cacao Barry" }
+    ]
   },
   {
     "id": "ing-163",
     "name": "白巧克力",
-    "aliases": ["white chocolate", "調溫白巧克力"]
+    "aliases": ["white chocolate", "調溫白巧克力"],
+    "brands": [
+      { "name": "Valrhona 法芙娜" },
+      { "name": "Callebaut" },
+      { "name": "Cacao Barry" }
+    ]
   },
   {
     "id": "ing-164",
