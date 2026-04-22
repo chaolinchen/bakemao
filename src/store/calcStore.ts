@@ -23,8 +23,10 @@ export type RecipeComponent = {
   /** 對應 molds.json id；簡化 UI 未用 preset 時為 null */
   moldPresetId: string | null
   moldType: ComponentMoldType
-  /** 圓模：吋；塔圈：cm；杯型時忽略 */
+  /** 圓模：吋 or cm（依 roundUnit）；塔圈：cm；杯型時忽略 */
   moldSize: number
+  /** 圓模尺寸單位，預設 'inch' */
+  roundUnit: 'inch' | 'cm'
   /** 杯型：每杯容積（cc），常見值 63/80/90/100/120/166 */
   cupCount: number
   /** null = 繼承全局 compQuantity */
@@ -114,6 +116,7 @@ export function defaultRecipeComponent(partial: {
     moldPresetId: null,
     moldType: 'round',
     moldSize: 6,
+    roundUnit: 'inch',
     cupCount: 90,
     customQty: null,
     cakeType: 'mousse',
@@ -140,6 +143,7 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     moldType:
       o.moldType === 'tart' || o.moldType === 'cup' ? o.moldType : 'round',
     moldSize: Number.isFinite(Number(o.moldSize)) ? Number(o.moldSize) : 6,
+    roundUnit: o.roundUnit === 'cm' ? 'cm' : 'inch',
     cupCount,
     customQty:
       o.customQty === null || o.customQty === undefined
@@ -251,7 +255,7 @@ export const useCalcStore = create<
     setComponentTargetMode: (id: string, mode: ComponentTargetMode) => void
     setComponentMold: (
       id: string,
-      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
+      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'roundUnit' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
   }

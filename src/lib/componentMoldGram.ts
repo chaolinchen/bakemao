@@ -25,10 +25,11 @@ export function gramPerUnitFromComponentMold(
   moldSize: number,
   cupVolumeCC = 90,
   gravity = 1.0,
-  fillRate = 0.95
+  fillRate = 0.95,
+  roundUnit: 'inch' | 'cm' = 'inch'
 ): number {
   if (moldType === 'round') {
-    const dCm = moldSize * 2.54
+    const dCm = roundUnit === 'cm' ? moldSize : moldSize * 2.54
     const vol = Math.max(0, cylinderVolumeCC(dCm, ROUND_HEIGHT_CM))
     return vol * fillRate * gravity
   }

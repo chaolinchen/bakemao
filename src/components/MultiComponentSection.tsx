@@ -1,5 +1,6 @@
 'use client'
 
+import html2canvas from 'html2canvas'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
@@ -21,7 +22,8 @@ function parseNum(s: string | number): number {
   return Number.isFinite(v) ? Math.abs(v) : 0
 }
 
-const ROUND_SIZES = [4, 5, 6, 7, 8, 9, 10, 12]
+const ROUND_SIZES_INCH = [4, 5, 6, 7, 8, 9, 10, 12]
+const ROUND_SIZES_CM = [15, 17, 18, 20, 22, 24, 26]
 const TART_SIZES = [6, 7, 8, 9, 10, 12, 15]
 
 const MOLD_TYPE_OPTS: { value: ComponentMoldType; label: string }[] = [
@@ -120,6 +122,8 @@ function ComponentCard({
   const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
   const setComponentMold = useCalcStore((s) => s.setComponentMold)
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
+
+  const roundUnit = comp.roundUnit ?? 'inch'
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showFormula, setShowFormula] = useState(false)
@@ -310,26 +314,56 @@ function ComponentCard({
 
             {comp.moldType !== 'cup' ? (
               <div>
-                <p className="mb-1.5 text-xs text-[#6B5A4A]">
-                  {comp.moldType === 'round' ? '尺寸（吋）' : '尺寸（cm）'}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {(comp.moldType === 'round' ? ROUND_SIZES : TART_SIZES).map(
-                    (s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
-                          comp.moldSize === s
-                            ? 'bg-[#C8602A] text-white'
-                            : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
-                        }`}
-                        onClick={() => setComponentMold(comp.id, { moldSize: s })}
-                      >
-                        {s}
-                      </button>
-                    )
+                <div className="mb-1.5 flex items-center justify-between">
+                  <p className="text-xs text-[#6B5A4A]">
+                    {comp.moldType === 'round'
+                      ? `尺寸（${roundUnit === 'cm' ? 'cm' : '吋'}）`
+                      : '尺寸（cm）'}
+                  </p>
+                  {comp.moldType === 'round' && (
+                    <div className="flex rounded-md border border-[#D9C9B5] bg-white text-xs overflow-hidden">
+                      {(['inch', 'cm'] as const).map((u) => (
+                        <button
+                          key={u}
+                          type="button"
+                          className={`px-2 py-0.5 transition-all ${
+                            roundUnit === u
+                              ? 'bg-[#C8602A] text-white'
+                              : 'text-[#6B5A4A]'
+                          }`}
+                          onClick={() =>
+                            setComponentMold(comp.id, {
+                              roundUnit: u,
+                              moldSize: u === 'cm' ? 20 : 8,
+                            })
+                          }
+                        >
+                          {u === 'inch' ? '吋' : 'cm'}
+                        </button>
+                      ))}
+                    </div>
                   )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(comp.moldType === 'round'
+                    ? roundUnit === 'cm'
+                      ? ROUND_SIZES_CM
+                      : ROUND_SIZES_INCH
+                    : TART_SIZES
+                  ).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
+                        comp.moldSize === s
+                          ? 'bg-[#C8602A] text-white'
+                          : 'border border-[#D9C9B5] bg-white text-[#6B5A4A]'
+                      }`}
+                      onClick={() => setComponentMold(comp.id, { moldSize: s })}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -427,7 +461,21 @@ function ComponentCard({
                 </div>
                 <button
                   type="button"
-                  className="text-sm text-red-700 underline"
+                  className="text-xs text-[#8A7968] underline underline-offset-2"
+                  onClick={() =>
+                    addCompLine(comp.id, {
+                      name: line.name,
+                      brand: line.brand,
+                      value: line.value,
+                      isFixed: line.isFixed,
+                    })
+                  }
+                >
+                  複製
+                </button>
+                <button
+                  type="button"
+                  className="text-xs text-red-700 underline underline-offset-2"
                   onClick={() => onRemoveIngredient(line)}
                 >
                   刪除
@@ -722,6 +770,28 @@ export function MultiComponentSection() {
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [showLoss, setShowLoss] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
+  const [screenshotting, setScreenshotting] = useState(false)
+
+  const handleScreenshot = async () => {
+    const el = document.querySelector('main')
+    if (!el) return
+    setScreenshotting(true)
+    try {
+      const canvas = await html2canvas(el as HTMLElement, {
+        backgroundColor: '#F7F0E6',
+        scale: 2,
+        useCORS: true,
+        scrollY: -window.scrollY,
+      })
+      const url = canvas.toDataURL('image/png')
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bakemao-配方.png`
+      a.click()
+    } finally {
+      setScreenshotting(false)
+    }
+  }
   const [lineToast, setLineToast] = useState<{
     msg: string
     onUndo: () => void
@@ -771,6 +841,14 @@ export function MultiComponentSection() {
       <div className="flex items-center justify-between">
         <h2 className="font-serif text-lg text-[#3D2918]">多組配方計算</h2>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="text-sm text-[#8A7968] underline underline-offset-2 disabled:opacity-50"
+            onClick={() => void handleScreenshot()}
+            disabled={screenshotting}
+          >
+            {screenshotting ? '截圖中…' : '截圖'}
+          </button>
           <button
             type="button"
             className="text-sm text-[#C8602A] underline underline-offset-2"
