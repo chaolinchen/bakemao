@@ -40,8 +40,16 @@ type PreviewLine =
   | { kind: 'header'; label: string; meta: string }
   | { kind: 'ingredient'; label: string; pct: string; gram: string | null }
 
-function IngredientPreview({ ingredients }: { ingredients: Stored }) {
-  const compQuantity = Number(ingredients.compQuantity ?? 6)
+const SHARE_QUICK_QTY = [1, 2, 4, 6, 12, 24, 48]
+
+function IngredientPreview({
+  ingredients,
+  overrideQty,
+}: {
+  ingredients: Stored
+  overrideQty?: number
+}) {
+  const compQuantity = overrideQty ?? Number(ingredients.compQuantity ?? 6)
   const compLossRate = Number(ingredients.compLossRate ?? 0)
   const lines: PreviewLine[] = []
 
@@ -141,12 +149,14 @@ export default function SharePage({
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
   const [copied, setCopied] = useState(false)
   const [confirmLoad, setConfirmLoad] = useState(false)
+  const [shareQty, setShareQty] = useState<number>(0)
 
   useEffect(() => {
     fetch(`/api/share/${params.token}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data: SharedRecipe) => {
         setRecipe(data)
+        setShareQty(Number(data.ingredients.compQuantity ?? 6))
         setStatus('ok')
       })
       .catch(() => setStatus('error'))
@@ -261,10 +271,45 @@ export default function SharePage({
           )}
         </section>
 
+        {/* 份數調整 */}
+        <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-semibold text-[#3D2918]">調整份數</span>
+            <span className="text-sm font-bold text-[#C8602A]">{shareQty} 個</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {SHARE_QUICK_QTY.map((q) => (
+              <button
+                key={q}
+                type="button"
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  shareQty === q
+                    ? 'bg-[#C8602A] text-white shadow-sm'
+                    : 'border border-[#D9C9B5] bg-[#FAF6F0] text-[#3D2918]'
+                }`}
+                onClick={() => setShareQty(q)}
+              >
+                {q}
+              </button>
+            ))}
+            <input
+              type="number"
+              min={1}
+              max={999}
+              value={shareQty}
+              onChange={(e) => {
+                const v = Math.min(999, Math.max(1, parseInt(e.target.value) || 1))
+                setShareQty(v)
+              }}
+              className="w-16 rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] px-2 py-1.5 text-center text-sm"
+            />
+          </div>
+        </section>
+
         {/* Ingredient list */}
         <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold text-[#6B5A4A]">材料比例</h2>
-          <IngredientPreview ingredients={recipe.ingredients} />
+          <IngredientPreview ingredients={recipe.ingredients} overrideQty={shareQty || undefined} />
         </section>
 
         {/* Actions */}

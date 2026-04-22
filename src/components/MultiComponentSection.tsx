@@ -124,9 +124,27 @@ function ComponentCard({
   const setComponentTargetMode = useCalcStore((s) => s.setComponentTargetMode)
   const setComponentMold = useCalcStore((s) => s.setComponentMold)
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
+  const setComponentGramMode = useCalcStore((s) => s.setComponentGramMode)
+  const setCompLineGramValue = useCalcStore((s) => s.setCompLineGramValue)
 
   const roundUnit = comp.roundUnit ?? 'inch'
   const roundHeight = comp.roundHeight ?? 6
+  const isGramMode = comp.gramMode ?? false
+  const gramValues = comp.gramValues ?? {}
+
+  // 克數模式：找最大 g 值作為基底（100%）
+  const gramEntries = comp.ingredients.map((ing) => ({
+    id: ing.id,
+    g: gramValues[ing.id] ?? 0,
+  }))
+  const baseGram = Math.max(...gramEntries.map((e) => e.g), 0)
+  const baseId = baseGram > 0
+    ? gramEntries.reduce((a, b) => (a.g >= b.g ? a : b)).id
+    : null
+  const derivedPcts: Record<string, number> = {}
+  for (const e of gramEntries) {
+    derivedPcts[e.id] = baseGram > 0 ? (e.g / baseGram) * 100 : 0
+  }
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showFormula, setShowFormula] = useState(false)
@@ -134,17 +152,22 @@ function ComponentCard({
   const effectiveQty = comp.customQty ?? globalQty
   const isCustomQty = comp.customQty !== null
 
-  const gramForCalc = useMemo(() => effectiveGramPerUnit(comp), [comp])
+  const gramForCalc = useMemo(
+    () => (isGramMode ? baseGram : effectiveGramPerUnit(comp)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [comp, isGramMode, baseGram]
+  )
 
   const result = useMemo(() => {
     const ing: IngredientInput[] = comp.ingredients.map((i) => ({
       name: i.name,
       brand: i.brand,
-      value: i.value,
+      value: isGramMode ? (derivedPcts[i.id] ?? 0) : i.value,
       isFixed: i.isFixed,
     }))
     return calculateExam('percent', ing, gramForCalc, effectiveQty, lossRate)
-  }, [comp.ingredients, gramForCalc, effectiveQty, lossRate])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comp.ingredients, gramForCalc, effectiveQty, lossRate, isGramMode, derivedPcts])
 
   const hasResult = gramForCalc > 0 && comp.ingredients.length > 0
 
@@ -188,7 +211,38 @@ function ComponentCard({
       </div>
 
       <div className="px-4 pt-3">
-        {/* 目標量模式 */}
+        {/* 輸入模式切換 */}
+        <div className="mb-3">
+          <div className="flex rounded-lg border border-[#D9C9B5] bg-[#FAF6F0] p-0.5">
+            {(
+              [
+                { value: false, label: '% 比例輸入' },
+                { value: true, label: 'g 克數輸入' },
+              ] as const
+            ).map((opt) => (
+              <button
+                key={String(opt.value)}
+                type="button"
+                onClick={() => setComponentGramMode(comp.id, opt.value)}
+                className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-all duration-150 ${
+                  isGramMode === opt.value
+                    ? 'bg-white text-[#C8602A] shadow-sm'
+                    : 'text-[#6B5A4A]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {isGramMode && (
+            <p className="mt-1.5 text-[10px] text-[#8A7968]">
+              輸入每份的實際克數，克數最高的材料自動設為基底（100%）
+            </p>
+          )}
+        </div>
+
+        {/* 目標量模式（克數模式下自動用 g 最大值，隱藏此設定） */}
+        {!isGramMode && (
         <div className="mb-3">
           <p className="mb-2 text-xs text-[#6B5A4A]">目標量</p>
           <SegmentedTargetMode
@@ -196,6 +250,7 @@ function ComponentCard({
             onChange={(m) => setComponentTargetMode(comp.id, m)}
           />
         </div>
+        )}
 
         {comp.targetMode === 'gram' ? (
           <div className="mb-3">
@@ -469,7 +524,10 @@ function ComponentCard({
         )}
         <div className="mb-2 space-y-2">
           {comp.ingredients.map((line) => {
-            const invalid = parseNum(line.value) === 0
+            const invalid = isGramMode
+              ? (gramValues[line.id] ?? 0) === 0
+              : parseNum(line.value) === 0
+            const isBase = isGramMode && line.id === baseId
             return (
               <div
                 key={line.id}
@@ -484,8 +542,30 @@ function ComponentCard({
                         · {line.brand}
                       </span>
                     ) : null}
+                    {isBase && (
+                      <span className="ml-1.5 rounded-full bg-[#C8602A]/15 px-1.5 py-0.5 text-[10px] font-medium text-[#C8602A]">
+                        基底
+                      </span>
+                    )}
                   </p>
+                  {isGramMode && (gramValues[line.id] ?? 0) > 0 && (
+                    <p className="text-[10px] text-[#B0A090]">
+                      {derivedPcts[line.id]?.toFixed(1) ?? '0'} %
+                    </p>
+                  )}
                 </div>
+                {isGramMode ? (
+                  <div className="w-20">
+                    <label className="text-xs text-[#6B5A4A]">g</label>
+                    <NumberInput
+                      invalid={invalid}
+                      value={(gramValues[line.id] ?? 0) === 0 ? '' : String(gramValues[line.id])}
+                      onChange={(e) =>
+                        setCompLineGramValue(comp.id, line.id, parseNum(e.target.value))
+                      }
+                    />
+                  </div>
+                ) : (
                 <div className="w-20">
                   <label className="text-xs text-[#6B5A4A]">%</label>
                   <NumberInput
@@ -498,6 +578,7 @@ function ComponentCard({
                     }
                   />
                 </div>
+                )}
                 <button
                   type="button"
                   className="text-xs text-[#8A7968] underline underline-offset-2"
@@ -533,15 +614,23 @@ function ComponentCard({
         </Button>
 
         <div className="mb-3 flex items-center justify-end gap-1.5">
-          <span className="text-xs text-[#6B5A4A]">
-            合計 {totalPct.toFixed(1)} %
-          </span>
-          <span
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#D9C9B5] text-[10px] text-[#8A7968] cursor-default"
-            title="烘焙百分比：主要材料（通常為麵粉）設為 100，其他材料為相對比例。合計通常遠超 100，是正常的。"
-          >
-            ?
-          </span>
+          {isGramMode ? (
+            <span className="text-xs text-[#6B5A4A]">
+              合計 {gramEntries.reduce((s, e) => s + (e.g ?? 0), 0).toFixed(1)} g
+            </span>
+          ) : (
+            <>
+              <span className="text-xs text-[#6B5A4A]">
+                合計 {totalPct.toFixed(1)} %
+              </span>
+              <span
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#D9C9B5] text-[10px] text-[#8A7968] cursor-default"
+                title="烘焙百分比：主要材料（通常為麵粉）設為 100，其他材料為相對比例。合計通常遠超 100，是正常的。"
+              >
+                ?
+              </span>
+            </>
+          )}
         </div>
 
         {hasResult && result.totalPct > 0 ? (

@@ -39,6 +39,10 @@ export type RecipeComponent = {
   customGravity: number
   /** 自訂填充率 0-1（cakeType=custom 時生效） */
   customFillRate: number
+  /** 克數輸入模式：true = 輸入 g，自動換算 % */
+  gramMode: boolean
+  /** 克數模式下各材料的 g 輸入值（lineId → g） */
+  gramValues: Record<string, number>
 }
 
 export type TargetKind = 'mold' | 'gram'
@@ -125,6 +129,8 @@ export function defaultRecipeComponent(partial: {
     cakeType: 'mousse',
     customGravity: 0.85,
     customFillRate: 0.8,
+    gramMode: false,
+    gramValues: {},
   }
 }
 
@@ -155,7 +161,7 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     customQty:
       o.customQty === null || o.customQty === undefined
         ? null
-        : Math.min(200, Math.max(1, Math.floor(Number(o.customQty)))),
+        : Math.min(999, Math.max(1, Math.floor(Number(o.customQty)))),
     cakeType: (['mousse', 'pound', 'sponge', 'chiffon', 'custom'] as CakeType[]).includes(
       o.cakeType as CakeType
     )
@@ -167,6 +173,10 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     customFillRate: Number.isFinite(Number(o.customFillRate)) && Number(o.customFillRate) > 0
       ? Number(o.customFillRate)
       : 0.8,
+    gramMode: o.gramMode === true,
+    gramValues: (o.gramValues && typeof o.gramValues === 'object' && !Array.isArray(o.gramValues))
+      ? (o.gramValues as Record<string, number>)
+      : {},
   }
 }
 
@@ -251,6 +261,8 @@ export const useCalcStore = create<
     addComponentFromTemplate: (name: string, ingredients: Omit<RecipeLine, 'id'>[], gramPerUnit?: number, cakeType?: CakeType) => void
     removeComponent: (id: string) => void
     duplicateComponent: (id: string) => void
+    setComponentGramMode: (id: string, mode: boolean) => void
+    setCompLineGramValue: (compId: string, lineId: string, g: number) => void
     updateComponentName: (id: string, name: string) => void
     updateComponentGram: (id: string, gram: number) => void
     updateCompLine: (compId: string, lineId: string, patch: Partial<IngredientInput>) => void
@@ -459,7 +471,21 @@ export const useCalcStore = create<
             return { ...c, ingredients: next }
           }),
         })),
-      setCompQuantity: (q) => set({ compQuantity: Math.min(200, Math.max(1, Math.floor(q))) }),
+      setComponentGramMode: (id, mode) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, gramMode: mode } : c
+          ),
+        })),
+      setCompLineGramValue: (compId, lineId, g) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === compId
+              ? { ...c, gramValues: { ...c.gramValues, [lineId]: g } }
+              : c
+          ),
+        })),
+      setCompQuantity: (q) => set({ compQuantity: Math.min(999, Math.max(1, Math.floor(q))) }),
       setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),
       clearComponents: () =>
         set({
@@ -491,7 +517,7 @@ export const useCalcStore = create<
                   customQty:
                     qty === null
                       ? null
-                      : Math.min(200, Math.max(1, Math.floor(qty))),
+                      : Math.min(999, Math.max(1, Math.floor(qty))),
                 }
               : c
           ),

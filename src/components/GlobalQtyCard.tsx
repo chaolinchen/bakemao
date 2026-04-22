@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useCalcStore } from '@/store/calcStore'
 import { Stepper } from './ui/Stepper'
 
-const QUICK_QTY = [1, 2, 4, 6, 8, 12]
+const QUICK_QTY = [1, 2, 4, 6, 12, 24, 48, 100]
 
 export function GlobalQtyCard() {
   const { compQuantity, setCompQuantity } = useCalcStore(
@@ -37,7 +37,7 @@ export function GlobalQtyCard() {
           </button>
         ))}
       </div>
-      <Stepper min={1} max={200} value={compQuantity} onChange={setCompQuantity} />
+      <Stepper min={1} max={999} value={compQuantity} onChange={setCompQuantity} />
     </section>
   )
 }
