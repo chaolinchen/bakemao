@@ -16,10 +16,11 @@ export function GlobalQtyCard() {
 
   return (
     <section className="rounded-2xl border border-[#E5D8C8] bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-semibold text-[#3D2918]">共做幾個？</span>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-sm font-semibold text-[#3D2918]">共做幾個成品？</span>
         <span className="text-sm font-bold text-[#C8602A]">{compQuantity} 個</span>
       </div>
+      <p className="mb-3 text-xs text-[#8A7968]">蛋糕幾個、塔幾個、杯子蛋糕幾個…</p>
       <div className="mb-2 flex flex-wrap gap-1.5">
         {QUICK_QTY.map((q) => (
           <button
@@ -36,7 +37,7 @@ export function GlobalQtyCard() {
           </button>
         ))}
       </div>
-      <Stepper min={1} max={30} value={compQuantity} onChange={setCompQuantity} />
+      <Stepper min={1} max={200} value={compQuantity} onChange={setCompQuantity} />
     </section>
   )
 }

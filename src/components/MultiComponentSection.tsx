@@ -411,7 +411,7 @@ function ComponentCard({
           <span className="text-xs text-[#6B5A4A]">份數</span>
           <Stepper
             min={1}
-            max={30}
+            max={200}
             value={effectiveQty}
             onChange={(q) => setComponentCustomQty(comp.id, q)}
           />
@@ -434,6 +434,11 @@ function ComponentCard({
           )}
         </div>
 
+        {comp.ingredients.length > 0 && (
+          <p className="mb-1.5 text-[10px] text-[#B0A090]">
+            主要材料（通常為麵粉）設 100，其他材料填相對比例
+          </p>
+        )}
         <div className="mb-2 space-y-2">
           {comp.ingredients.map((line) => {
             const invalid = parseNum(line.value) === 0

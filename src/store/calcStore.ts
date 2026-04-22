@@ -148,7 +148,7 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     customQty:
       o.customQty === null || o.customQty === undefined
         ? null
-        : Math.min(30, Math.max(1, Math.floor(Number(o.customQty)))),
+        : Math.min(200, Math.max(1, Math.floor(Number(o.customQty)))),
     cakeType: (['mousse', 'pound', 'sponge', 'chiffon', 'custom'] as CakeType[]).includes(
       o.cakeType as CakeType
     )
@@ -435,7 +435,7 @@ export const useCalcStore = create<
             return { ...c, ingredients: next }
           }),
         })),
-      setCompQuantity: (q) => set({ compQuantity: Math.min(30, Math.max(1, Math.floor(q))) }),
+      setCompQuantity: (q) => set({ compQuantity: Math.min(200, Math.max(1, Math.floor(q))) }),
       setCompLossRate: (r) => set({ compLossRate: Math.min(0.3, Math.max(0, r)) }),
       clearComponents: () =>
         set({
@@ -467,7 +467,7 @@ export const useCalcStore = create<
                   customQty:
                     qty === null
                       ? null
-                      : Math.min(30, Math.max(1, Math.floor(qty))),
+                      : Math.min(200, Math.max(1, Math.floor(qty))),
                 }
               : c
           ),

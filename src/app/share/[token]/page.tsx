@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { calculateExam } from '@/lib/calculator'
+import { effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import {
   defaultMoldUi,
   defaultRecipeComponent,
@@ -34,28 +36,62 @@ type SharedRecipe = {
   ingredients: Stored
 }
 
+type PreviewLine =
+  | { kind: 'header'; label: string; meta: string }
+  | { kind: 'ingredient'; label: string; pct: string; gram: string | null }
+
 function IngredientPreview({ ingredients }: { ingredients: Stored }) {
-  const lines: { label: string; value: string }[] = []
+  const compQuantity = Number(ingredients.compQuantity ?? 6)
+  const compLossRate = Number(ingredients.compLossRate ?? 0)
+  const lines: PreviewLine[] = []
 
   if (Array.isArray(ingredients.components) && ingredients.components.length > 0) {
     for (const c of ingredients.components) {
-      const comp = c as { name?: string; ingredients?: RecipeLine[] }
-      const items = comp.ingredients ?? []
-      if (items.length > 0) {
-        lines.push({ label: `【${comp.name ?? '組合'}】`, value: '' })
-        for (const item of items) {
-          lines.push({
-            label: item.name + (item.brand ? ` · ${item.brand}` : ''),
-            value: `${item.value}%`,
-          })
+      const comp = normalizeRecipeComponent(c)
+      if (!comp || comp.ingredients.length === 0) continue
+
+      const gramForCalc = effectiveGramPerUnit(comp)
+      const qty = comp.customQty ?? compQuantity
+      const gramMap = new Map<string, number>()
+
+      if (gramForCalc > 0) {
+        const result = calculateExam(
+          'percent',
+          comp.ingredients.map((i) => ({
+            name: i.name,
+            brand: i.brand,
+            value: i.value,
+            isFixed: i.isFixed,
+          })),
+          gramForCalc,
+          qty,
+          compLossRate
+        )
+        for (const row of result.ingredients) {
+          gramMap.set(`${row.name}\0${row.brand ?? ''}`, row.gram)
         }
+      }
+
+      const meta = gramForCalc > 0 ? `× ${qty} 個` : ''
+      lines.push({ kind: 'header', label: comp.name ?? '組合', meta })
+      for (const item of comp.ingredients) {
+        const key = `${item.name}\0${item.brand ?? ''}`
+        const gram = gramMap.get(key)
+        lines.push({
+          kind: 'ingredient',
+          label: item.name + (item.brand ? ` · ${item.brand}` : ''),
+          pct: `${item.value}%`,
+          gram: gram != null ? `${gram.toFixed(1)} g` : null,
+        })
       }
     }
   } else if (Array.isArray(ingredients.lines)) {
     for (const item of ingredients.lines) {
       lines.push({
+        kind: 'ingredient',
         label: item.name + (item.brand ? ` · ${item.brand}` : ''),
-        value: `${item.value}%`,
+        pct: `${item.value}%`,
+        gram: null,
       })
     }
   }
@@ -67,18 +103,26 @@ function IngredientPreview({ ingredients }: { ingredients: Stored }) {
   return (
     <ul className="space-y-1.5">
       {lines.map((l, i) =>
-        l.value === '' ? (
-          <li key={i} className="pt-2 text-xs font-semibold text-[#6B5A4A]">
-            {l.label}
+        l.kind === 'header' ? (
+          <li key={i} className="flex items-baseline gap-2 pt-2">
+            <span className="text-xs font-semibold text-[#6B5A4A]">【{l.label}】</span>
+            {l.meta && <span className="text-[10px] text-[#B0A090]">{l.meta}</span>}
           </li>
         ) : (
           <li key={i} className="flex items-center justify-between gap-2">
             <span className="min-w-0 flex-1 truncate text-sm text-[#3D2918]">
               {l.label}
             </span>
-            <span className="shrink-0 font-mono text-sm font-medium text-[#C8602A]">
-              {l.value}
-            </span>
+            <div className="flex shrink-0 items-center gap-2">
+              {l.gram && (
+                <span className="font-mono text-sm font-semibold text-[#3D2918]">
+                  {l.gram}
+                </span>
+              )}
+              <span className="w-10 text-right font-mono text-xs text-[#8A7968]">
+                {l.pct}
+              </span>
+            </div>
           </li>
         )
       )}
