@@ -1,7 +1,7 @@
 'use client'
 
 import { signIn, useSession } from 'next-auth/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import { queueOfflineSave } from '@/lib/offlineSync'
 import { computeResult, useCalcStore } from '@/store/calcStore'
@@ -20,7 +20,30 @@ export function SaveRecipeBar() {
   const [nameOpen, setNameOpen] = useState(false)
   const [name, setName] = useState(defaultRecipeName)
   const [toast, setToast] = useState<string | null>(null)
+  const [nudge, setNudge] = useState(false)
+  const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const online = typeof navigator !== 'undefined' ? navigator.onLine : true
+
+  const hasAnyResult = useCalcStore((s) => {
+    const comps = s.components ?? []
+    return comps.some(
+      (c) =>
+        c.ingredients.length > 0 &&
+        (c.targetMode === 'mold' || c.gramPerUnit > 0)
+    )
+  })
+
+  useEffect(() => {
+    if (!hasAnyResult || status !== 'unauthenticated') return
+    const key = 'bakemao_save_nudge'
+    if (typeof localStorage !== 'undefined' && localStorage.getItem(key)) return
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
+    setNudge(true)
+    nudgeTimerRef.current = setTimeout(() => setNudge(false), 6000)
+    return () => {
+      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current)
+    }
+  }, [hasAnyResult, status])
 
   // 監聽「先儲存配方」custom event（從新配方 Dialog 觸發）
   useEffect(() => {
@@ -135,6 +158,11 @@ export function SaveRecipeBar() {
           'calc(0.75rem + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
       }}
     >
+      {nudge && !toast ? (
+        <p className="mb-2 text-center text-xs text-[#6B5A4A]">
+          計算完成！登入後可跨裝置保存你的配方 ↓
+        </p>
+      ) : null}
       {toast ? (
         <p className="mb-2 text-center text-sm text-[#3D2918]">{toast}</p>
       ) : null}

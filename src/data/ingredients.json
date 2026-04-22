@@ -161,7 +161,8 @@
   },
   {
     "id": "ing-100",
-    "name": "杏仁粉"
+    "name": "杏仁粉",
+    "aliases": ["almond meal", "almond flour", "almond powder", "扁桃仁粉"]
   },
   {
     "id": "ing-101",
@@ -402,5 +403,70 @@
   {
     "id": "ing-160",
     "name": "海藻糖"
+  },
+  {
+    "id": "ing-161",
+    "name": "黑巧克力",
+    "aliases": ["苦甜巧克力", "dark chocolate", "調溫黑巧克力"]
+  },
+  {
+    "id": "ing-162",
+    "name": "牛奶巧克力",
+    "aliases": ["milk chocolate", "調溫牛奶巧克力"]
+  },
+  {
+    "id": "ing-163",
+    "name": "白巧克力",
+    "aliases": ["white chocolate", "調溫白巧克力"]
+  },
+  {
+    "id": "ing-164",
+    "name": "果膠",
+    "aliases": ["NH果膠", "pectin"]
+  },
+  {
+    "id": "ing-165",
+    "name": "鏡面果膠",
+    "aliases": ["nappage", "鏡面膠"]
+  },
+  {
+    "id": "ing-166",
+    "name": "卡士達粉",
+    "aliases": ["custard powder", "即溶卡士達"]
+  },
+  {
+    "id": "ing-167",
+    "name": "水果果泥",
+    "aliases": ["果泥", "puree", "覆盆子果泥", "芒果果泥", "百香果泥"]
+  },
+  {
+    "id": "ing-168",
+    "name": "榛果醬",
+    "aliases": ["praline", "榛果帕林內"]
+  },
+  {
+    "id": "ing-169",
+    "name": "杏仁醬",
+    "aliases": ["almond paste", "杏仁帕林內"]
+  },
+  {
+    "id": "ing-170",
+    "name": "糖漿",
+    "aliases": ["simple syrup", "基礎糖漿", "1:1糖漿"]
+  },
+  {
+    "id": "ing-171",
+    "name": "葡萄糖漿",
+    "aliases": ["glucose syrup", "水麥芽"]
+  },
+  {
+    "id": "ing-172",
+    "name": "酒石酸",
+    "aliases": ["cream of tartar", "塔塔粉"]
+  },
+  {
+    "id": "ing-173",
+    "name": "即溶咖啡",
+    "aliases": ["espresso powder", "咖啡粉末"]
   }
 ]

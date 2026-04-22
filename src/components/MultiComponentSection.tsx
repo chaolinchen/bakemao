@@ -164,10 +164,11 @@ function ComponentCard({
         />
         <button
           type="button"
-          className="shrink-0 text-sm text-red-700 underline"
+          className="shrink-0 rounded-md px-1.5 py-0.5 text-lg leading-none text-[#B0A090] transition hover:bg-red-50 hover:text-red-600"
+          title="刪除此組合"
           onClick={onRemove}
         >
-          刪除
+          ×
         </button>
       </div>
 
@@ -444,9 +445,17 @@ function ComponentCard({
           + 新增材料
         </Button>
 
-        <p className="mb-3 text-right text-xs text-[#6B5A4A]">
-          總計 {totalPct.toFixed(2)} %
-        </p>
+        <div className="mb-3 flex items-center justify-end gap-1.5">
+          <span className="text-xs text-[#6B5A4A]">
+            合計 {totalPct.toFixed(1)} %
+          </span>
+          <span
+            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-[#D9C9B5] text-[10px] text-[#8A7968] cursor-default"
+            title="烘焙百分比：主要材料（通常為麵粉）設為 100，其他材料為相對比例。合計通常遠超 100，是正常的。"
+          >
+            ?
+          </span>
+        </div>
 
         {hasResult && result.totalPct > 0 ? (
           <div className="mb-4 rounded-xl border border-[#E5D8C8] bg-[#FAF6F0] p-3">
@@ -819,6 +828,21 @@ export function MultiComponentSection() {
           </div>
         ) : null}
       </div>
+
+      {/* 空狀態：唯一組合且無材料時，顯示範本入口 */}
+      {components.length === 1 && components[0].ingredients.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-[#C8602A]/40 bg-[#FDF3E7] p-4 text-center">
+          <p className="mb-1 text-sm font-medium text-[#3D2918]">第一次使用？</p>
+          <p className="mb-3 text-xs text-[#6B5A4A]">套用範本配方快速開始，或直接加材料自行輸入。</p>
+          <button
+            type="button"
+            className="rounded-xl bg-[#C8602A] px-4 py-2 text-sm font-medium text-white transition active:scale-95"
+            onClick={() => setShowTemplates(true)}
+          >
+            套用範本配方
+          </button>
+        </div>
+      )}
 
       {components.map((comp) => (
         <ComponentCard

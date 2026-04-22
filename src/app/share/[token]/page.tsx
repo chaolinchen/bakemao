@@ -96,6 +96,7 @@ export default function SharePage({
   const [recipe, setRecipe] = useState<SharedRecipe | null>(null)
   const [status, setStatus] = useState<'loading' | 'ok' | 'error'>('loading')
   const [copied, setCopied] = useState(false)
+  const [confirmLoad, setConfirmLoad] = useState(false)
 
   useEffect(() => {
     fetch(`/api/share/${params.token}`)
@@ -224,7 +225,7 @@ export default function SharePage({
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
-          <Button className="w-full py-3 text-base" onClick={loadRecipe}>
+          <Button className="w-full py-3 text-base" onClick={() => setConfirmLoad(true)}>
             在計算機中開啟
           </Button>
           <button
@@ -244,6 +245,35 @@ export default function SharePage({
           提供
         </p>
       </main>
+
+      {confirmLoad && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <button
+            type="button"
+            aria-label="取消"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setConfirmLoad(false)}
+          />
+          <div className="relative w-full max-w-xs rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-semibold text-[#3D2918]">載入此配方？</h3>
+            <p className="mt-2 text-sm text-[#5C4D3E]">
+              計算機目前的內容將被覆蓋，請確認已儲存或不需保留。
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Button className="w-full" onClick={loadRecipe}>
+                直接開啟
+              </Button>
+              <button
+                type="button"
+                className="w-full rounded-xl py-2.5 text-sm font-medium text-[#6B5A4A] transition hover:bg-black/5"
+                onClick={() => setConfirmLoad(false)}
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

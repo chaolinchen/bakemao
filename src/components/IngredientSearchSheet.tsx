@@ -70,6 +70,19 @@ export function IngredientSearchSheet({
         panelStyle={sheetPanelStyle}
       >
         <ul className="space-y-2">
+          <li>
+            <button
+              type="button"
+              className="w-full rounded-lg border border-[#C8602A] bg-[#FDF3E7] px-3 py-2 text-left text-sm font-medium text-[#C8602A] hover:bg-[#F5E6D0]"
+              onClick={() => {
+                onPick({ name: brandPick.name })
+                setBrandPick(null)
+                onClose()
+              }}
+            >
+              不指定品牌
+            </button>
+          </li>
           {brandPick.brands.map((b) => (
             <li key={b.name}>
               <button
@@ -85,19 +98,6 @@ export function IngredientSearchSheet({
               </button>
             </li>
           ))}
-          <li>
-            <button
-              type="button"
-              className="text-sm text-[#C8602A] underline"
-              onClick={() => {
-                onPick({ name: brandPick.name })
-                setBrandPick(null)
-                onClose()
-              }}
-            >
-              {'\u7565\u904e\u54c1\u724c'}
-            </button>
-          </li>
         </ul>
       </BottomSheet>
     )
