@@ -270,9 +270,16 @@ function ComponentCard({
             ))}
           </div>
           {isGramMode && (
-            <p className="mt-1.5 text-[10px] text-[#8A7968]">
-              輸入每份的實際克數，克數最高的材料自動設為基底（100%）
-            </p>
+            <div className="mt-1.5 space-y-0.5">
+              <p className="text-[10px] text-[#8A7968]">
+                輸入每份的實際克數，克數最高的材料自動設為基底（100%）
+              </p>
+              {Object.keys(gramValues).length > 0 && (
+                <p className="text-[11px] font-bold text-[#6B4A2F]">
+                  每份合計：{gramEntries.reduce((s, e) => s + e.g, 0).toFixed(1)} g
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -1128,7 +1135,7 @@ export function MultiComponentSection() {
               setMultiSaveDialogOpen(true)
             }}
           >
-            儲存配方
+            存到配方本
           </button>
           <button
             type="button"

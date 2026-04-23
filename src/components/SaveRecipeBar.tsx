@@ -181,7 +181,7 @@ export function SaveRecipeBar() {
           }}
         >
           <Sparkle size={14} color="#fff" />
-          儲存配方
+          雲端備份配方
         </button>
       </div>
 
