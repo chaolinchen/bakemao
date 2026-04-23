@@ -1,14 +1,14 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.2.7 | 2026-04-21）
+## SNAPSHOT（v0.3.0 | 2026-04-23）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **`GET /api/version`**：Hub 狀態頁用；prod 有 `VERCEL_GIT_COMMIT_SHA` 時 `commit` 為 7 位 SHA。
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 13 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
-- **功能進度**：**TASK-12 ∼ 19 + v2.0 + v2.1** 全部完成。最新（v2.1）：麵糊比重+填充率——「按模具算」新增蛋糕類型選擇（慕斯/磅蛋糕/海綿/戚風/自訂），公式 `gramPerUnit = 容積 × fillRate × gravity`，海綿蛋糕 8吋 ≈ 537g 驗算通過。
+- **功能進度**：**TASK-12 ∼ 19 + v2.0 ∼ v2.2** 全部完成。最新（v2.2 / 2026-04-23）：四輪 persona 測試後修正——配方本（localStorage SavedRecipesSheet）、IG 分享圖（Canvas 1080×1080）、全域 Toast、列印 CSS、Enter 跳欄 iOS 修正、截圖跑版修正、雲端/本機儲存語意分離、克數模式每份合計顯示。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 
@@ -58,8 +58,8 @@
 
 ## 目前狀態（給 agent 續作）
 
-- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v2.1**，含 §20～§25）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
-- **已完成 TASK-16 ～ TASK-19 + v2.0 + v2.1**：多組配方、SummaryCard、分享連結、OG image、範本配方、麵糊比重+填充率（cakeType/gravity/fillRate）全部上線。
+- **規格**：以 **`PRD_BakeMao_v1.0.md`**（**v2.2**，含 §20～§26）為準；MVP 技術棧為 **Next.js 14、Neon、NextAuth**，非 Supabase Auth。
+- **已完成 TASK-16 ～ TASK-19 + v2.0 ～ v2.2**：多組配方、SummaryCard、分享連結、OG image、範本配方、麵糊比重+填充率（cakeType/gravity/fillRate）全部上線。
 - **DB migration**：`001_init.sql`、`002_add_share_token.sql` 已在 dev + prod 執行完畢。
 - **已結案：Maximum update depth**（模具 / `useShallow`，詳見 §19）。
 - **建置品質**：TypeScript clean；若遇 chunk 遺失先 `rm -rf .next`。
@@ -67,8 +67,7 @@
 
 ## 下一步（產品向，優先順序）
 
-1. **手機實測**：分享連結 OG 預覽（LINE/IG）、PWA 安裝、iOS Safari 鍵盤行為。
-2. **IG 推廣**：po 第一篇使用教學，帶 bakemao.smallfatmao.com 連結。
-3. **GA4 埋點**：追蹤「儲存配方」「分享連結」「在計算機中開啟」事件，建立留存指標基線。
-4. **GA4 埋點**：追蹤「儲存配方」「分享連結」「在計算機中開啟」「套用範本」事件，建立留存指標基線。
-- **工程**：git push main → Vercel 自動部署，無需手動 `vercel --prod`。
+1. **Beta 測試**：邀請 10 位真實用戶（含 2 位糕餅從業者）1 週觀察，收集真實反饋。
+2. **GA4 埋點**：追蹤「儲存配方」「分享連結」「套用範本」「IG 分享圖」事件。
+3. **IG 推廣**：po 第一篇使用教學，帶 bakemao.smallfatmao.com 連結。
+4. **v3.1 非阻塞修正**（Beta 期間平行推進）：iPad 版面、截圖長圖、IG 分享圖入口（多組件頁）、克數基底手選、配方備註欄。

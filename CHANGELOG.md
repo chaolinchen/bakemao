@@ -2,6 +2,58 @@
 
 ---
 
+## v1.4.2 — 2026-04-23
+### Fix
+- B1：SaveRecipeBar 底部大按鈕改為「雲端備份配方」，與多組件區「存到配方本」語意明確分離（雲端登入 vs 本機 localStorage）
+- B2：克數輸入模式補顯「每份合計：XXXg」即時數值，讓師傅確認每份用料總重是否符合預期
+
+---
+
+## v1.4.1 — 2026-04-23
+### Fix
+- Enter 跳欄後延遲 100ms 再 scrollIntoView，解決 iOS 鍵盤開啟時基準偏移問題
+- IG 分享圖克數格式：整數顯示整數（100g），有小數才顯示一位（12.5g）
+
+---
+
+## v1.4.0 — 2026-04-23
+### Feat
+- 全域 Toast 系統（pub/sub，底部 pill，2.5s 自動消失）；儲存配方改用 Toast 取代行內綠字
+- SavedRecipesSheet 改版：刪除鍵移至左側（防誤觸），多組件配方卡片顯示組件名稱縮略（最多 3 個）
+- Enter 跳欄後補 scrollIntoView({ block: 'center' }) 確保欄位置中
+### Fix
+- Print CSS：@page A4 margin、page-break-inside avoid、克數粗體、材料分隔線
+- IG Canvas：長文字 truncateText 截斷保護 + requestAnimationFrame Safari race condition 修復
+- IG Canvas 克數格式統一 toFixed(1)
+
+---
+
+## v1.3.0 — 2026-04-23
+### Feat
+- 烘焙百分比可折疊說明 tooltip（`[?] 什麼是烘焙百分比？`），單配方＋多組件模式皆有
+- NumberInput Enter 鍵自動跳下一個 `[data-ingredient-input]` 欄位
+- 配方儲存/配方本（localStorage，最多 20 筆）：SavedRecipesSheet 底部抽屜，含名稱/日期/類型 badge/載入/刪除二次確認
+- IG 分享圖：1080×1080 Canvas 直接生成（generateIgCard），品牌色+橫條比例圖，shareIgCard 支援 Web Share API
+- @media print 列印樣式：隱藏按鈕/nav，A4 版面，克數大字
+### Fix
+- html2canvas 截圖跑版：補 windowWidth / scrollX / scrollY / height，解決手機版跑版
+- MultiComponentSection html2canvas 截圖 height 改用 scrollHeight（截完整內容）
+
+---
+
+## v1.2.5 — 2026-04-22
+### Feat（v3.0 設計改版 Option A 雲朵奶蓋）
+- 設計系統：sky blue bg #E6EEF5、cream #FFFBF2、chocolate #6B4A2F、orange #C8602A；.mao-card、.mao-pill CSS class
+- 字型：Baloo 2 + Roboto Mono + Noto Sans TC
+- 新元件：Sparkle.tsx（4-point star）、Button.tsx、Stepper.tsx 全面改版
+- 全頁面套用新設計（page.tsx、GlobalQtyCard、SummaryCard、SaveRecipeBar、MultiComponentSection、share、recipes）
+- 三花貓 SVG logo（maologo.png）、背景改 #FDF8F2
+- kg 自動格式（fmtG() helper，≥1000g 顯示 X.XX kg）
+- CSV 桌機限定（hidden sm:inline）
+- 分享頁：「在計算機中開啟」→「用 BakeMao 開啟」+跨組合備料彙總
+
+---
+
 ## v1.2.4 — 2026-04-21
 ### Feat
 - **麵糊比重 + 填充率**：「按模具算」模式新增蛋糕類型選擇器（慕斯/磅蛋糕/海綿蛋糕/戚風蛋糕/自訂）。

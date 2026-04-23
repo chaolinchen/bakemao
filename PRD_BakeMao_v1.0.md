@@ -1,5 +1,5 @@
 # BakeMao 烘焙貓 PRD
-**版本：v1.9 | 日期：2026-04-20 | 狀態：確認**
+**版本：v2.2 | 日期：2026-04-23 | 狀態：確認**
 
 > **v1.5：** 後台已由 Supabase 改為 **Neon（PostgreSQL）** + **NextAuth.js v5**；配方與使用者資料表以 repo `neon/001_init.sql` 為準。  
 > **v1.5.1：** 新增 **§19 實作備註**（Zustand 選擇器與模具推導；**不變更**產品功能規格）。  
@@ -7,8 +7,9 @@
 > **v1.7（2026-04-20）：** TASK-16 多組配方整合上線；TASK-17 UX 修正（彙總卡 SummaryCard / Toast Undo / 新配方按鈕）✅ 已上線。  
 > **v1.8（2026-04-20）：** TASK-18 配方分享連結 ✅ 已上線；§22 分享功能新增。  
 > **v1.9（2026-04-20）：** TASK-19 UX 三項改善 ✅ 已上線；§23 新增。  
-> **v2.0（2026-04-21）：** UX 修正四項 ✅ 已上線（SummaryCard 折疊提示、新配方 Dialog 按鈕順序、範本配方、份數 badge tooltip）；§24 新增。  
-> **v2.1（2026-04-21）：** 麵糊比重+填充率 ✅ 已上線；§25 新增。
+> **v2.0（2026-04-21）：** UX 修正四項 ✅（SummaryCard、新配方 Dialog、範本配方、份數 badge tooltip）；§24 新增。
+> **v2.1（2026-04-21）：** 麵糊比重+填充率 ✅；§25 新增。
+> **v2.2（2026-04-23）：** 用戶測試四輪修正全上線 ✅；§26 新增（配方儲存本機版、IG 分享圖、列印、Toast、UX 修正）。
 
 ---
 
@@ -514,3 +515,52 @@ gramPerUnit = 模具容積(cc) × 填充率 × 比重
 - 從 Neon 抓取配方資料，用 Satori 生成 1200×630 PNG
 - 顯示：配方名稱（大字）、組合數/份數副標、材料列表預覽（最多 2 組 × 3 項）、bakemao.smallfatmao.com
 - LINE / IG / iMessage 分享連結時自動顯示預覽圖
+
+---
+
+## 26. v2.2 用戶測試修正（✅ 2026-04-23 已上線）
+
+> 經四輪 persona 模擬測試（林太太/阿傑師/Cynthia/王老闆/小凱/婚禮蛋糕師 Irene），以下功能已上線。
+
+### 截圖跑版修正
+- html2canvas 補 `windowWidth`、`scrollX`、`scrollY`、`height`，解決手機版截圖跑版
+- MultiComponentSection 截圖改用 `scrollHeight` 抓完整高度
+
+### 烘焙百分比新手說明
+- 每個組合卡（百分比模式）顯示 `[?] 烘焙百分比說明` 可折疊 tooltip
+- 說明文字：「以麵粉重量為 100%，其他材料相對麵粉的比例」
+
+### NumberInput Enter 跳欄
+- Enter 鍵自動跳至下一個 `[data-ingredient-input]` 欄位
+- 延遲 100ms 後 `scrollIntoView({ block: 'center' })`，解決 iOS 鍵盤開啟時偏移
+
+### 配方儲存（本機 localStorage）
+- 另一套儲存機制（不需登入），最多 20 筆，存於 `bakemao_saved_recipes`
+- `SavedRecipesSheet` 底部抽屜：名稱、日期、種類 badge（單配方/多組件）、組件縮略名、載入、刪除（二次確認）
+- 按鈕標籤：「存到配方本」（本機）vs「雲端備份配方」（需登入）
+
+### IG 分享圖（Canvas 生成）
+- `generateIgCard`：1080×1080 Canvas，品牌色彩、橫條比例圖、截斷保護（truncateText）
+- `shareIgCard`：requestAnimationFrame 修復 Safari 首次空白問題
+- CalcResult 新增「IG 樣板」按鈕（與原「分享圖」並排）
+
+### 全域 Toast 系統
+- pub/sub 架構（`src/lib/toast.ts` + `ToastContainer.tsx`），底部 pill，2.5s 自動消失
+- 用於：儲存配方成功、未來可擴充
+
+### 列印樣式
+- `@media print`：隱藏按鈕/nav，@page A4 1.5cm margin，page-break-inside avoid，克數粗體
+
+### 克數模式補顯每份合計
+- 克數輸入模式下，即時顯示「每份合計：XXXg」，讓師傅確認每份用料總重
+
+### 儲存入口語意分離（B1 修正）
+- 底部 SaveRecipeBar：「雲端備份配方」（Google 登入，跨裝置）
+- 多組件區：「存到配方本」（localStorage，僅此裝置）
+
+### 已知 Non-blocking 待辦（v3.1）
+- iPad/桌機寬螢幕版面優化（目前 max-w-lg 單欄）
+- 截圖長圖問題（多組件 5000px+ 截圖不適合直接社群分享）
+- IG 分享圖入口尚未加入多組件頁面
+- 克數模式基底無法手動指定
+- 配方備註欄
