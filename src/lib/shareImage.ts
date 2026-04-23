@@ -21,6 +21,12 @@ export async function captureAndShare(rootId: string) {
     scale: 2,
     useCORS: true,
     backgroundColor: '#F7F0E6',
+    width: el.offsetWidth,
+    height: el.offsetHeight,
+    windowWidth: document.documentElement.scrollWidth,
+    windowHeight: document.documentElement.scrollHeight,
+    scrollX: -window.scrollX,
+    scrollY: -window.scrollY,
   })
 
   const w = canvas.width

@@ -914,10 +914,16 @@ export function MultiComponentSection() {
     if (!el) return
     setScreenshotting(true)
     try {
-      const canvas = await html2canvas(el as HTMLElement, {
+      const mainEl = el as HTMLElement
+      const canvas = await html2canvas(mainEl, {
         backgroundColor: '#F7F0E6',
         scale: 2,
         useCORS: true,
+        width: mainEl.offsetWidth,
+        height: mainEl.scrollHeight,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
+        scrollX: -window.scrollX,
         scrollY: -window.scrollY,
         onclone: (_doc, cloned) => {
           // 隱藏輸入框邊框，讓截圖像乾淨備料單
