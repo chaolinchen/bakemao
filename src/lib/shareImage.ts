@@ -268,13 +268,33 @@ export async function shareIgCard(
         }
       }
 
+      // Fallback: show overlay so user can long-press to save (works in IG in-app browser)
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'bakemao-ig.png'
-      a.click()
-      URL.revokeObjectURL(url)
-      resolve()
+      const overlay = document.createElement('div')
+      overlay.style.cssText =
+        'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;'
+      const img = document.createElement('img')
+      img.src = url
+      img.alt = 'BakeMao IG 備料卡'
+      img.style.cssText = 'max-width:100%;max-height:65vh;border-radius:12px;'
+      const hint = document.createElement('p')
+      hint.textContent = '長按圖片儲存到相冊'
+      hint.style.cssText = 'color:#fff;font-size:14px;font-weight:bold;text-align:center;margin:0;'
+      const closeBtn = document.createElement('button')
+      closeBtn.textContent = '關閉'
+      closeBtn.style.cssText =
+        'padding:10px 32px;background:#fff;border:none;border-radius:20px;font-weight:bold;font-size:14px;cursor:pointer;'
+      const cleanup = () => {
+        if (document.body.contains(overlay)) document.body.removeChild(overlay)
+        URL.revokeObjectURL(url)
+        resolve()
+      }
+      closeBtn.onclick = cleanup
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup() })
+      overlay.appendChild(img)
+      overlay.appendChild(hint)
+      overlay.appendChild(closeBtn)
+      document.body.appendChild(overlay)
     })
   })
 }

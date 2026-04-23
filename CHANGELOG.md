@@ -2,6 +2,32 @@
 
 ---
 
+## v1.5.1 — 2026-04-23
+### Chore
+- MultiComponentSection.tsx（1400 行）拆成三個檔案：MultiComponentCard.tsx（~380 行）、MultiTemplateDialog.tsx（~110 行）、MultiComponentSection.tsx（~250 行）
+- 落實單檔 ≤ 400 行規則，降低未來 session 讀檔成本
+
+---
+
+## v1.5.0 — 2026-04-23
+### Feat
+- 統一儲存入口：SaveRecipeBar 底部按鈕改為「儲存配方」，BottomSheet 內提供「存到配方本（本機·免登入）」與「雲端備份（Google 登入）」兩選項
+- 未登入時點雲端備份直接跳 Google OAuth，不再顯示額外對話框
+### Fix
+- 移除多組工具列的「存配方」按鈕（功能已整合至底部統一入口）
+- 工具列改為兩行排版：第一行標題＋「＋新配方」，第二行截圖/配方本/範本/CSV，解決手機按鈕換行問題
+
+---
+
+## v1.4.3 — 2026-04-23
+### Fix
+- 截圖改為擷取 `#multi-section-root` 而非整個 `main`，解決含 GlobalQtyCard 的跑版問題；onclone 隱藏所有按鈕與 `[data-screenshot-hide]` 元素
+- 截圖彈窗新增「IG 備料卡分享」按鈕，使用跨組合彙整材料清單生成 1080×1080 卡片
+- 過濾空白名稱材料列（`name.trim() === ''` 不渲染），消除清單中的空白卡片
+- SavedRecipesSheet 標題下方加副標題「本機儲存，不需登入」，區隔本機與雲端儲存
+
+---
+
 ## v1.4.2 — 2026-04-23
 ### Fix
 - B1：SaveRecipeBar 底部大按鈕改為「雲端備份配方」，與多組件區「存到配方本」語意明確分離（雲端登入 vs 本機 localStorage）

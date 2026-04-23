@@ -1,14 +1,15 @@
 # BakeMao — CONTEXT
 > ⚠️ 開始工作前必讀全域規則：`/vibecoding/AGENTS.md`
 
-## SNAPSHOT（v0.3.0 | 2026-04-23）
+## SNAPSHOT（v0.4.0 | 2026-04-23）
 
 - **GitHub**：[github.com/chaolinchen/bakemao](https://github.com/chaolinchen/bakemao)；**Vercel**：[bakemao.vercel.app](https://bakemao.vercel.app)
 - **`GET /api/version`**：Hub 狀態頁用；prod 有 `VERCEL_GIT_COMMIT_SHA` 時 `commit` 為 7 位 SHA。
 - **資料庫／登入**：**Neon** + **`neon/001_init.sql`**；**NextAuth v5** + Google；**不要**再用 `supabase/migrations/`（僅歷史）。必備 env：`AUTH_SECRET`、`AUTH_URL`、`GOOGLE_CLIENT_ID`、`GOOGLE_CLIENT_SECRET`、`DATABASE_URL`（`vercel env pull .env.local`）。**`AUTH_URL`** 須與實際 origin 一致（本機常用 `http://localhost:3000`）；**Google OAuth 重新導向 URI** 見本節下段。
 - **Zustand 地雷（已修）**：模具目標改由 **`computeResult` + `src/lib/moldParts.ts`（`getMoldParts`）** 推導；**`CalcResult`** 若用 `useCalcStore(s => ({...}))` 必搭配 **`useShallow`**，否則易 **Maximum update depth**。
 - **驗證**：最近一次 **`npm run build`**／**`npm test`（Vitest 13 題）** 已通過；**middleware** 已改為單獨 **`auth.config.ts`（Edge 不拉 Neon）**，prod middleware 約 **79KB**；全站 **`useKeyboardOffset`** 設 **`--keyboard-offset`（行動端鍵盤）** 與 SaveRecipeBar 底部補白。
-- **功能進度**：**TASK-12 ∼ 19 + v2.0 ∼ v2.2** 全部完成。最新（v2.2 / 2026-04-23）：四輪 persona 測試後修正——配方本（localStorage SavedRecipesSheet）、IG 分享圖（Canvas 1080×1080）、全域 Toast、列印 CSS、Enter 跳欄 iOS 修正、截圖跑版修正、雲端/本機儲存語意分離、克數模式每份合計顯示。
+- **功能進度**：v1.5.1（2026-04-23）。手機實測 5 項全修：截圖跑版（捕捉 #multi-section-root）、工具列兩行排版、空白材料行過濾、配方本副標題說明、多組模式 IG 分享入口。統一儲存 UX（SaveRecipeBar 單一「儲存配方」按鈕→BottomSheet→本機/雲端兩選項）。MultiComponentSection.tsx 拆成 3 檔（MultiComponentCard / MultiTemplateDialog / MultiComponentSection）。
+- **檔案架構**：`MultiComponentSection.tsx`（~250 行主組件）、`MultiComponentCard.tsx`（~380 行 ComponentCard）、`MultiTemplateDialog.tsx`（~110 行範本對話框）。單檔上限 400 行規則已落地。
 
 **Google Cloud OAuth 重新導向 URI（NextAuth）**：正式 `https://bakemao.smallfatmao.com/api/auth/callback/google`；本機 `http://localhost:3000/api/auth/callback/google`；可選 `https://bakemao.vercel.app/api/auth/callback/google`。舊 **Supabase** callback 可刪。
 

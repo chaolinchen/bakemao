@@ -67,12 +67,17 @@ export function SavedRecipesSheet({ open, onClose, onLoad, onDelete, recipes }: 
           className="flex items-center justify-between px-5 py-4 shrink-0"
           style={{ borderBottom: '2px solid #6B4A2F' }}
         >
-          <span
-            className="text-lg font-extrabold"
-            style={{ color: '#3D2918' }}
-          >
-            我的配方本
-          </span>
+          <div>
+            <span
+              className="text-lg font-extrabold"
+              style={{ color: '#3D2918' }}
+            >
+              我的配方本
+            </span>
+            <p className="text-xs mt-0.5" style={{ color: '#9B7B5A' }}>
+              本機儲存，不需登入
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center w-8 h-8 rounded-full font-bold text-base"

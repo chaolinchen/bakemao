@@ -4,9 +4,10 @@ import { signIn, useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import { queueOfflineSave } from '@/lib/offlineSync'
+import { saveRecipe } from '@/lib/savedRecipes'
+import { showToast } from '@/lib/toast'
 import { computeResult, useCalcStore } from '@/store/calcStore'
 import { BottomSheet } from './ui/BottomSheet'
-import { Button } from './ui/Button'
 import { Sparkle } from './ui/Sparkle'
 
 function defaultRecipeName() {
@@ -17,10 +18,8 @@ function defaultRecipeName() {
 
 export function SaveRecipeBar() {
   const { data: session, status } = useSession()
-  const [authOpen, setAuthOpen] = useState(false)
-  const [nameOpen, setNameOpen] = useState(false)
+  const [saveOpen, setSaveOpen] = useState(false)
   const [name, setName] = useState(defaultRecipeName)
-  const [toast, setToast] = useState<string | null>(null)
   const [nudge, setNudge] = useState(false)
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const online = typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -48,18 +47,39 @@ export function SaveRecipeBar() {
 
   useEffect(() => {
     const handler = () => {
-      if (status !== 'authenticated') {
-        setAuthOpen(true)
-      } else {
-        setName(defaultRecipeName())
-        setNameOpen(true)
-      }
+      setName(defaultRecipeName())
+      setSaveOpen(true)
     }
     window.addEventListener('bakemao:requestSave', handler)
     return () => window.removeEventListener('bakemao:requestSave', handler)
-  }, [status])
+  }, [])
 
-  const save = async () => {
+  const saveLocal = () => {
+    const snapshot = useCalcStore.getState()
+    const comps = snapshot.components ?? []
+    if (comps.length > 0) {
+      saveRecipe(name.trim() || '未命名配方', {
+        kind: 'multi',
+        components: comps,
+        compQuantity: snapshot.compQuantity ?? 6,
+        compLossRate: snapshot.compLossRate ?? 0,
+      })
+    } else {
+      saveRecipe(name.trim() || '未命名配方', {
+        kind: 'single',
+        mode: snapshot.mode,
+        ingredients: snapshot.ingredients.map((i) => ({ ...i, brand: i.brand ?? '' })),
+        targetKind: snapshot.targetKind,
+        totalGram: snapshot.totalGram,
+        loss: snapshot.loss,
+        moldUi: snapshot.moldUi,
+      })
+    }
+    showToast('已存到配方本')
+    setSaveOpen(false)
+  }
+
+  const saveCloud = async () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
     const globalQ = snapshot.compQuantity ?? 6
@@ -70,11 +90,7 @@ export function SaveRecipeBar() {
         const qty = c.customQty ?? globalQ
         const g =
           c.targetMode === 'mold'
-            ? gramPerUnitFromComponentMold(
-                c.moldType,
-                c.moldSize,
-                c.cupCount
-              )
+            ? gramPerUnitFromComponentMold(c.moldType, c.moldSize, c.cupCount)
             : c.gramPerUnit
         sum += Math.max(0, g) * Math.max(1, qty)
       }
@@ -121,15 +137,14 @@ export function SaveRecipeBar() {
     }
 
     if (status !== 'authenticated' || !session) {
-      setAuthOpen(true)
+      void signIn('google', { callbackUrl: '/' })
       return
     }
 
     if (!online) {
       queueOfflineSave(payload)
-      setToast('已暫存於本機，連線後同步')
-      setTimeout(() => setToast(null), 3000)
-      setNameOpen(false)
+      showToast('已暫存於本機，連線後同步')
+      setSaveOpen(false)
       return
     }
 
@@ -142,12 +157,11 @@ export function SaveRecipeBar() {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
-      setToast(`儲存失敗：${(err as { error?: string }).error ?? res.statusText}`)
+      showToast(`雲端備份失敗：${(err as { error?: string }).error ?? res.statusText}`)
     } else {
-      setToast('已儲存 ✓')
+      showToast('雲端備份成功 ✓')
     }
-    setTimeout(() => setToast(null), 3000)
-    setNameOpen(false)
+    setSaveOpen(false)
   }
 
   return (
@@ -159,13 +173,10 @@ export function SaveRecipeBar() {
           'calc(14px + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
       }}
     >
-      {nudge && !toast ? (
+      {nudge ? (
         <p className="mb-2 text-center text-xs text-[#6B5A4A]">
-          計算完成！登入後可跨裝置保存你的配方 ↓
+          計算完成！可儲存配方以便下次使用 ↓
         </p>
-      ) : null}
-      {toast ? (
-        <p className="mb-2 text-center text-sm text-[#3D2918]">{toast}</p>
       ) : null}
 
       <div className="mx-auto max-w-lg">
@@ -173,51 +184,48 @@ export function SaveRecipeBar() {
           type="button"
           className="flex w-full items-center justify-center gap-2.5 rounded-[20px] border-[2.5px] border-[#6B4A2F] bg-[#C8602A] py-4 text-base font-extrabold tracking-[2px] text-white shadow-[0_5px_0_#6B4A2F,0_10px_20px_rgba(107,74,47,0.25)] transition active:translate-y-[2px] active:shadow-[0_3px_0_#6B4A2F,0_5px_10px_rgba(107,74,47,0.15)]"
           onClick={() => {
-            if (status !== 'authenticated') {
-              setAuthOpen(true)
-            } else {
-              setNameOpen(true)
-            }
+            setName(defaultRecipeName())
+            setSaveOpen(true)
           }}
         >
           <Sparkle size={14} color="#fff" />
-          雲端備份配方
+          儲存配方
         </button>
       </div>
 
-      <BottomSheet open={nameOpen} onClose={() => setNameOpen(false)} title="命名">
+      <BottomSheet open={saveOpen} onClose={() => setSaveOpen(false)} title="儲存配方">
         <label className="text-xs text-[#6B5A4A]">名稱（最多 30 字）</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value.slice(0, 30))}
-          className="mb-4 w-full rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2"
+          className="mb-5 w-full rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2"
         />
-        <Button className="w-full" onClick={() => void save()}>
-          確認儲存
-        </Button>
-      </BottomSheet>
 
-      {authOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div className="flex flex-col gap-3">
+          {/* Local save */}
           <button
             type="button"
-            aria-label="關閉"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setAuthOpen(false)}
-          />
-          <div className="mao-card relative w-full max-w-xs p-6">
-            <h2 className="mb-1 text-lg font-extrabold text-[#4A3322]">登入以儲存配方</h2>
-            <p className="mb-5 text-sm text-[#6B5A4A]">登入後可跨裝置存取你的配方</p>
-            <Button
-              className="w-full"
-              onClick={() => void signIn('google', { callbackUrl: '/' })}
-            >
-              Google 登入
-            </Button>
-          </div>
+            onClick={saveLocal}
+            className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+          >
+            <span className="text-sm font-extrabold text-[#4A3322]">存到配方本（本機）</span>
+            <span className="text-xs text-[#9B7B5A]">免登入 · 僅限此裝置</span>
+          </button>
+
+          {/* Cloud save */}
+          <button
+            type="button"
+            onClick={() => void saveCloud()}
+            className="flex flex-col items-start gap-0.5 rounded-2xl border-[2.5px] border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+          >
+            <span className="text-sm font-extrabold text-white">
+              {status === 'authenticated' ? '雲端備份' : '雲端備份（需登入）'}
+            </span>
+            <span className="text-xs text-[#FFE0C8]">跨裝置同步 · Google 帳號</span>
+          </button>
         </div>
-      )}
+      </BottomSheet>
     </div>
   )
 }
