@@ -20,7 +20,10 @@ export function NumberInput(
         e.preventDefault()
         const next = all[idx + 1]
         next.focus()
-        next.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Delay scrollIntoView so iOS keyboard has time to open first
+        setTimeout(() => {
+          next.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }, 100)
       }
     }
     onKeyDown?.(e)

@@ -188,7 +188,7 @@ export function generateIgCard(
     ctx.font = 'bold 44px monospace'
     ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
-    ctx.fillText(`${ing.gram.toFixed(1)} g`, 960, y + rowHeight / 2)
+    ctx.fillText(`${Number.isInteger(ing.gram) ? ing.gram : ing.gram.toFixed(1)} g`, 960, y + rowHeight / 2)
 
     // Separator
     ctx.strokeStyle = '#E5D8C8'
@@ -231,7 +231,7 @@ export function generateIgCard(
   ctx.font = 'bold 44px monospace'
   ctx.textAlign = 'right'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`${totalGram.toFixed(1)} g`, 960, y + rowHeight / 2)
+  ctx.fillText(`${Number.isInteger(totalGram) ? totalGram : totalGram.toFixed(1)} g`, 960, y + rowHeight / 2)
 
   // Brand
   ctx.fillStyle = '#C8602A'
