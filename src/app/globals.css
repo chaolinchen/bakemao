@@ -55,6 +55,11 @@ body {
   .font-mono-num { font-variant-numeric: tabular-nums; }
 }
 
+@page {
+  margin: 1.5cm;
+  size: A4;
+}
+
 @media print {
   /* Hide interactive / navigation elements */
   button,
@@ -87,5 +92,24 @@ body {
     border-radius: 0 !important;
     box-shadow: none !important;
     border: 1px solid #cccccc !important;
+  }
+
+  /* Avoid page breaks inside result sections */
+  .rounded-2xl,
+  section,
+  .mao-card {
+    page-break-inside: avoid;
+  }
+
+  /* Bold gram values */
+  [class*="font-extrabold"],
+  [class*="font-bold"] {
+    font-weight: bold !important;
+  }
+
+  /* Preserve row separation in ingredient result rows */
+  tr,
+  [data-ingredient-row] {
+    border-bottom: 1px solid #ccc;
   }
 }

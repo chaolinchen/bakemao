@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Baloo_2, Noto_Sans_TC, Roboto_Mono } from 'next/font/google'
 import { Providers } from '@/components/Providers'
+import { ToastContainer } from '@/components/ui/ToastContainer'
 import './globals.css'
 
 const baloo = Baloo_2({
@@ -46,6 +47,7 @@ export default function RootLayout({
         style={{ fontFamily: "'Baloo 2', 'Noto Sans TC', system-ui, sans-serif" }}
       >
         <Providers>{children}</Providers>
+        <ToastContainer />
       </body>
     </html>
   )

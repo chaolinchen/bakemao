@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { SavedRecipe } from '@/lib/savedRecipes'
+import type { SavedRecipe, SavedMultiRecipe } from '@/lib/savedRecipes'
 
 interface Props {
   open: boolean
@@ -97,78 +97,91 @@ export function SavedRecipesSheet({ open, onClose, onLoad, onDelete, recipes }: 
               還沒有儲存的配方
             </p>
           ) : (
-            displayed.map((recipe) => (
-              <div
-                key={recipe.id}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3"
-                style={{
-                  background: '#FFF5E8',
-                  border: '2px solid #6B4A2F',
-                  boxShadow: '0 2px 0 #6B4A2F',
-                }}
-              >
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p
-                    className="font-extrabold text-sm truncate"
-                    style={{ color: '#3D2918' }}
-                  >
-                    {recipe.name}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs" style={{ color: '#9B7B5A' }}>
-                      {formatDate(recipe.createdAt)}
-                    </span>
-                    {recipe.snapshot.kind === 'multi' ? (
-                      <span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{
-                          background: '#FFE9D1',
-                          color: '#C8602A',
-                          border: '1.5px solid #C8602A',
-                        }}
-                      >
-                        多組件
-                      </span>
-                    ) : (
-                      <span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{
-                          background: '#E0EEFF',
-                          color: '#1D4ED8',
-                          border: '1.5px solid #1D4ED8',
-                        }}
-                      >
-                        單配方
-                      </span>
-                    )}
-                  </div>
-                </div>
+            displayed.map((recipe) => {
+              const isMulti = recipe.snapshot.kind === 'multi'
+              const multiSnap = isMulti ? (recipe.snapshot as SavedMultiRecipe) : null
+              const componentNames = multiSnap
+                ? multiSnap.components.map((c) => c.name).slice(0, 3).join(' · ') +
+                  (multiSnap.components.length > 3 ? ` +${multiSnap.components.length - 3}` : '')
+                : null
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {confirmId === recipe.id && (
-                    <span
-                      className="text-xs font-bold"
-                      style={{ color: '#DC2626' }}
-                    >
-                      確認刪除？
-                    </span>
-                  )}
+              return (
+                <div
+                  key={recipe.id}
+                  className="flex items-center gap-2 rounded-2xl px-3 py-3"
+                  style={{
+                    background: '#FFF5E8',
+                    border: '2px solid #6B4A2F',
+                    boxShadow: '0 2px 0 #6B4A2F',
+                  }}
+                >
+                  {/* Delete button — left side */}
                   <button
                     onClick={() => handleDeleteClick(recipe.id)}
-                    className="text-xs font-bold px-2 py-1 rounded-lg"
+                    className="shrink-0 flex items-center justify-center rounded-lg text-base font-bold"
                     style={{
+                      width: 32,
+                      height: 32,
                       background: confirmId === recipe.id ? '#DC2626' : '#FFE9D1',
-                      border: `1.5px solid ${confirmId === recipe.id ? '#DC2626' : '#6B4A2F'}`,
+                      border: `1.5px solid ${confirmId === recipe.id ? '#DC2626' : '#D9C9B5'}`,
                       color: confirmId === recipe.id ? '#fff' : '#6B4A2F',
                     }}
+                    title={confirmId === recipe.id ? '再按一次確認刪除' : '刪除'}
+                    aria-label="刪除配方"
                   >
-                    刪除
+                    {confirmId === recipe.id ? '!' : '🗑'}
                   </button>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="font-extrabold text-sm truncate"
+                      style={{ color: '#3D2918' }}
+                    >
+                      {recipe.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs" style={{ color: '#9B7B5A' }}>
+                        {formatDate(recipe.createdAt)}
+                      </span>
+                      {isMulti ? (
+                        <span
+                          className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: '#FFE9D1',
+                            color: '#C8602A',
+                            border: '1.5px solid #C8602A',
+                          }}
+                        >
+                          多組件
+                        </span>
+                      ) : (
+                        <span
+                          className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: '#E0EEFF',
+                            color: '#1D4ED8',
+                            border: '1.5px solid #1D4ED8',
+                          }}
+                        >
+                          單配方
+                        </span>
+                      )}
+                    </div>
+                    {componentNames && (
+                      <p
+                        className="mt-0.5 text-xs truncate"
+                        style={{ color: '#9B7B5A' }}
+                      >
+                        {componentNames}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Load button — right side */}
                   <button
                     onClick={() => handleLoad(recipe)}
-                    className="text-xs font-bold px-3 py-1 rounded-lg"
+                    className="shrink-0 text-xs font-bold px-3 py-1 rounded-lg"
                     style={{
                       background: '#C8602A',
                       border: '1.5px solid #6B4A2F',
@@ -179,8 +192,8 @@ export function SavedRecipesSheet({ open, onClose, onLoad, onDelete, recipes }: 
                     載入
                   </button>
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

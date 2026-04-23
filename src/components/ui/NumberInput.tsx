@@ -18,7 +18,9 @@ export function NumberInput(
       const idx = all.indexOf(e.currentTarget)
       if (idx !== -1 && idx < all.length - 1) {
         e.preventDefault()
-        all[idx + 1].focus()
+        const next = all[idx + 1]
+        next.focus()
+        next.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }
     onKeyDown?.(e)

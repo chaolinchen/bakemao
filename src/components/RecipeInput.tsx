@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { LossInput } from '@/lib/calculator'
 import { loadSavedRecipes, saveRecipe, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
 import { useCalcStore } from '@/store/calcStore'
+import { showToast } from '@/lib/toast'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
 import { SavedRecipesSheet } from './SavedRecipesSheet'
 import { Button } from './ui/Button'
@@ -40,7 +41,6 @@ export function RecipeInput() {
   const [tooltipOpen, setTooltipOpen] = useState(false)
   const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [saveName, setSaveName] = useState('')
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [recipesSheetOpen, setRecipesSheetOpen] = useState(false)
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([])
 
@@ -213,8 +213,7 @@ export function RecipeInput() {
                   moldUi: moldUiSnapshot,
                 })
                 setSaveDialogOpen(false)
-                setSaveSuccess(true)
-                setTimeout(() => setSaveSuccess(false), 2000)
+                showToast('配方已儲存')
               }}
             >
               儲存
@@ -229,10 +228,6 @@ export function RecipeInput() {
           </div>
         </div>
       )}
-      {saveSuccess && (
-        <p className="mt-1 text-center text-xs text-green-700">已儲存！</p>
-      )}
-
       <p className="mt-2 text-right text-sm text-[#6B5A4A]">
         {mode === 'percent' ? (
           <>總計 {totalPct.toFixed(2)} %</>

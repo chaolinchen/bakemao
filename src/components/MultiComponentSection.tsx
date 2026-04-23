@@ -9,6 +9,7 @@ import { CAKE_TYPE_PRESETS } from '@/lib/componentMoldGram'
 import type { CakeType, ComponentMoldType } from '@/lib/componentMoldGram'
 import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import { loadSavedRecipes, saveRecipe, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
+import { showToast } from '@/lib/toast'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
@@ -939,7 +940,6 @@ export function MultiComponentSection() {
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
   const [multiSaveDialogOpen, setMultiSaveDialogOpen] = useState(false)
   const [multiSaveName, setMultiSaveName] = useState('')
-  const [multiSaveSuccess, setMultiSaveSuccess] = useState(false)
   const [multiRecipesSheetOpen, setMultiRecipesSheetOpen] = useState(false)
   const [multiSavedRecipes, setMultiSavedRecipes] = useState<SavedRecipe[]>([])
 
@@ -1256,8 +1256,7 @@ export function MultiComponentSection() {
                   compLossRate: compLossRate ?? 0,
                 })
                 setMultiSaveDialogOpen(false)
-                setMultiSaveSuccess(true)
-                setTimeout(() => setMultiSaveSuccess(false), 2000)
+                showToast('配方已儲存')
               }}
             >
               儲存
@@ -1270,9 +1269,6 @@ export function MultiComponentSection() {
               取消
             </button>
           </div>
-          {multiSaveSuccess && (
-            <p className="mt-1 text-center text-xs text-green-700">已儲存！</p>
-          )}
         </div>
       )}
 

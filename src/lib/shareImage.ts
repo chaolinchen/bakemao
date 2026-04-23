@@ -113,6 +113,25 @@ function roundRect(
   ctx.closePath()
 }
 
+function truncateText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number
+): string {
+  if (ctx.measureText(text).width <= maxWidth) return text
+  let lo = 0
+  let hi = text.length
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2)
+    if (ctx.measureText(text.slice(0, mid) + '…').width <= maxWidth) {
+      lo = mid
+    } else {
+      hi = mid - 1
+    }
+  }
+  return text.slice(0, lo) + '…'
+}
+
 export function generateIgCard(
   ingredients: Array<{ name: string; gram: number }>,
   totalGram: number
@@ -162,14 +181,14 @@ export function generateIgCard(
     ctx.font = '36px sans-serif'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
-    ctx.fillText(ing.name, 120, y + rowHeight / 2)
+    ctx.fillText(truncateText(ctx, ing.name, 500), 120, y + rowHeight / 2)
 
     // Gram value
     ctx.fillStyle = '#C8602A'
     ctx.font = 'bold 44px monospace'
     ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
-    ctx.fillText(`${ing.gram} g`, 960, y + rowHeight / 2)
+    ctx.fillText(`${ing.gram.toFixed(1)} g`, 960, y + rowHeight / 2)
 
     // Separator
     ctx.strokeStyle = '#E5D8C8'
@@ -212,7 +231,7 @@ export function generateIgCard(
   ctx.font = 'bold 44px monospace'
   ctx.textAlign = 'right'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`${totalGram} g`, 960, y + rowHeight / 2)
+  ctx.fillText(`${totalGram.toFixed(1)} g`, 960, y + rowHeight / 2)
 
   // Brand
   ctx.fillStyle = '#C8602A'
@@ -231,6 +250,8 @@ export async function shareIgCard(
   if (typeof document === 'undefined') return
 
   const canvas = generateIgCard(ingredients, totalGram)
+
+  await new Promise(resolve => requestAnimationFrame(resolve))
 
   return new Promise((resolve) => {
     canvas.toBlob(async (blob) => {
