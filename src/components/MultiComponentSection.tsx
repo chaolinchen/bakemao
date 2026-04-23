@@ -8,10 +8,12 @@ import type { IngredientInput } from '@/lib/calculator'
 import { CAKE_TYPE_PRESETS } from '@/lib/componentMoldGram'
 import type { CakeType, ComponentMoldType } from '@/lib/componentMoldGram'
 import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
+import { loadSavedRecipes, saveRecipe, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
+import { SavedRecipesSheet } from './SavedRecipesSheet'
 import { ConfirmDialog } from './ui/Dialog'
 import { NumberInput } from './ui/NumberInput'
 import { Sparkle } from './ui/Sparkle'
@@ -96,6 +98,29 @@ function SegmentedTargetMode({
           {opt.label}
         </button>
       ))}
+    </div>
+  )
+}
+
+// ─── PercentTooltip ─────────────────────────────────────────────────────────
+
+function PercentTooltip() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mb-2">
+      <button
+        type="button"
+        className="flex items-center gap-1 text-[11px] text-[#6B4A2F] underline underline-offset-2"
+        onClick={() => setOpen((x) => !x)}
+      >
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#E5D8C8] text-[10px] font-bold text-[#6B4A2F]">?</span>
+        烘焙百分比說明
+      </button>
+      {open && (
+        <div className="mt-1.5 rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] p-3 text-[11px] text-[#5C4A3A]">
+          「烘焙百分比」以麵粉重量為 100%，其他材料相對麵粉的比例。例如：麵粉 100%、奶油 80% 代表奶油是麵粉重量的 80%。
+        </div>
+      )}
     </div>
   )
 }
@@ -531,6 +556,10 @@ function ComponentCard({
             主要材料（通常為麵粉）設 100，其他材料填相對比例
           </p>
         )}
+
+        {/* Collapsible percent tooltip */}
+        {!isGramMode && <PercentTooltip />}
+
         <div className="mb-2 space-y-2">
           {comp.ingredients.map((line) => {
             const invalid = isGramMode
@@ -908,6 +937,11 @@ export function MultiComponentSection() {
   const [showTemplates, setShowTemplates] = useState(false)
   const [screenshotting, setScreenshotting] = useState(false)
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
+  const [multiSaveDialogOpen, setMultiSaveDialogOpen] = useState(false)
+  const [multiSaveName, setMultiSaveName] = useState('')
+  const [multiSaveSuccess, setMultiSaveSuccess] = useState(false)
+  const [multiRecipesSheetOpen, setMultiRecipesSheetOpen] = useState(false)
+  const [multiSavedRecipes, setMultiSavedRecipes] = useState<SavedRecipe[]>([])
 
   const handleScreenshot = async () => {
     const el = document.querySelector('main')
@@ -1089,6 +1123,26 @@ export function MultiComponentSection() {
           <button
             type="button"
             className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
+            onClick={() => {
+              setMultiSaveName('')
+              setMultiSaveDialogOpen(true)
+            }}
+          >
+            儲存配方
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
+            onClick={() => {
+              setMultiSavedRecipes(loadSavedRecipes())
+              setMultiRecipesSheetOpen(true)
+            }}
+          >
+            配方本
+          </button>
+          <button
+            type="button"
+            className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
             onClick={() => setShowTemplates(true)}
           >
             範本
@@ -1178,6 +1232,50 @@ export function MultiComponentSection() {
         ＋ 新增組合
       </button>
 
+      {/* Inline save dialog */}
+      {multiSaveDialogOpen && (
+        <div className="rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] p-3">
+          <label className="mb-1 block text-xs text-[#6B5A4A]">配方名稱</label>
+          <input
+            type="text"
+            value={multiSaveName}
+            onChange={(e) => setMultiSaveName(e.target.value.slice(0, 30))}
+            placeholder="例：生日蛋糕組合"
+            className="mb-2 w-full rounded-lg border border-[#D9C9B5] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#6B4A2F]"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-[#6B4A2F] bg-[#C8602A] py-1.5 text-xs font-bold text-white"
+              onClick={() => {
+                const name = multiSaveName.trim() || '未命名配方'
+                saveRecipe(name, {
+                  kind: 'multi',
+                  components,
+                  compQuantity: compQuantity ?? 6,
+                  compLossRate: compLossRate ?? 0,
+                })
+                setMultiSaveDialogOpen(false)
+                setMultiSaveSuccess(true)
+                setTimeout(() => setMultiSaveSuccess(false), 2000)
+              }}
+            >
+              儲存
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-[#D9C9B5] bg-white py-1.5 text-xs text-[#6B5A4A]"
+              onClick={() => setMultiSaveDialogOpen(false)}
+            >
+              取消
+            </button>
+          </div>
+          {multiSaveSuccess && (
+            <p className="mt-1 text-center text-xs text-green-700">已儲存！</p>
+          )}
+        </div>
+      )}
+
       {confirmClear ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <button
@@ -1258,6 +1356,27 @@ export function MultiComponentSection() {
               setComponentTargetMode(comps[comps.length - 1].id, 'mold')
             }
           }
+        }}
+      />
+
+      <SavedRecipesSheet
+        open={multiRecipesSheetOpen}
+        recipes={multiSavedRecipes}
+        onClose={() => setMultiRecipesSheetOpen(false)}
+        onLoad={(r) => {
+          if (r.snapshot.kind !== 'multi') return
+          const snap = r.snapshot
+          clearComponents()
+          // Restore components via store replaceAll
+          useCalcStore.getState().replaceAll({
+            components: snap.components,
+            compQuantity: snap.compQuantity,
+            compLossRate: snap.compLossRate,
+          })
+        }}
+        onDelete={(id) => {
+          deleteRecipe(id)
+          setMultiSavedRecipes((prev) => prev.filter((r) => r.id !== id))
         }}
       />
     </section>

@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import type { LossInput } from '@/lib/calculator'
+import { loadSavedRecipes, saveRecipe, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
 import { useCalcStore } from '@/store/calcStore'
 import { IngredientSearchSheet } from './IngredientSearchSheet'
+import { SavedRecipesSheet } from './SavedRecipesSheet'
 import { Button } from './ui/Button'
 import { ConfirmDialog } from './ui/Dialog'
 import { NumberInput } from './ui/NumberInput'
@@ -24,6 +26,9 @@ export function RecipeInput() {
   const removeLine = useCalcStore((s) => s.removeLine)
   const addLine = useCalcStore((s) => s.addLine)
   const clearIngredients = useCalcStore((s) => s.clearIngredients)
+  const setTargetKind = useCalcStore((s) => s.setTargetKind)
+  const setTotalGram = useCalcStore((s) => s.setTotalGram)
+  const setMoldUi = useCalcStore((s) => s.setMoldUi)
 
   const [sheet, setSheet] = useState(false)
   const [confirmMode, setConfirmMode] = useState(false)
@@ -32,6 +37,12 @@ export function RecipeInput() {
   const [lossAdvanced, setLossAdvanced] = useState(
     () => loss.type === 'manual'
   )
+  const [tooltipOpen, setTooltipOpen] = useState(false)
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
+  const [saveName, setSaveName] = useState('')
+  const [saveSuccess, setSaveSuccess] = useState(false)
+  const [recipesSheetOpen, setRecipesSheetOpen] = useState(false)
+  const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([])
 
   const totalPct = ingredients
     .filter((i) => !i.isFixed)
@@ -57,6 +68,25 @@ export function RecipeInput() {
             setConfirmMode(true)
           }}
         />
+      </div>
+
+      {/* Collapsible tooltip for baking percentage */}
+      <div className="mb-3">
+        <button
+          type="button"
+          className="flex items-center gap-1 text-xs text-[#6B4A2F] underline underline-offset-2"
+          onClick={() => setTooltipOpen((x) => !x)}
+        >
+          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#E5D8C8] text-[10px] font-bold text-[#6B4A2F]">?</span>
+          {mode === 'percent' ? '什麼是烘焙百分比？' : '克數模式說明'}
+        </button>
+        {tooltipOpen && (
+          <div className="mt-2 rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] p-3 text-xs text-[#5C4A3A]">
+            {mode === 'percent'
+              ? '「烘焙百分比」以麵粉重量為 100%，其他材料相對麵粉的比例。例如：麵粉 100%、奶油 80% 代表奶油是麵粉重量的 80%。'
+              : '直接輸入每種材料的克數。系統會自動以最重的材料為基準換算比例。'}
+          </div>
+        )}
       </div>
 
       <div className="max-h-[min(360px,50vh)] space-y-2 overflow-auto pr-1">
@@ -124,6 +154,84 @@ export function RecipeInput() {
       >
         + 新增材料
       </Button>
+
+      {/* Save / Load buttons */}
+      <div className="mt-2 flex gap-2">
+        <button
+          type="button"
+          className="flex-1 rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] py-2 text-xs font-bold text-[#6B4A2F]"
+          onClick={() => {
+            setSaveName('')
+            setSaveDialogOpen(true)
+          }}
+        >
+          儲存配方
+        </button>
+        <button
+          type="button"
+          className="flex-1 rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] py-2 text-xs font-bold text-[#6B4A2F]"
+          onClick={() => {
+            setSavedRecipes(loadSavedRecipes())
+            setRecipesSheetOpen(true)
+          }}
+        >
+          我的配方本
+        </button>
+      </div>
+
+      {/* Inline save dialog */}
+      {saveDialogOpen && (
+        <div className="mt-2 rounded-xl border border-[#6B4A2F] bg-[#FFF8F0] p-3">
+          <label className="mb-1 block text-xs text-[#6B5A4A]">配方名稱</label>
+          <input
+            type="text"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value.slice(0, 30))}
+            placeholder="例：磅蛋糕 v1"
+            className="mb-2 w-full rounded-lg border border-[#D9C9B5] bg-white px-2 py-1.5 text-sm outline-none focus:border-[#6B4A2F]"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-[#6B4A2F] bg-[#C8602A] py-1.5 text-xs font-bold text-white"
+              onClick={() => {
+                const name = saveName.trim() || '未命名配方'
+                const moldUiSnapshot = useCalcStore.getState().moldUi
+                saveRecipe(name, {
+                  kind: 'single',
+                  mode,
+                  ingredients: ingredients.map((i) => ({
+                    id: i.id,
+                    name: i.name,
+                    brand: i.brand ?? '',
+                    value: i.value,
+                    isFixed: i.isFixed,
+                  })),
+                  targetKind: useCalcStore.getState().targetKind,
+                  totalGram: useCalcStore.getState().totalGram,
+                  loss,
+                  moldUi: moldUiSnapshot,
+                })
+                setSaveDialogOpen(false)
+                setSaveSuccess(true)
+                setTimeout(() => setSaveSuccess(false), 2000)
+              }}
+            >
+              儲存
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-lg border border-[#D9C9B5] bg-white py-1.5 text-xs text-[#6B5A4A]"
+              onClick={() => setSaveDialogOpen(false)}
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+      {saveSuccess && (
+        <p className="mt-1 text-center text-xs text-green-700">已儲存！</p>
+      )}
 
       <p className="mt-2 text-right text-sm text-[#6B5A4A]">
         {mode === 'percent' ? (
@@ -221,6 +329,33 @@ export function RecipeInput() {
         onConfirm={() => {
           if (deleteId) removeLine(deleteId)
           setDeleteId(null)
+        }}
+      />
+
+      <SavedRecipesSheet
+        open={recipesSheetOpen}
+        recipes={savedRecipes}
+        onClose={() => setRecipesSheetOpen(false)}
+        onLoad={(r) => {
+          if (r.snapshot.kind !== 'single') return
+          const snap = r.snapshot
+          clearIngredients()
+          setMode(snap.mode)
+          for (const ing of snap.ingredients) {
+            addLine({ name: ing.name, brand: ing.brand, value: ing.value, isFixed: ing.isFixed })
+          }
+          if (snap.targetKind === 'mold' || snap.targetKind === 'gram') {
+            setTargetKind(snap.targetKind as 'mold' | 'gram')
+          }
+          if (typeof snap.totalGram === 'number') setTotalGram(snap.totalGram)
+          if (snap.moldUi && typeof snap.moldUi === 'object') {
+            setMoldUi(snap.moldUi as Parameters<typeof setMoldUi>[0])
+          }
+          if (snap.loss) setLoss(snap.loss as LossInput)
+        }}
+        onDelete={(id) => {
+          deleteRecipe(id)
+          setSavedRecipes((prev) => prev.filter((r) => r.id !== id))
         }}
       />
     </section>

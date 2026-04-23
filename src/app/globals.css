@@ -54,3 +54,38 @@ body {
   .text-balance { text-wrap: balance; }
   .font-mono-num { font-variant-numeric: tabular-nums; }
 }
+
+@media print {
+  /* Hide interactive / navigation elements */
+  button,
+  nav,
+  header,
+  .no-print,
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Hide fixed / sticky elements (toolbars, overlays) */
+  *[style*="position: fixed"],
+  *[style*="position:fixed"],
+  *[style*="position: sticky"],
+  *[style*="position:sticky"] {
+    display: none !important;
+  }
+
+  /* Clean white background */
+  body {
+    background: #ffffff !important;
+    color: #000000;
+    font-size: 12pt;
+  }
+
+  /* Remove decorative shadows and border-radius from result sections */
+  .rounded-2xl,
+  .shadow-sm,
+  .mao-card {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #cccccc !important;
+  }
+}

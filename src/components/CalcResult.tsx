@@ -6,7 +6,7 @@ import molds from '@/data/molds.json'
 import { getMoldParts } from '@/lib/moldParts'
 import { computeResult, useCalcStore, type CalcStateSlice } from '@/store/calcStore'
 import { Button } from './ui/Button'
-import { captureAndShare } from '@/lib/shareImage'
+import { captureAndShare, shareIgCard } from '@/lib/shareImage'
 
 export function CalcResult() {
   // Object selector must be shallow-compared — else every render gets a new `{}` → infinite loop
@@ -83,13 +83,27 @@ export function CalcResult() {
     >
       <div className="mb-3 flex justify-between gap-2">
         <h2 className="font-serif text-xl text-[#3D2918]">計算結果</h2>
-        <Button
-          variant="ghost"
-          className="!text-xs"
-          onClick={() => void captureAndShare('bakemao-calc-result')}
-        >
-          分享圖
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            className="!text-xs"
+            onClick={() => void captureAndShare('bakemao-calc-result')}
+          >
+            分享圖
+          </Button>
+          <Button
+            variant="ghost"
+            className="!text-xs"
+            onClick={() =>
+              void shareIgCard(
+                result.ingredients.map((r) => ({ name: r.name, gram: r.gram })),
+                result.totalGram
+              )
+            }
+          >
+            IG樣板
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
