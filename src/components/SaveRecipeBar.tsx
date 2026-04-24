@@ -75,7 +75,7 @@ export function SaveRecipeBar() {
         moldUi: snapshot.moldUi,
       })
     }
-    showToast('已存到配方本')
+    showToast('已存到配方本', '僅限此裝置，換裝置請用雲端備份')
     setSaveOpen(false)
   }
 

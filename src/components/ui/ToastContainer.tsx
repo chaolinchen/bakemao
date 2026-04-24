@@ -4,17 +4,17 @@ import { useEffect, useState } from 'react'
 import { subscribeToast } from '@/lib/toast'
 
 export function ToastContainer() {
-  const [state, setState] = useState<{ message: string; visible: boolean }>({
+  const [state, setState] = useState<{ message: string; subtitle?: string; visible: boolean }>({
     message: '',
     visible: false,
   })
 
   useEffect(() => {
-    const unsub = subscribeToast((message) => {
-      setState({ message, visible: true })
+    const unsub = subscribeToast(({ message, subtitle }) => {
+      setState({ message, subtitle, visible: true })
       setTimeout(() => {
         setState((prev) => ({ ...prev, visible: false }))
-      }, 2500)
+      }, 3000)
     })
     return unsub
   }, [])
@@ -23,12 +23,15 @@ export function ToastContainer() {
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-lg"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] rounded-2xl px-5 py-3 text-sm font-bold text-white shadow-lg"
       style={{ background: '#3D2918' }}
       role="status"
       aria-live="polite"
     >
-      ✓ {state.message}
+      <div>✓ {state.message}</div>
+      {state.subtitle && (
+        <div className="mt-0.5 text-xs font-normal opacity-75">{state.subtitle}</div>
+      )}
     </div>
   )
 }
