@@ -30,7 +30,7 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen pb-36 text-[#4A3322]"
+      className="min-h-screen pb-8 text-[#4A3322]"
       style={{
         background: '#E6EEF5',
         backgroundImage:

@@ -22,7 +22,7 @@ export function SaveRecipeBar() {
   const [saveOpen, setSaveOpen] = useState(false)
   const [name, setName] = useState(defaultRecipeName)
   const [notes, setNotes] = useState('')
-  const [nudge, setNudge] = useState(false)
+  const [keyboardOpen, setKeyboardOpen] = useState(false)
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const online = typeof navigator !== 'undefined' ? navigator.onLine : true
 
@@ -35,17 +35,21 @@ export function SaveRecipeBar() {
     )
   })
 
+  // Detect keyboard open via visualViewport
   useEffect(() => {
-    if (!hasAnyResult || status !== 'unauthenticated') return
-    const key = 'bakemao_save_nudge'
-    if (typeof localStorage !== 'undefined' && localStorage.getItem(key)) return
-    if (typeof localStorage !== 'undefined') localStorage.setItem(key, '1')
-    setNudge(true)
-    nudgeTimerRef.current = setTimeout(() => setNudge(false), 6000)
-    return () => {
-      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current)
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => {
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      setKeyboardOpen(kh > 100)
     }
-  }, [hasAnyResult, status])
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [])
 
   useEffect(() => {
     const handler = () => {
@@ -57,6 +61,12 @@ export function SaveRecipeBar() {
     return () => window.removeEventListener('bakemao:requestSave', handler)
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (nudgeTimerRef.current) clearTimeout(nudgeTimerRef.current)
+    }
+  }, [])
+
   const saveLocal = () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
@@ -64,7 +74,7 @@ export function SaveRecipeBar() {
       saveRecipe(name.trim() || '未命名配方', {
         kind: 'multi',
         components: comps,
-        compQuantity: snapshot.compQuantity ?? 6,
+        compQuantity: snapshot.compQuantity ?? 1,
         compLossRate: snapshot.compLossRate ?? 0,
       }, notes)
     } else {
@@ -86,7 +96,7 @@ export function SaveRecipeBar() {
   const saveCloud = async () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
-    const globalQ = snapshot.compQuantity ?? 6
+    const globalQ = snapshot.compQuantity ?? 1
 
     function multiApproxTargetGram(): number {
       let sum = 0
@@ -169,35 +179,24 @@ export function SaveRecipeBar() {
     setSaveOpen(false)
   }
 
-  return (
-    <div
-      className="sticky bottom-0 z-30 px-4"
-      style={{
-        paddingTop: '14px',
-        paddingBottom:
-          'calc(14px + env(safe-area-inset-bottom) + var(--keyboard-offset, 0px))',
-      }}
-    >
-      {nudge ? (
-        <p className="mb-2 text-center text-xs text-[#6B5A4A]">
-          計算完成！可儲存配方以便下次使用 ↓
-        </p>
-      ) : null}
+  // FAB: only show when there are results AND keyboard is closed
+  if (!hasAnyResult || keyboardOpen) return null
 
-      <div className="mx-auto max-w-lg">
-        <button
-          type="button"
-          className="flex w-full items-center justify-center gap-2.5 rounded-[20px] border-[2.5px] border-[#6B4A2F] bg-[#C8602A] py-4 text-base font-extrabold tracking-[2px] text-white shadow-[0_5px_0_#6B4A2F,0_10px_20px_rgba(107,74,47,0.25)] transition active:translate-y-[2px] active:shadow-[0_3px_0_#6B4A2F,0_5px_10px_rgba(107,74,47,0.15)]"
-          onClick={() => {
-            setName(defaultRecipeName())
-            setNotes('')
-            setSaveOpen(true)
-          }}
-        >
-          <Sparkle size={14} color="#fff" />
-          儲存配方
-        </button>
-      </div>
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          setName(defaultRecipeName())
+          setNotes('')
+          setSaveOpen(true)
+        }}
+        className="fixed bottom-6 right-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
+        style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
+      >
+        <Sparkle size={13} color="#fff" />
+        儲存配方
+      </button>
 
       <BottomSheet open={saveOpen} onClose={() => setSaveOpen(false)} title="儲存配方">
         <label className="text-xs text-[#6B5A4A]">名稱（最多 30 字）</label>
@@ -217,7 +216,6 @@ export function SaveRecipeBar() {
         />
 
         <div className="flex flex-col gap-3">
-          {/* Local save */}
           <button
             type="button"
             onClick={saveLocal}
@@ -227,7 +225,6 @@ export function SaveRecipeBar() {
             <span className="text-xs text-[#9B7B5A]">免登入 · 僅限此裝置</span>
           </button>
 
-          {/* Cloud save */}
           <button
             type="button"
             onClick={() => void saveCloud()}
@@ -240,6 +237,6 @@ export function SaveRecipeBar() {
           </button>
         </div>
       </BottomSheet>
-    </div>
+    </>
   )
 }
