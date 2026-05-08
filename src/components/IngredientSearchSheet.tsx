@@ -17,16 +17,17 @@ export function IngredientSearchSheet({
 }) {
   const [q, setQ] = useState('')
   const [brandPick, setBrandPick] = useState<IngRow | null>(null)
-  const [sheetMaxHeight, setSheetMaxHeight] = useState<number | undefined>(
-    undefined
-  )
+  const [sheetMaxHeight, setSheetMaxHeight] = useState<number | undefined>(undefined)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
 
   useEffect(() => {
     if (!open) return
     const vv = window.visualViewport
     if (!vv) return
     const update = () => {
-      setSheetMaxHeight(vv.height + vv.offsetTop - 8)
+      const kh = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      setKeyboardHeight(kh)
+      setSheetMaxHeight(vv.height - 16)
     }
     vv.addEventListener('resize', update)
     vv.addEventListener('scroll', update)
@@ -66,8 +67,9 @@ export function IngredientSearchSheet({
       <BottomSheet
         open={open}
         onClose={onClose}
-        title={`\u9078\u64c7\u300c${brandPick.name}\u300d\u54c1\u724c`}
+        title={`選擇「${brandPick.name}」品牌`}
         panelStyle={sheetPanelStyle}
+        bottomOffset={keyboardHeight}
       >
         <ul className="space-y-2">
           <li>
@@ -109,12 +111,13 @@ export function IngredientSearchSheet({
       onClose={onClose}
       title="新增材料"
       panelStyle={sheetPanelStyle}
+      bottomOffset={keyboardHeight}
     >
       <input
         ref={searchRef}
         inputMode="search"
         type="search"
-        placeholder="\u641c\u5c0b\u98df\u6750\uff0c\u627e\u4e0d\u5230\u53ef\u76f4\u63a5\u8f38\u5165"
+        placeholder="搜尋食材，找不到可直接輸入"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         onFocus={(e) =>
@@ -143,7 +146,7 @@ export function IngredientSearchSheet({
               <span className="font-medium text-[#3D2918]">{row.name}</span>
               {row.aliases?.length ? (
                 <span className="ml-2 text-xs text-[#8A7968]">
-                  {row.aliases.join('\u3001')}
+                  {row.aliases.join('、')}
                 </span>
               ) : null}
             </button>
@@ -159,8 +162,8 @@ export function IngredientSearchSheet({
             onClose()
           }}
         >
-          <span aria-hidden>{'\u2795'}</span>
-          {`\u76f4\u63a5\u4f7f\u7528\u300c${q.trim()}\u300d`}
+          <span aria-hidden>+</span>
+          {`直接使用「${q.trim()}」`}
         </button>
       ) : null}
     </BottomSheet>

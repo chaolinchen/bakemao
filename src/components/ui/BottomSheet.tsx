@@ -9,6 +9,7 @@ export function BottomSheet({
   children,
   panelStyle,
   panelClassName,
+  bottomOffset = 0,
 }: {
   open: boolean
   onClose: () => void
@@ -17,6 +18,8 @@ export function BottomSheet({
   /** e.g. keyboard-aware maxHeight on mobile */
   panelStyle?: CSSProperties
   panelClassName?: string
+  /** pixels to raise the panel above the bottom (e.g. keyboard height on iOS) */
+  bottomOffset?: number
 }) {
   useEffect(() => {
     if (!open) return
@@ -29,7 +32,10 @@ export function BottomSheet({
 
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div
+      className="fixed inset-0 z-50 flex flex-col justify-end"
+      style={bottomOffset > 0 ? { paddingBottom: bottomOffset } : undefined}
+    >
       <button
         type="button"
         aria-label="關閉"
