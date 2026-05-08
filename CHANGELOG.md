@@ -2,6 +2,22 @@
 
 ---
 
+## v1.6.0 — 2026-05-09
+### Fix
+- **百分比小數點輸入**：`NumberInput` 改用 internal local state（`isFocused` ref），避免 controlled re-render 在用戶輸入 `"1."` 時吃掉小數點；移除干擾 iOS 鍵盤類型的 `pattern` 屬性。
+- **範本配方 Dialog 滾動**：`MultiTemplateDialog` 加 `max-h-[85dvh] overflow-y-auto overscroll-contain` + `useEffect` 鎖定 `body overflow`，修復背景跟著滑動 & 按鈕被遮擋。
+- **搜尋食材 placeholder 亂碼**：JSX 字串屬性不解析 `\uXXXX`，改為直接中文。
+- **搜尋食材鍵盤遮擋**：`IngredientSearchSheet` 追蹤 `keyboardHeight`（via `visualViewport`），傳入 `BottomSheet` 新增的 `bottomOffset` prop，讓 panel 浮在鍵盤上方。
+- **品牌需點兩次**：`IngredientSearchSheet` 從「條件渲染不同 BottomSheet」改為「單一 BottomSheet + 內部 view 切換」，避免 unmount/remount 造成 iOS 首次 tap 被吸收。
+- **模具體積浮點數**：長方形模具容積顯示 `toFixed(2)`，不再出現 `222.76799999...`。
+- **成品預設值**：store / GlobalQtyCard / MultiComponentSection 預設值 `6` → `1`（新用戶/清空後更直覺）。
+
+### Feat
+- **儲存配方 → FAB**：從全寬 sticky bar 改為左下角 `fixed` 浮動 pill 按鈕；無結果時不顯示；鍵盤打開時自動隱藏（`visualViewport` 偵測）；不再佔用 layout 空間。
+- **長方形模具**（v3.3 已在，補記）：尺寸 長/寬/高 cm 輸入，公式 `l×w×h×fillRate×gravity`。
+
+---
+
 ## v1.5.1 — 2026-04-23
 ### Chore
 - MultiComponentSection.tsx（1400 行）拆成三個檔案：MultiComponentCard.tsx（~380 行）、MultiTemplateDialog.tsx（~110 行）、MultiComponentSection.tsx（~250 行）

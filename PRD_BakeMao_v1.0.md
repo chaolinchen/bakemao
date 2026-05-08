@@ -1,5 +1,5 @@
 # BakeMao 烘焙貓 PRD
-**版本：v2.2 | 日期：2026-04-23 | 狀態：確認**
+**版本：v2.3 | 日期：2026-05-09 | 狀態：確認**
 
 > **v1.5：** 後台已由 Supabase 改為 **Neon（PostgreSQL）** + **NextAuth.js v5**；配方與使用者資料表以 repo `neon/001_init.sql` 為準。  
 > **v1.5.1：** 新增 **§19 實作備註**（Zustand 選擇器與模具推導；**不變更**產品功能規格）。  
@@ -10,6 +10,7 @@
 > **v2.0（2026-04-21）：** UX 修正四項 ✅（SummaryCard、新配方 Dialog、範本配方、份數 badge tooltip）；§24 新增。
 > **v2.1（2026-04-21）：** 麵糊比重+填充率 ✅；§25 新增。
 > **v2.2（2026-04-23）：** 用戶測試四輪修正全上線 ✅；§26 新增（配方儲存本機版、IG 分享圖、列印、Toast、UX 修正）。
+> **v2.3（2026-05-09）：** 手機實測 Bug 修正批次 ✅；§27 新增（百分比小數點、FAB 儲存按鈕、搜尋 UX 修正）。
 
 ---
 
@@ -564,3 +565,49 @@ gramPerUnit = 模具容積(cc) × 填充率 × 比重
 - IG 分享圖入口尚未加入多組件頁面
 - 克數模式基底無法手動指定
 - 配方備註欄
+
+
+---
+
+## §27 手機實測 Bug 修正批次（v2.3 / 2026-05-09）
+
+### 輸入體驗修正
+
+**百分比小數點**
+- `NumberInput` 改用 `isFocused` ref + local `displayValue` state：focus 期間不受 controlled re-render 影響，輸入 `"1."` 後游標不會跳掉
+- 移除 `pattern="[0-9]*"` 屬性（干擾 iOS 鍵盤類型選擇）
+
+**成品份數預設值**
+- 新用戶 / 清空後預設由 `6` 改為 `1`（更直覺，大多數人先試做一個）
+
+**模具容積顯示**
+- 長方形模具容積由浮點原始值改為 `toFixed(2)`（避免 `222.76799999...` 顯示）
+
+### 搜尋食材 UX 修正
+
+**Placeholder 亂碼**
+- JSX 字串屬性不解析 `\uXXXX`，全部改為直接中文
+
+**鍵盤遮擋選項**
+- `IngredientSearchSheet` 透過 `visualViewport resize` 事件追蹤 `keyboardHeight`
+- `BottomSheet` 新增 `bottomOffset` prop，將 panel 推到鍵盤上方
+
+**品牌需點兩次**
+- 原因：選食材後 `brandPick` state 切換，導致 BottomSheet unmount/remount，iOS 首次 tap 被舊的卸載過程吸收
+- 修法：改為單一 BottomSheet，內容用 `brandPick` state 做 view 切換，BottomSheet 本體不 unmount
+
+### 範本配方 Dialog 修正
+
+**滾動時背景跟著動**
+- `MultiTemplateDialog` 開啟時 `document.body.style.overflow = 'hidden'`，關閉時還原
+- Dialog 卡片加 `max-h-[85dvh] overflow-y-auto overscroll-contain`
+
+### 儲存配方按鈕重設計
+
+**舊行為**：全寬 sticky bottom bar，任何時候都懸浮在頁面底部，遮擋輸入框
+**新行為**：左下角 `fixed` FAB pill 按鈕
+- 無結果（無任何組合計算完成）→ 不顯示
+- 鍵盤打開中（`visualViewport` 偵測 keyboardHeight > 100px）→ 不顯示
+- 有結果且鍵盤關閉 → 顯示橘色 pill 按鈕
+- 位置：左下角（不蓋住右側輸入框和刪除按鈕）
+- 頁面 `pb` 從 `pb-36` → `pb-24`（FAB 為 fixed，不佔 layout 空間）
