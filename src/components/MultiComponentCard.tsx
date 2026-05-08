@@ -26,6 +26,7 @@ const MOLD_TYPE_OPTS: { value: ComponentMoldType; label: string }[] = [
   { value: 'round', label: '圓模（吋）' },
   { value: 'tart', label: '塔圈（cm）' },
   { value: 'cup', label: '杯型' },
+  { value: 'rectangle', label: '長方形' },
 ]
 
 const CAKE_TYPE_OPTS: { value: CakeType; label: string }[] = [
@@ -154,6 +155,7 @@ export function ComponentCard({
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
   const setComponentGramMode = useCalcStore((s) => s.setComponentGramMode)
   const setCompLineGramValue = useCalcStore((s) => s.setCompLineGramValue)
+  const setComponentGramBase = useCalcStore((s) => s.setComponentGramBase)
 
   const roundUnit = comp.roundUnit ?? 'inch'
   const roundHeight = comp.roundHeight ?? 6
@@ -164,10 +166,15 @@ export function ComponentCard({
     id: ing.id,
     g: gramValues[ing.id] ?? 0,
   }))
-  const baseGram = Math.max(...gramEntries.map((e) => e.g), 0)
-  const baseId = baseGram > 0
+  const autoBaseGram = Math.max(...gramEntries.map((e) => e.g), 0)
+  const autoBaseId = autoBaseGram > 0
     ? gramEntries.reduce((a, b) => (a.g >= b.g ? a : b)).id
     : null
+  // Use manual base if set and still a valid ingredient id, else fall back to auto
+  const validLineIds = new Set(comp.ingredients.map((i) => i.id))
+  const manualBaseId = comp.gramBase && validLineIds.has(comp.gramBase) ? comp.gramBase : null
+  const baseId = manualBaseId ?? autoBaseId
+  const baseGram = baseId ? (gramValues[baseId] ?? 0) : autoBaseGram
   const derivedPcts: Record<string, number> = {}
   for (const e of gramEntries) {
     derivedPcts[e.id] = baseGram > 0 ? (e.g / baseGram) * 100 : 0
@@ -265,7 +272,7 @@ export function ComponentCard({
           {isGramMode && (
             <div className="mt-1.5 space-y-0.5">
               <p className="text-[10px] text-[#8A7968]">
-                輸入每份的實際克數，克數最高的材料自動設為基底（100%）
+                輸入每份的實際克數，克數最高的材料自動設為基底（100%），或點材料名稱旁按鈕手動指定
               </p>
               {Object.keys(gramValues).length > 0 && (
                 <p className="text-[11px] font-bold text-[#6B4A2F]">
@@ -409,7 +416,34 @@ export function ComponentCard({
               </div>
             )}
 
-            {comp.moldType !== 'cup' ? (
+            {comp.moldType === 'rectangle' ? (
+              <div>
+                <p className="mb-1.5 text-xs text-[#6B5A4A]">尺寸（cm）</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {(
+                    [
+                      { label: '長', key: 'l' as const },
+                      { label: '寬', key: 'w' as const },
+                      { label: '高', key: 'h' as const },
+                    ] as const
+                  ).map(({ label, key }) => (
+                    <div key={key}>
+                      <p className="mb-0.5 text-[11px] text-[#8A7968]">{label}</p>
+                      <NumberInput
+                        value={String(comp.rectBox?.[key] ?? (key === 'l' ? 17 : key === 'w' ? 8 : 6))}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value)
+                          if (Number.isFinite(v) && v > 0 && v <= 100) {
+                            setComponentMold(comp.id, { rectBox: { ...(comp.rectBox ?? { l: 17, w: 8, h: 6 }), [key]: v } })
+                          }
+                        }}
+                        placeholder={key === 'l' ? '17' : key === 'w' ? '8' : '6'}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : comp.moldType !== 'cup' ? (
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <p className="text-xs text-[#6B5A4A]">
@@ -537,6 +571,7 @@ export function ComponentCard({
           {comp.ingredients.filter((l) => l.name.trim() !== '').map((line) => {
             const invalid = isGramMode ? (gramValues[line.id] ?? 0) === 0 : parseNum(line.value) === 0
             const isBase = isGramMode && line.id === baseId
+            const isManualBase = isGramMode && line.id === manualBaseId
             return (
               <div
                 key={line.id}
@@ -549,9 +584,24 @@ export function ComponentCard({
                       <span className="text-xs text-[#8A7968]"> · {line.brand}</span>
                     ) : null}
                     {isBase && (
-                      <span className="ml-1.5 rounded-full border border-[#6B4A2F] bg-[#C8602A] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                        基底
-                      </span>
+                      <button
+                        type="button"
+                        className="ml-1.5 rounded-full border border-[#6B4A2F] bg-[#C8602A] px-1.5 py-0.5 text-[10px] font-extrabold text-white"
+                        title={isManualBase ? '點擊取消手動設定，改回自動偵測' : '自動偵測的基底（點擊鎖定）'}
+                        onClick={() => setComponentGramBase(comp.id, isManualBase ? null : line.id)}
+                      >
+                        {isManualBase ? '基底 ✓' : '基底'}
+                      </button>
+                    )}
+                    {isGramMode && !isBase && (
+                      <button
+                        type="button"
+                        className="ml-1.5 rounded-full border border-[#D9C9B5] bg-[#F5EDE3] px-1.5 py-0.5 text-[10px] font-bold text-[#9B7B5A]"
+                        title="設為基底材料（100%）"
+                        onClick={() => setComponentGramBase(comp.id, line.id)}
+                      >
+                        設基底
+                      </button>
                     )}
                   </p>
                   {isGramMode && (gramValues[line.id] ?? 0) > 0 && (

@@ -107,7 +107,7 @@ export function IngredientSearchSheet({
     <BottomSheet
       open={open}
       onClose={onClose}
-      title="\u65b0\u589e\u6750\u6599"
+      title="新增材料"
       panelStyle={sheetPanelStyle}
     >
       <input

@@ -39,10 +39,14 @@ export type RecipeComponent = {
   customGravity: number
   /** 自訂填充率 0-1（cakeType=custom 時生效） */
   customFillRate: number
+  /** 長方形模具尺寸 cm */
+  rectBox: { l: number; w: number; h: number }
   /** 克數輸入模式：true = 輸入 g，自動換算 % */
   gramMode: boolean
   /** 克數模式下各材料的 g 輸入值（lineId → g） */
   gramValues: Record<string, number>
+  /** 克數模式下手動指定的基底材料 lineId；null = 自動（最大克數） */
+  gramBase?: string | null
 }
 
 export type TargetKind = 'mold' | 'gram'
@@ -129,8 +133,10 @@ export function defaultRecipeComponent(partial: {
     cakeType: 'mousse',
     customGravity: 0.85,
     customFillRate: 0.8,
+    rectBox: { l: 17, w: 8, h: 6 },
     gramMode: false,
     gramValues: {},
+    gramBase: null,
   }
 }
 
@@ -150,7 +156,7 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     targetMode: o.targetMode === 'mold' ? 'mold' : 'gram',
     moldPresetId: o.moldPresetId ?? null,
     moldType:
-      o.moldType === 'tart' || o.moldType === 'cup' ? o.moldType : 'round',
+      o.moldType === 'tart' || o.moldType === 'cup' || o.moldType === 'rectangle' ? o.moldType : 'round',
     moldSize: Number.isFinite(Number(o.moldSize)) ? Number(o.moldSize) : 6,
     roundUnit: o.roundUnit === 'cm' ? 'cm' : 'inch',
     roundHeight:
@@ -173,10 +179,16 @@ export function normalizeRecipeComponent(c: unknown): RecipeComponent | null {
     customFillRate: Number.isFinite(Number(o.customFillRate)) && Number(o.customFillRate) > 0
       ? Number(o.customFillRate)
       : 0.8,
+    rectBox: {
+      l: Number.isFinite(Number((o as RecipeComponent).rectBox?.l)) && Number((o as RecipeComponent).rectBox?.l) > 0 ? Number((o as RecipeComponent).rectBox?.l) : 17,
+      w: Number.isFinite(Number((o as RecipeComponent).rectBox?.w)) && Number((o as RecipeComponent).rectBox?.w) > 0 ? Number((o as RecipeComponent).rectBox?.w) : 8,
+      h: Number.isFinite(Number((o as RecipeComponent).rectBox?.h)) && Number((o as RecipeComponent).rectBox?.h) > 0 ? Number((o as RecipeComponent).rectBox?.h) : 6,
+    },
     gramMode: o.gramMode === true,
     gramValues: (o.gramValues && typeof o.gramValues === 'object' && !Array.isArray(o.gramValues))
       ? (o.gramValues as Record<string, number>)
       : {},
+    gramBase: typeof o.gramBase === 'string' ? o.gramBase : null,
   }
 }
 
@@ -276,9 +288,10 @@ export const useCalcStore = create<
     setComponentTargetMode: (id: string, mode: ComponentTargetMode) => void
     setComponentMold: (
       id: string,
-      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'roundUnit' | 'roundHeight' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate'>>
+      patch: Partial<Pick<RecipeComponent, 'moldType' | 'moldSize' | 'roundUnit' | 'roundHeight' | 'cupCount' | 'cakeType' | 'customGravity' | 'customFillRate' | 'rectBox'>>
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
+    setComponentGramBase: (id: string, lineId: string | null) => void
   }
 >()(
   persist(
@@ -520,6 +533,13 @@ export const useCalcStore = create<
                       : Math.min(999, Math.max(1, Math.floor(qty))),
                 }
               : c
+          ),
+        })),
+
+      setComponentGramBase: (id, lineId) =>
+        set((s) => ({
+          components: (s.components ?? []).map((c) =>
+            c.id === id ? { ...c, gramBase: lineId } : c
           ),
         })),
     }),

@@ -1,6 +1,6 @@
 import { cylinderVolumeCC } from './moldsVolume'
 
-export type ComponentMoldType = 'round' | 'tart' | 'cup'
+export type ComponentMoldType = 'round' | 'tart' | 'cup' | 'rectangle'
 
 export const CAKE_TYPE_PRESETS = {
   mousse:  { gravity: 1.0,  fillRate: 0.95 },
@@ -27,7 +27,10 @@ export function gramPerUnitFromComponentMold(
   gravity = 1.0,
   fillRate = 0.95,
   roundUnit: 'inch' | 'cm' = 'inch',
-  roundHeight = ROUND_HEIGHT_CM
+  roundHeight = ROUND_HEIGHT_CM,
+  rectL = 17,
+  rectW = 8,
+  rectH = 6
 ): number {
   if (moldType === 'round') {
     const dCm = roundUnit === 'cm' ? moldSize : moldSize * 2.54
@@ -36,6 +39,10 @@ export function gramPerUnitFromComponentMold(
   }
   if (moldType === 'tart') {
     const vol = Math.max(0, cylinderVolumeCC(moldSize, TART_HEIGHT_CM))
+    return vol * fillRate * gravity
+  }
+  if (moldType === 'rectangle') {
+    const vol = Math.max(0, rectL * rectW * rectH)
     return vol * fillRate * gravity
   }
   // 杯型：容積直接是目標克重（慕斯/布丁類），不套比重

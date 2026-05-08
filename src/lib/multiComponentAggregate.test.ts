@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { RecipeComponent } from '../store/calcStore'
+import { defaultRecipeComponent } from '../store/calcStore'
 import { aggregateIngredientsAcrossComponents } from './multiComponentAggregate'
 
 function line(
@@ -13,30 +13,8 @@ function line(
 
 describe('aggregateIngredientsAcrossComponents', () => {
   it('merges same name+brand across two components', () => {
-    const a: RecipeComponent = {
-      id: 'a',
-      name: 'A',
-      gramPerUnit: 100,
-      ingredients: [line('低筋麵粉', 100, '1')],
-      targetMode: 'gram',
-      moldPresetId: null,
-      moldType: 'round',
-      moldSize: 6,
-      cupCount: 6,
-      customQty: null,
-    }
-    const b: RecipeComponent = {
-      id: 'b',
-      name: 'B',
-      gramPerUnit: 100,
-      ingredients: [line('低筋麵粉', 100, '2')],
-      targetMode: 'gram',
-      moldPresetId: null,
-      moldType: 'round',
-      moldSize: 6,
-      cupCount: 6,
-      customQty: null,
-    }
+    const a = defaultRecipeComponent({ id: 'a', name: 'A', gramPerUnit: 100, ingredients: [line('低筋麵粉', 100, '1')] })
+    const b = defaultRecipeComponent({ id: 'b', name: 'B', gramPerUnit: 100, ingredients: [line('低筋麵粉', 100, '2')] })
     const { rows, shouldShow } = aggregateIngredientsAcrossComponents(
       [a, b],
       1,
@@ -49,18 +27,7 @@ describe('aggregateIngredientsAcrossComponents', () => {
   })
 
   it('hides when single component has no valid result', () => {
-    const one: RecipeComponent = {
-      id: 'a',
-      name: 'A',
-      gramPerUnit: 0,
-      ingredients: [],
-      targetMode: 'gram',
-      moldPresetId: null,
-      moldType: 'round',
-      moldSize: 6,
-      cupCount: 6,
-      customQty: null,
-    }
+    const one = defaultRecipeComponent({ id: 'a', name: 'A', gramPerUnit: 0, ingredients: [] })
     const { shouldShow, rows } = aggregateIngredientsAcrossComponents(
       [one],
       6,

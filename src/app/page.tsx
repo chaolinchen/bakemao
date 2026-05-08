@@ -89,10 +89,16 @@ export default function Home() {
         </div>
       ) : null}
 
-      <main className="relative z-[1] mx-auto flex max-w-lg flex-col gap-4 p-4">
-        <GlobalQtyCard />
-        <MultiComponentSection />
-        <SummaryCard />
+      <main className="relative mx-auto max-w-lg p-4 lg:max-w-5xl">
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6">
+          <div className="flex flex-col gap-4">
+            <GlobalQtyCard />
+            <MultiComponentSection />
+          </div>
+          <div className="lg:sticky lg:top-20">
+            <SummaryCard />
+          </div>
+        </div>
       </main>
 
       <SaveRecipeBar />
