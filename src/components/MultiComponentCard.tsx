@@ -527,7 +527,7 @@ export function ComponentCard({
             )}
             {comp.moldType !== 'cup' && (
               <p className="text-xs text-[#8A7968]">
-                共 <span className="font-semibold text-[#3D2918]">{moldVolumeLabel}</span>{' '}
+                共 <span className="font-semibold text-[#3D2918]">{Number(moldVolumeLabel).toFixed(2)}</span>{' '}
                 g（1cc≈1g）
               </p>
             )}
