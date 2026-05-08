@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import type { CakeType } from '@/lib/componentMoldGram'
 
 type TemplateIngredient = { name: string; value: number }
@@ -71,6 +72,13 @@ export function TemplateDialog({
   onClose: () => void
   onApply: (tpl: RecipeTemplate) => void
 }) {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [open])
+
   if (!open) return null
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
@@ -80,7 +88,7 @@ export function TemplateDialog({
         aria-label="關閉"
         onClick={onClose}
       />
-      <div className="mao-card relative w-full max-w-sm p-5">
+      <div className="mao-card relative w-full max-w-sm p-5 max-h-[85dvh] overflow-y-auto overscroll-contain">
         <h3 className="text-lg font-extrabold text-[#4A3322]">範本配方</h3>
         <p className="mt-1 text-xs text-[#9E8672]">
           套用後會新增一組配方，你可以繼續修改比例。
