@@ -191,7 +191,7 @@ export function SaveRecipeBar() {
           setNotes('')
           setSaveOpen(true)
         }}
-        className="fixed bottom-6 right-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
+        className="fixed bottom-6 left-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
         style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <Sparkle size={13} color="#fff" />

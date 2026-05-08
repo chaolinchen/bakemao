@@ -59,18 +59,24 @@ export function IngredientSearchSheet({
 
   const searchRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    if (open) searchRef.current?.focus()
-  }, [open])
+    if (open && !brandPick) searchRef.current?.focus()
+  }, [open, brandPick])
 
-  if (brandPick && brandPick.brands && brandPick.brands.length > 0) {
-    return (
-      <BottomSheet
-        open={open}
-        onClose={onClose}
-        title={`選擇「${brandPick.name}」品牌`}
-        panelStyle={sheetPanelStyle}
-        bottomOffset={keyboardHeight}
-      >
+  const title = brandPick ? `選擇「${brandPick.name}」品牌` : '新增材料'
+
+  return (
+    <BottomSheet
+      open={open}
+      onClose={() => {
+        setBrandPick(null)
+        onClose()
+      }}
+      title={title}
+      panelStyle={sheetPanelStyle}
+      bottomOffset={keyboardHeight}
+    >
+      {brandPick && brandPick.brands && brandPick.brands.length > 0 ? (
+        /* Brand selection view — stays inside same BottomSheet, no unmount */
         <ul className="space-y-2">
           <li>
             <button
@@ -100,72 +106,74 @@ export function IngredientSearchSheet({
               </button>
             </li>
           ))}
-        </ul>
-      </BottomSheet>
-    )
-  }
-
-  return (
-    <BottomSheet
-      open={open}
-      onClose={onClose}
-      title="新增材料"
-      panelStyle={sheetPanelStyle}
-      bottomOffset={keyboardHeight}
-    >
-      <input
-        ref={searchRef}
-        inputMode="search"
-        type="search"
-        placeholder="搜尋食材，找不到可直接輸入"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onFocus={(e) =>
-          e.currentTarget.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-          })
-        }
-        className="mb-3 w-full rounded-lg border border-[#D9C9B5] px-3 py-2"
-      />
-      <ul className="max-h-[50vh] space-y-1 overflow-auto">
-        {filtered.map((row) => (
-          <li key={row.id}>
+          <li>
             <button
               type="button"
-              className="w-full rounded-lg px-2 py-2 text-left hover:bg-[#EDE4D6]"
+              className="mt-1 w-full rounded-lg px-3 py-2 text-left text-sm text-[#8A7968]"
+              onClick={() => setBrandPick(null)}
+            >
+              ← 返回搜尋
+            </button>
+          </li>
+        </ul>
+      ) : (
+        /* Search view */
+        <>
+          <input
+            ref={searchRef}
+            inputMode="search"
+            type="search"
+            placeholder="搜尋食材，找不到可直接輸入"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onFocus={(e) =>
+              e.currentTarget.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+              })
+            }
+            className="mb-3 w-full rounded-lg border border-[#D9C9B5] px-3 py-2"
+          />
+          <ul className="max-h-[50vh] space-y-1 overflow-auto">
+            {filtered.map((row) => (
+              <li key={row.id}>
+                <button
+                  type="button"
+                  className="w-full rounded-lg px-2 py-2 text-left hover:bg-[#EDE4D6]"
+                  onClick={() => {
+                    if ('brands' in row && row.brands && row.brands.length > 0) {
+                      setBrandPick(row)
+                      return
+                    }
+                    onPick({ name: row.name })
+                    onClose()
+                  }}
+                >
+                  <span className="font-medium text-[#3D2918]">{row.name}</span>
+                  {row.aliases?.length ? (
+                    <span className="ml-2 text-xs text-[#8A7968]">
+                      {row.aliases.join('、')}
+                    </span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+          {q.trim() && filtered.length === 0 ? (
+            <button
+              type="button"
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C8602A] py-3 text-base font-medium text-white"
               onClick={() => {
-                if ('brands' in row && row.brands && row.brands.length > 0) {
-                  setBrandPick(row)
-                  return
-                }
-                onPick({ name: row.name })
+                onPick({ name: q.trim() })
                 onClose()
               }}
             >
-              <span className="font-medium text-[#3D2918]">{row.name}</span>
-              {row.aliases?.length ? (
-                <span className="ml-2 text-xs text-[#8A7968]">
-                  {row.aliases.join('、')}
-                </span>
-              ) : null}
+              <span aria-hidden>+</span>
+              {`直接使用「${q.trim()}」`}
             </button>
-          </li>
-        ))}
-      </ul>
-      {q.trim() && filtered.length === 0 ? (
-        <button
-          type="button"
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#C8602A] py-3 text-base font-medium text-white"
-          onClick={() => {
-            onPick({ name: q.trim() })
-            onClose()
-          }}
-        >
-          <span aria-hidden>+</span>
-          {`直接使用「${q.trim()}」`}
-        </button>
-      ) : null}
+          ) : null}
+        </>
+      )}
     </BottomSheet>
   )
 }
