@@ -47,7 +47,7 @@ export function MultiComponentSection() {
   )
 
   const components = rawComponents ?? []
-  const compQuantity = rawCompQuantity ?? 6
+  const compQuantity = rawCompQuantity ?? 1
   const compLossRate = rawCompLossRate ?? 0
 
   const [hydrated, setHydrated] = useState(false)
@@ -122,7 +122,7 @@ export function MultiComponentSection() {
   const handleIgShare = () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
-    const globalQty = snapshot.compQuantity ?? 6
+    const globalQty = snapshot.compQuantity ?? 1
     const lossRate = snapshot.compLossRate ?? 0
     const { rows, totalGram } = aggregateIngredientsAcrossComponents(comps, globalQty, lossRate)
     if (rows.length === 0) return
@@ -136,7 +136,7 @@ export function MultiComponentSection() {
   const handleExportCsv = () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
-    const globalQty = snapshot.compQuantity ?? 6
+    const globalQty = snapshot.compQuantity ?? 1
     const lossRate = snapshot.compLossRate ?? 0
     const rows: string[][] = [['組合', '材料', '烘焙百分比', '克數']]
     for (const comp of comps) {

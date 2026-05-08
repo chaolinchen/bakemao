@@ -10,7 +10,7 @@ const QUICK_QTY = [1, 2, 4, 6, 12, 24, 48, 100]
 export function GlobalQtyCard() {
   const { compQuantity, setCompQuantity } = useCalcStore(
     useShallow((s) => ({
-      compQuantity: s.compQuantity ?? 6,
+      compQuantity: s.compQuantity ?? 1,
       setCompQuantity: s.setCompQuantity,
     }))
   )

@@ -305,7 +305,7 @@ export const useCalcStore = create<
       ingredients: [],
       moldUi: { ...defaultMoldUi },
       components: [],
-      compQuantity: 6,
+      compQuantity: 1,
       compLossRate: 0,
 
       setMode: (mode) => set({ mode }),
@@ -503,7 +503,7 @@ export const useCalcStore = create<
       clearComponents: () =>
         set({
           components: [],
-          compQuantity: 6,
+          compQuantity: 1,
           compLossRate: 0,
         }),
 
