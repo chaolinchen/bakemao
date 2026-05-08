@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
 import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import { loadSavedRecipes, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
+import { trackEvent } from '@/lib/analytics'
 import { shareIgCard } from '@/lib/shareImage'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
@@ -125,6 +126,7 @@ export function MultiComponentSection() {
     const lossRate = snapshot.compLossRate ?? 0
     const { rows, totalGram } = aggregateIngredientsAcrossComponents(comps, globalQty, lossRate)
     if (rows.length === 0) return
+    trackEvent('share_ig_card')
     void shareIgCard(
       rows.map((r) => ({ name: r.name + (r.brand ? ` · ${r.brand}` : ''), gram: r.gram })),
       totalGram
@@ -200,12 +202,15 @@ export function MultiComponentSection() {
     <section id="multi-section-root" className="space-y-4">
       <div className="flex flex-col gap-2 px-1">
         <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-[17px] font-extrabold text-[#4A3322]">
-            <span className="inline-flex rounded-full border-2 border-[#6B4A2F] bg-[#FFD089] p-1 shadow-[0_2px_0_#6B4A2F]">
-              <Sparkle size={12} color="#C8602A" />
-            </span>
-            多組配方計算
-          </h2>
+          <div>
+            <h2 className="flex items-center gap-2 text-[17px] font-extrabold text-[#4A3322]">
+              <span className="inline-flex rounded-full border-2 border-[#6B4A2F] bg-[#FFD089] p-1 shadow-[0_2px_0_#6B4A2F]">
+                <Sparkle size={12} color="#C8602A" />
+              </span>
+              多組配方計算
+            </h2>
+            <p className="mt-0.5 pl-8 text-[12px] text-[#9B7B5A]">單組也可以用</p>
+          </div>
           <button
             type="button"
             className="flex items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-3 py-1 text-[12.5px] font-extrabold text-white shadow-[0_2px_0_#6B4A2F]"
@@ -223,6 +228,13 @@ export function MultiComponentSection() {
             disabled={screenshotting}
           >
             {screenshotting ? '截圖中…' : '截圖'}
+          </button>
+          <button
+            type="button"
+            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-1 text-[12.5px] font-extrabold text-[#C8602A] shadow-[0_2px_0_#6B4A2F]"
+            onClick={handleIgShare}
+          >
+            IG 備料卡
           </button>
           <button
             type="button"
@@ -357,6 +369,7 @@ export function MultiComponentSection() {
         open={showTemplates}
         onClose={() => setShowTemplates(false)}
         onApply={(tpl) => {
+          trackEvent('apply_template', { label: tpl.label })
           clearComponents()
           addComponentFromTemplate(
             tpl.label,

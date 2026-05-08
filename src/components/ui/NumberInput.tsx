@@ -32,7 +32,7 @@ export function NumberInput(
     <input
       type="text"
       inputMode="decimal"
-      pattern="[0-9]*"
+      pattern="[0-9]*\.?[0-9]*"
       autoComplete="off"
       data-ingredient-input
       className={`w-full rounded-xl border-2 bg-[#FFFBF2] px-3 py-2 text-base font-extrabold outline-none focus:ring-2 focus:ring-[#C8602A]/30 font-[family-name:var(--font-roboto-mono)] ${

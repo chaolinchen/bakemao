@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
 import { queueOfflineSave } from '@/lib/offlineSync'
 import { saveRecipe } from '@/lib/savedRecipes'
+import { trackEvent } from '@/lib/analytics'
 import { showToast } from '@/lib/toast'
 import { computeResult, useCalcStore } from '@/store/calcStore'
 import { BottomSheet } from './ui/BottomSheet'
@@ -20,6 +21,7 @@ export function SaveRecipeBar() {
   const { data: session, status } = useSession()
   const [saveOpen, setSaveOpen] = useState(false)
   const [name, setName] = useState(defaultRecipeName)
+  const [notes, setNotes] = useState('')
   const [nudge, setNudge] = useState(false)
   const nudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const online = typeof navigator !== 'undefined' ? navigator.onLine : true
@@ -48,6 +50,7 @@ export function SaveRecipeBar() {
   useEffect(() => {
     const handler = () => {
       setName(defaultRecipeName())
+      setNotes('')
       setSaveOpen(true)
     }
     window.addEventListener('bakemao:requestSave', handler)
@@ -63,7 +66,7 @@ export function SaveRecipeBar() {
         components: comps,
         compQuantity: snapshot.compQuantity ?? 6,
         compLossRate: snapshot.compLossRate ?? 0,
-      })
+      }, notes)
     } else {
       saveRecipe(name.trim() || '未命名配方', {
         kind: 'single',
@@ -73,8 +76,9 @@ export function SaveRecipeBar() {
         totalGram: snapshot.totalGram,
         loss: snapshot.loss,
         moldUi: snapshot.moldUi,
-      })
+      }, notes)
     }
+    trackEvent('save_recipe', { method: 'local' })
     showToast('已存到配方本', '僅限此裝置，換裝置請用雲端備份')
     setSaveOpen(false)
   }
@@ -159,6 +163,7 @@ export function SaveRecipeBar() {
       const err = await res.json().catch(() => ({}))
       showToast(`雲端備份失敗：${(err as { error?: string }).error ?? res.statusText}`)
     } else {
+      trackEvent('save_recipe', { method: 'cloud' })
       showToast('雲端備份成功 ✓')
     }
     setSaveOpen(false)
@@ -185,6 +190,7 @@ export function SaveRecipeBar() {
           className="flex w-full items-center justify-center gap-2.5 rounded-[20px] border-[2.5px] border-[#6B4A2F] bg-[#C8602A] py-4 text-base font-extrabold tracking-[2px] text-white shadow-[0_5px_0_#6B4A2F,0_10px_20px_rgba(107,74,47,0.25)] transition active:translate-y-[2px] active:shadow-[0_3px_0_#6B4A2F,0_5px_10px_rgba(107,74,47,0.15)]"
           onClick={() => {
             setName(defaultRecipeName())
+            setNotes('')
             setSaveOpen(true)
           }}
         >
@@ -199,7 +205,15 @@ export function SaveRecipeBar() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value.slice(0, 30))}
-          className="mb-5 w-full rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2"
+          className="mb-3 w-full rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2"
+        />
+        <label className="text-xs text-[#6B5A4A]">備註（選填，最多 100 字）</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value.slice(0, 100))}
+          placeholder="版本說明、調整記錄…"
+          rows={2}
+          className="mb-5 w-full resize-none rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2 text-sm"
         />
 
         <div className="flex flex-col gap-3">

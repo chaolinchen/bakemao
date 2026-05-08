@@ -181,6 +181,14 @@ export function SavedRecipesSheet({ open, onClose, onLoad, onDelete, recipes }: 
                         {componentNames}
                       </p>
                     )}
+                    {recipe.notes && (
+                      <p
+                        className="mt-1 text-xs line-clamp-2"
+                        style={{ color: '#7B6A58', fontStyle: 'italic' }}
+                      >
+                        {recipe.notes}
+                      </p>
+                    )}
                   </div>
 
                   {/* Load button — right side */}

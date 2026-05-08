@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
+import { trackEvent } from '@/lib/analytics'
 import { calculateExam } from '@/lib/calculator'
 import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import {
@@ -377,7 +378,7 @@ export default function SharePage({
 
         {/* Actions */}
         <div className="flex flex-col gap-2">
-          <Button className="w-full py-3 text-base" onClick={() => setConfirmLoad(true)}>
+          <Button className="w-full py-3 text-base" onClick={() => { trackEvent('open_bakemao'); setConfirmLoad(true) }}>
             用 BakeMao 開啟
           </Button>
           <button

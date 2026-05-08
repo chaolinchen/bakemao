@@ -90,7 +90,7 @@ export async function captureAndShare(rootId: string) {
 const IG_SIZE = 1080
 const IG_MARGIN = 40
 const IG_RADIUS = 40
-const MAX_ROWS = 8
+const MAX_ROWS = 12
 
 function roundRect(
   ctx: CanvasRenderingContext2D,
@@ -171,9 +171,11 @@ export function generateIgCard(
   const rows = showAll ? ingredients : ingredients.slice(0, MAX_ROWS - 1)
   const extraCount = showAll ? 0 : ingredients.length - (MAX_ROWS - 1)
 
-  // Ingredient rows
-  const rowHeight = 80
-  let y = 220
+  // Responsive row height: shrink when many items so everything fits in 1080px
+  const displayCount = Math.min(ingredients.length, MAX_ROWS)
+  const rowHeight = displayCount <= 6 ? 84 : displayCount <= 9 ? 74 : 62
+  const startY = displayCount <= 6 ? 220 : displayCount <= 9 ? 205 : 188
+  let y = startY
 
   for (const ing of rows) {
     // Name

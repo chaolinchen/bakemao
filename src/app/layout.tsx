@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Baloo_2, Noto_Sans_TC, Roboto_Mono } from 'next/font/google'
+import Script from 'next/script'
 import { Providers } from '@/components/Providers'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import './globals.css'
+
+const GA_ID = 'G-EHQCHQVB1M'
 
 const baloo = Baloo_2({
   subsets: ['latin'],
@@ -70,6 +73,13 @@ export default function RootLayout({
       >
         <Providers>{children}</Providers>
         <ToastContainer />
+        <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+        <Script id="ga4-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}');
+        `}</Script>
       </body>
     </html>
   )

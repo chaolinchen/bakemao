@@ -20,6 +20,7 @@ export interface SavedMultiRecipe {
 export interface SavedRecipe {
   id: string
   name: string
+  notes?: string
   createdAt: number
   snapshot: SavedSingleRecipe | SavedMultiRecipe
 }
@@ -48,7 +49,8 @@ function persistRecipes(recipes: SavedRecipe[]): void {
 
 export function saveRecipe(
   name: string,
-  snapshot: SavedSingleRecipe | SavedMultiRecipe
+  snapshot: SavedSingleRecipe | SavedMultiRecipe,
+  notes?: string
 ): SavedRecipe {
   const id =
     typeof crypto !== 'undefined' && crypto.randomUUID
@@ -58,6 +60,7 @@ export function saveRecipe(
   const entry: SavedRecipe = {
     id,
     name,
+    ...(notes?.trim() ? { notes: notes.trim() } : {}),
     createdAt: Date.now(),
     snapshot,
   }
