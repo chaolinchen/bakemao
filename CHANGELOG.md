@@ -2,6 +2,16 @@
 
 ---
 
+## v1.6.1 — 2026-05-09
+### Fix
+- **FAB 跑版**：`pb-24` 改為 `calc(7rem + env(safe-area-inset-bottom))` 確保 Home Bar 裝置上 FAB 不蓋住底部內容。
+- **截圖跑版+資訊不足**：移除 `html2canvas`，改用 Canvas API 手繪配方卡（含組合名稱、材料名/品牌/百分比/克數、小計/總計）；手機支援 `navigator.share`，不支援則長按存圖 overlay。
+
+### UX
+- **分享按鈕合併**：「截圖」與「IG 備料卡」合併為單一「分享」按鈕，開啟 BottomSheet 後再選擇配方截圖或 IG 備料卡。
+
+---
+
 ## v1.6.0 — 2026-05-09
 ### Fix
 - **百分比小數點輸入**：`NumberInput` 改用 internal local state（`isFocused` ref），避免 controlled re-render 在用戶輸入 `"1."` 時吃掉小數點；移除干擾 iOS 鍵盤類型的 `pattern` 屬性。

@@ -1,18 +1,18 @@
 'use client'
 
-import html2canvas from 'html2canvas'
 import { useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { calculateExam } from '@/lib/calculator'
 import { aggregateIngredientsAcrossComponents, effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
 import { loadSavedRecipes, deleteRecipe, type SavedRecipe } from '@/lib/savedRecipes'
 import { trackEvent } from '@/lib/analytics'
-import { shareIgCard } from '@/lib/shareImage'
+import { shareIgCard, shareRecipeCard, type RecipeCardComponent } from '@/lib/shareImage'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
 import { ComponentCard, parseNum } from './MultiComponentCard'
 import { TemplateDialog } from './MultiTemplateDialog'
 import { SavedRecipesSheet } from './SavedRecipesSheet'
+import { BottomSheet } from './ui/BottomSheet'
 import { ConfirmDialog } from './ui/Dialog'
 import { NumberInput } from './ui/NumberInput'
 import { Sparkle } from './ui/Sparkle'
@@ -64,59 +64,53 @@ export function MultiComponentSection() {
   const [removeId, setRemoveId] = useState<string | null>(null)
   const [showLoss, setShowLoss] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
-  const [screenshotting, setScreenshotting] = useState(false)
-  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
+  const [showShareSheet, setShowShareSheet] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const [multiRecipesSheetOpen, setMultiRecipesSheetOpen] = useState(false)
   const [multiSavedRecipes, setMultiSavedRecipes] = useState<SavedRecipe[]>([])
 
-  const handleScreenshot = async () => {
-    const el = document.getElementById('multi-section-root')
-    if (!el) return
-    setScreenshotting(true)
-    try {
-      const canvas = await html2canvas(el, {
-        backgroundColor: '#F7F0E6',
-        scale: 2,
-        useCORS: true,
-        width: el.offsetWidth,
-        height: el.scrollHeight,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        onclone: (_doc, cloned) => {
-          cloned.querySelectorAll('input').forEach((inp) => {
-            inp.style.border = 'none'
-            inp.style.background = 'transparent'
-            inp.style.outline = 'none'
-          })
-          cloned.querySelectorAll('[data-screenshot-hide]').forEach((el) => {
-            ;(el as HTMLElement).style.display = 'none'
-          })
-          cloned.querySelectorAll('button').forEach((btn) => {
-            btn.style.display = 'none'
-          })
-        },
-      })
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.font = `bold ${30}px sans-serif`
-        ctx.fillStyle = 'rgba(200, 96, 42, 0.55)'
-        ctx.textAlign = 'right'
-        ctx.fillText('BakeMao 烘焙貓', canvas.width - 32, canvas.height - 32)
+  const buildShareData = (): { comps: RecipeCardComponent[]; globalQty: number; lossRate: number } => {
+    const snapshot = useCalcStore.getState()
+    const comps = snapshot.components ?? []
+    const globalQty = snapshot.compQuantity ?? 1
+    const lossRate = snapshot.compLossRate ?? 0
+    const cardComps: RecipeCardComponent[] = comps.map((comp) => {
+      const gramForCalc = effectiveGramPerUnit(comp)
+      const qty = comp.customQty ?? globalQty
+      const gramMap = new Map<string, number>()
+      if (gramForCalc > 0 && comp.ingredients.length > 0) {
+        const result = calculateExam(
+          'percent',
+          comp.ingredients.map((i) => ({ name: i.name, brand: i.brand, value: i.value, isFixed: i.isFixed })),
+          gramForCalc, qty, lossRate,
+        )
+        for (const r of result.ingredients) gramMap.set(`${r.name}\0${r.brand ?? ''}`, r.gram)
       }
-      setScreenshotUrl(canvas.toDataURL('image/png'))
-    } finally {
-      setScreenshotting(false)
-    }
+      return {
+        name: comp.name,
+        qty,
+        ingredients: comp.ingredients.map((ing) => ({
+          name: ing.name,
+          brand: ing.brand,
+          pct: ing.value,
+          gram: gramMap.get(`${ing.name}\0${ing.brand ?? ''}`),
+        })),
+        subtotalGram: gramForCalc > 0 ? gramForCalc * qty : undefined,
+      }
+    })
+    return { comps: cardComps, globalQty, lossRate }
   }
 
-  const downloadScreenshot = () => {
-    if (!screenshotUrl) return
-    const a = document.createElement('a')
-    a.href = screenshotUrl
-    a.download = 'bakemao-配方.png'
-    a.click()
+  const handleRecipeScreenshot = async () => {
+    setSharing(true)
+    setShowShareSheet(false)
+    try {
+      const { comps, globalQty, lossRate } = buildShareData()
+      trackEvent('share_recipe_screenshot')
+      await shareRecipeCard(comps, globalQty, lossRate)
+    } finally {
+      setSharing(false)
+    }
   }
 
   const handleIgShare = () => {
@@ -126,6 +120,7 @@ export function MultiComponentSection() {
     const lossRate = snapshot.compLossRate ?? 0
     const { rows, totalGram } = aggregateIngredientsAcrossComponents(comps, globalQty, lossRate)
     if (rows.length === 0) return
+    setShowShareSheet(false)
     trackEvent('share_ig_card')
     void shareIgCard(
       rows.map((r) => ({ name: r.name + (r.brand ? ` · ${r.brand}` : ''), gram: r.gram })),
@@ -223,18 +218,11 @@ export function MultiComponentSection() {
         <div className="flex flex-wrap items-center gap-1.5" data-screenshot-hide>
           <button
             type="button"
-            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] disabled:opacity-50"
-            onClick={() => void handleScreenshot()}
-            disabled={screenshotting}
+            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-1 text-[12.5px] font-extrabold text-[#C8602A] shadow-[0_2px_0_#6B4A2F] disabled:opacity-50"
+            onClick={() => setShowShareSheet(true)}
+            disabled={sharing}
           >
-            {screenshotting ? '截圖中…' : '截圖'}
-          </button>
-          <button
-            type="button"
-            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-1 text-[12.5px] font-extrabold text-[#C8602A] shadow-[0_2px_0_#6B4A2F]"
-            onClick={handleIgShare}
-          >
-            IG 備料卡
+            {sharing ? '產生中…' : '分享'}
           </button>
           <button
             type="button"
@@ -405,36 +393,26 @@ export function MultiComponentSection() {
       />
     </section>
 
-    {screenshotUrl && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <button type="button" aria-label="關閉" className="absolute inset-0 bg-black/60" onClick={() => setScreenshotUrl(null)} />
-        <div className="mao-card relative flex w-full max-w-sm flex-col gap-3 p-4">
-          <h3 className="text-base font-extrabold text-[#4A3322]">配方截圖</h3>
-          <div className="max-h-[50vh] overflow-auto rounded-xl border border-[#E5D8C8]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={screenshotUrl} alt="配方截圖" className="w-full" />
-          </div>
-          <p className="text-center text-xs text-[#8A7968]">行動裝置：長按圖片可儲存到相冊</p>
-          <button
-            type="button"
-            className="w-full rounded-2xl border-2 border-[#6B4A2F] bg-[#C8602A] py-2.5 text-sm font-extrabold text-white shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
-            onClick={downloadScreenshot}
-          >
-            下載圖片
-          </button>
-          <button
-            type="button"
-            className="w-full rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] py-2.5 text-sm font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] transition active:translate-y-px"
-            onClick={handleIgShare}
-          >
-            IG 備料卡分享
-          </button>
-          <button type="button" className="w-full rounded-xl py-2 text-sm text-[#6B5A4A] transition hover:bg-black/5" onClick={() => setScreenshotUrl(null)}>
-            關閉
-          </button>
-        </div>
+    <BottomSheet open={showShareSheet} onClose={() => setShowShareSheet(false)} title="分享配方">
+      <div className="flex flex-col gap-3 pb-2">
+        <button
+          type="button"
+          className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+          onClick={() => void handleRecipeScreenshot()}
+        >
+          <span className="text-sm font-extrabold text-[#4A3322]">配方截圖</span>
+          <span className="text-xs text-[#9B7B5A]">含材料名稱、百分比、克數，可下載或分享</span>
+        </button>
+        <button
+          type="button"
+          className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFE1C7] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+          onClick={handleIgShare}
+        >
+          <span className="text-sm font-extrabold text-[#C8602A]">IG 備料卡</span>
+          <span className="text-xs text-[#A86840]">1080×1080 正方形，適合 IG 貼文備料一覽</span>
+        </button>
       </div>
-    )}
+    </BottomSheet>
 
     {lineToast && (
       <div

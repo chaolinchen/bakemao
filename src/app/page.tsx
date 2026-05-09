@@ -30,8 +30,9 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-screen pb-24 text-[#4A3322]"
+      className="min-h-screen text-[#4A3322]"
       style={{
+        paddingBottom: 'calc(7rem + env(safe-area-inset-bottom, 0px))',
         background: '#E6EEF5',
         backgroundImage:
           'radial-gradient(circle at 15% 10%, rgba(255,255,255,0.7) 0, transparent 40%), radial-gradient(circle at 90% 85%, rgba(255,231,217,0.6) 0, transparent 42%)',
