@@ -33,6 +33,8 @@ export const metadata: Metadata = {
   title: 'BakeMao 烘焙貓',
   description: '烘焙配方換算、模具與耗損，換模具、算克數、多組配方，全自動。',
   manifest: '/manifest.json',
+  // Beta 測試中：全站不進搜尋引擎索引，只有拿到連結者能進；之後要公開再移除此設定。
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },

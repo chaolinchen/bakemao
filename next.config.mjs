@@ -35,6 +35,15 @@ const withPWA = withPWAInit({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Beta：全站 X-Robots-Tag noindex（連 API/非 HTML 回應都擋）。只擋搜尋收錄，不影響有連結者開啟。
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }],
+      },
+    ]
+  },
 }
 
 export default withPWA(nextConfig)
