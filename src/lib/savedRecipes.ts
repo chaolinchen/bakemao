@@ -22,6 +22,7 @@ export interface SavedRecipe {
   name: string
   notes?: string
   createdAt: number
+  updatedAt?: number
   snapshot: SavedSingleRecipe | SavedMultiRecipe
 }
 
@@ -73,6 +74,31 @@ export function saveRecipe(
     recipes = recipes.slice(0, MAX_SAVED)
   }
 
+  persistRecipes(recipes)
+  return entry
+}
+
+/**
+ * 覆蓋更新既有配方（保留原 id 與 createdAt）。
+ * 找不到該 id 時回傳 null（呼叫端可改用 saveRecipe 另存新檔）。
+ */
+export function updateRecipe(
+  id: string,
+  name: string,
+  snapshot: SavedSingleRecipe | SavedMultiRecipe,
+  notes?: string
+): SavedRecipe | null {
+  const recipes = loadSavedRecipes()
+  const idx = recipes.findIndex((r) => r.id === id)
+  if (idx === -1) return null
+  const entry: SavedRecipe = {
+    ...recipes[idx],
+    name,
+    snapshot,
+    ...(notes?.trim() ? { notes: notes.trim() } : { notes: undefined }),
+    updatedAt: Date.now(),
+  }
+  recipes[idx] = entry
   persistRecipes(recipes)
   return entry
 }

@@ -2,10 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { calculateExam } from '@/lib/calculator'
-import type { IngredientInput } from '@/lib/calculator'
 import { CAKE_TYPE_PRESETS } from '@/lib/componentMoldGram'
 import type { CakeType, ComponentMoldType } from '@/lib/componentMoldGram'
-import { effectiveGramPerUnit } from '@/lib/multiComponentAggregate'
+import {
+  componentGramPerUnit,
+  componentIngredientInputs,
+  effectiveGramPerUnit,
+} from '@/lib/multiComponentAggregate'
 import type { RecipeComponent } from '@/store/calcStore'
 import { useCalcStore } from '@/store/calcStore'
 import type { RecipeLine } from '@/types/recipe-line'
@@ -155,7 +158,6 @@ export function ComponentCard({
   const setComponentCustomQty = useCalcStore((s) => s.setComponentCustomQty)
   const setComponentGramMode = useCalcStore((s) => s.setComponentGramMode)
   const setCompLineGramValue = useCalcStore((s) => s.setCompLineGramValue)
-  const setComponentGramBase = useCalcStore((s) => s.setComponentGramBase)
 
   const roundUnit = comp.roundUnit ?? 'inch'
   const roundHeight = comp.roundHeight ?? 6
@@ -186,22 +188,18 @@ export function ComponentCard({
   const effectiveQty = comp.customQty ?? globalQty
   const isCustomQty = comp.customQty !== null
 
+  // 克數模式：每份總克重 = 各材料克數加總（非基底克重）；比例/模具模式照舊
   const gramForCalc = useMemo(
-    () => (isGramMode ? baseGram : effectiveGramPerUnit(comp)),
+    () => componentGramPerUnit(comp),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [comp, isGramMode, baseGram]
+    [comp]
   )
 
   const result = useMemo(() => {
-    const ing: IngredientInput[] = comp.ingredients.map((i) => ({
-      name: i.name,
-      brand: i.brand,
-      value: isGramMode ? (derivedPcts[i.id] ?? 0) : i.value,
-      isFixed: i.isFixed,
-    }))
+    const ing = componentIngredientInputs(comp)
     return calculateExam('percent', ing, gramForCalc, effectiveQty, lossRate)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [comp.ingredients, gramForCalc, effectiveQty, lossRate, isGramMode, derivedPcts])
+  }, [comp, gramForCalc, effectiveQty, lossRate])
 
   const hasResult = gramForCalc > 0 && comp.ingredients.length > 0
   const maxGram = hasResult ? Math.max(...result.ingredients.map((r) => r.gram), 0.001) : 1
@@ -272,7 +270,7 @@ export function ComponentCard({
           {isGramMode && (
             <div className="mt-1.5 space-y-0.5">
               <p className="text-[10px] text-[#8A7968]">
-                輸入每份的實際克數，克數最高的材料自動設為基底（100%），或點材料名稱旁按鈕手動指定
+                輸入每樣材料「每份」的實際克數即可。下方的克數 = 你輸入的量 × 份數 ÷ 良率；不設損耗時就是原樣。
               </p>
               {Object.keys(gramValues).length > 0 && (
                 <p className="text-[11px] font-bold text-[#6B4A2F]">
@@ -283,7 +281,7 @@ export function ComponentCard({
           )}
         </div>
 
-        {/* 目標量模式 */}
+        {/* 目標量模式（克數模式下不需要，每份總克重由材料克數加總得出） */}
         {!isGramMode && (
           <div className="mb-3">
             <p className="mb-2 text-xs text-[#6B5A4A]">目標量</p>
@@ -294,7 +292,7 @@ export function ComponentCard({
           </div>
         )}
 
-        {comp.targetMode === 'gram' ? (
+        {isGramMode ? null : comp.targetMode === 'gram' ? (
           <div className="mb-3">
             <div className="mb-1 flex items-center gap-3">
               <label className="shrink-0 text-sm text-[#6B5A4A]">每份</label>
@@ -559,7 +557,7 @@ export function ComponentCard({
           )}
         </div>
 
-        {comp.ingredients.length > 0 && (
+        {!isGramMode && comp.ingredients.length > 0 && (
           <p className="mb-1.5 text-[10px] text-[#B0A090]">
             主要材料（通常為麵粉）設 100，其他材料填相對比例
           </p>
@@ -570,12 +568,10 @@ export function ComponentCard({
         <div className="mb-2 space-y-2">
           {comp.ingredients.filter((l) => l.name.trim() !== '').map((line) => {
             const invalid = isGramMode ? (gramValues[line.id] ?? 0) === 0 : parseNum(line.value) === 0
-            const isBase = isGramMode && line.id === baseId
-            const isManualBase = isGramMode && line.id === manualBaseId
             return (
               <div
                 key={line.id}
-                className={`flex flex-wrap items-end gap-2 rounded-2xl border-2 border-[#6B4A2F] px-3 py-3 shadow-[0_2px_0_#6B4A2F] ${isBase ? 'bg-[#FFE1C7]' : 'bg-white'}`}
+                className="flex flex-wrap items-end gap-2 rounded-2xl border-2 border-[#6B4A2F] bg-white px-3 py-3 shadow-[0_2px_0_#6B4A2F]"
               >
                 <div className="min-w-[90px] flex-1">
                   <p className="text-sm font-medium text-[#3D2918]">
@@ -583,30 +579,10 @@ export function ComponentCard({
                     {line.brand ? (
                       <span className="text-xs text-[#8A7968]"> · {line.brand}</span>
                     ) : null}
-                    {isBase && (
-                      <button
-                        type="button"
-                        className="ml-1.5 rounded-full border border-[#6B4A2F] bg-[#C8602A] px-1.5 py-0.5 text-[10px] font-extrabold text-white"
-                        title={isManualBase ? '點擊取消手動設定，改回自動偵測' : '自動偵測的基底（點擊鎖定）'}
-                        onClick={() => setComponentGramBase(comp.id, isManualBase ? null : line.id)}
-                      >
-                        {isManualBase ? '基底 ✓' : '基底'}
-                      </button>
-                    )}
-                    {isGramMode && !isBase && (
-                      <button
-                        type="button"
-                        className="ml-1.5 rounded-full border border-[#D9C9B5] bg-[#F5EDE3] px-1.5 py-0.5 text-[10px] font-bold text-[#9B7B5A]"
-                        title="設為基底材料（100%）"
-                        onClick={() => setComponentGramBase(comp.id, line.id)}
-                      >
-                        設基底
-                      </button>
-                    )}
                   </p>
                   {isGramMode && (gramValues[line.id] ?? 0) > 0 && (
                     <p className="text-[10px] text-[#B0A090]">
-                      {derivedPcts[line.id]?.toFixed(1) ?? '0'} %
+                      佔比 {derivedPcts[line.id]?.toFixed(0) ?? '0'}%
                     </p>
                   )}
                 </div>
@@ -686,8 +662,8 @@ export function ComponentCard({
         {hasResult && result.totalPct > 0 ? (
           <div className="mb-4 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] p-3">
             <div className="space-y-1.5">
-              {result.ingredients.map((row) => (
-                <div key={row.name + (row.brand ?? '')} className="flex items-center gap-2">
+              {result.ingredients.map((row, i) => (
+                <div key={`${row.name} ${row.brand ?? ''} ${i}`} className="flex items-center gap-2">
                   <span className="w-24 shrink-0 truncate text-sm text-[#3D2918]">
                     {row.name}
                     {row.brand ? <span className="text-xs text-[#8A7968]"> · {row.brand}</span> : null}

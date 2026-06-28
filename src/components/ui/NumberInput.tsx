@@ -21,7 +21,8 @@ export function NumberInput(
 
   const handleFocus = (e: FocusEvent<HTMLInputElement>) => {
     isFocused.current = true
-    e.currentTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 不在 focus 時強制 scrollIntoView：每次點欄位都置中會造成畫面跳動。
+    // 交給瀏覽器原生捲動 + visualViewport keyboard offset 處理。
     onFocus?.(e)
   }
 

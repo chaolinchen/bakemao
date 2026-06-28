@@ -103,6 +103,9 @@ export interface CalcStateSlice {
   components?: RecipeComponent[]
   compQuantity?: number     // 1–30, default 3
   compLossRate?: number     // 0–0.3, default 0
+  /** 目前載入中的本機配方 id（用於儲存時詢問「覆蓋舊配方 / 另存新配方」）；null = 全新配方 */
+  loadedRecipeId?: string | null
+  loadedRecipeName?: string | null
 }
 
 export function makeRecipeId() {
@@ -292,6 +295,7 @@ export const useCalcStore = create<
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
     setComponentGramBase: (id: string, lineId: string | null) => void
+    setLoadedRecipe: (id: string | null, name?: string | null) => void
   }
 >()(
   persist(
@@ -307,6 +311,8 @@ export const useCalcStore = create<
       components: [],
       compQuantity: 1,
       compLossRate: 0,
+      loadedRecipeId: null,
+      loadedRecipeName: null,
 
       setMode: (mode) => set({ mode }),
       setTargetKind: (targetKind) => set({ targetKind }),
@@ -505,7 +511,12 @@ export const useCalcStore = create<
           components: [],
           compQuantity: 1,
           compLossRate: 0,
+          loadedRecipeId: null,
+          loadedRecipeName: null,
         }),
+
+      setLoadedRecipe: (id, name = null) =>
+        set({ loadedRecipeId: id, loadedRecipeName: name }),
 
       setComponentTargetMode: (id, targetMode) =>
         set((s) => ({
@@ -570,6 +581,8 @@ export const useCalcStore = create<
           components: mergedComponents,
           compQuantity: Number(p.compQuantity ?? c.compQuantity),
           compLossRate: Number(p.compLossRate ?? c.compLossRate),
+          loadedRecipeId: p.loadedRecipeId ?? null,
+          loadedRecipeName: p.loadedRecipeName ?? null,
         } as never
       },
       partialize: (s) => ({
@@ -584,6 +597,8 @@ export const useCalcStore = create<
         components: s.components,
         compQuantity: s.compQuantity,
         compLossRate: s.compLossRate,
+        loadedRecipeId: s.loadedRecipeId,
+        loadedRecipeName: s.loadedRecipeName,
       }),
     }
   )

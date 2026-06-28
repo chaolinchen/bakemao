@@ -275,7 +275,7 @@ export function MultiComponentSection() {
               )}
             </div>
             <p className="mt-1.5 text-xs text-[#8A7968]">
-              備料時的預計損耗（沾鍋、試做等），不確定可不填
+              可選的安全餘量：怕沾鍋、試做不夠時才填。它會整鍋等比放大、不改變材料比例；家庭少量設 0 即可。
             </p>
           </div>
         )}
@@ -385,6 +385,8 @@ export function MultiComponentSection() {
             compQuantity: snap.compQuantity,
             compLossRate: snap.compLossRate,
           })
+          // 記住載入來源，儲存時可選擇「覆蓋此配方」
+          useCalcStore.getState().setLoadedRecipe(r.id, r.name)
         }}
         onDelete={(id) => {
           deleteRecipe(id)

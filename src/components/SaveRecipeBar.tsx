@@ -2,9 +2,9 @@
 
 import { signIn, useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
-import { gramPerUnitFromComponentMold } from '@/lib/componentMoldGram'
+import { componentGramPerUnit } from '@/lib/multiComponentAggregate'
 import { queueOfflineSave } from '@/lib/offlineSync'
-import { saveRecipe } from '@/lib/savedRecipes'
+import { loadSavedRecipes, saveRecipe, updateRecipe } from '@/lib/savedRecipes'
 import { trackEvent } from '@/lib/analytics'
 import { showToast } from '@/lib/toast'
 import { computeResult, useCalcStore } from '@/store/calcStore'
@@ -29,11 +29,22 @@ export function SaveRecipeBar() {
   const hasAnyResult = useCalcStore((s) => {
     const comps = s.components ?? []
     return comps.some(
-      (c) =>
-        c.ingredients.length > 0 &&
-        (c.targetMode === 'mold' || c.gramPerUnit > 0)
+      (c) => c.ingredients.length > 0 && componentGramPerUnit(c) > 0
     )
   })
+
+  const loadedRecipeId = useCalcStore((s) => s.loadedRecipeId ?? null)
+  const loadedRecipeName = useCalcStore((s) => s.loadedRecipeName ?? null)
+  // 載入來源仍存在於配方本時，才顯示「覆蓋」選項
+  const [existingLoaded, setExistingLoaded] = useState(false)
+  useEffect(() => {
+    if (!saveOpen) return
+    if (!loadedRecipeId) {
+      setExistingLoaded(false)
+      return
+    }
+    setExistingLoaded(loadSavedRecipes().some((r) => r.id === loadedRecipeId))
+  }, [saveOpen, loadedRecipeId])
 
   // Detect keyboard open via visualViewport
   useEffect(() => {
@@ -53,7 +64,8 @@ export function SaveRecipeBar() {
 
   useEffect(() => {
     const handler = () => {
-      setName(defaultRecipeName())
+      const ln = useCalcStore.getState().loadedRecipeName
+      setName(ln || defaultRecipeName())
       setNotes('')
       setSaveOpen(true)
     }
@@ -67,28 +79,44 @@ export function SaveRecipeBar() {
     }
   }, [])
 
-  const saveLocal = () => {
+  // overwrite=true 時覆蓋目前載入的配方，否則另存新配方
+  const saveLocal = (overwrite: boolean) => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
-    if (comps.length > 0) {
-      saveRecipe(name.trim() || '未命名配方', {
-        kind: 'multi',
-        components: comps,
-        compQuantity: snapshot.compQuantity ?? 1,
-        compLossRate: snapshot.compLossRate ?? 0,
-      }, notes)
-    } else {
-      saveRecipe(name.trim() || '未命名配方', {
-        kind: 'single',
-        mode: snapshot.mode,
-        ingredients: snapshot.ingredients.map((i) => ({ ...i, brand: i.brand ?? '' })),
-        targetKind: snapshot.targetKind,
-        totalGram: snapshot.totalGram,
-        loss: snapshot.loss,
-        moldUi: snapshot.moldUi,
-      }, notes)
+    const finalName = name.trim() || '未命名配方'
+    const snap =
+      comps.length > 0
+        ? {
+            kind: 'multi' as const,
+            components: comps,
+            compQuantity: snapshot.compQuantity ?? 1,
+            compLossRate: snapshot.compLossRate ?? 0,
+          }
+        : {
+            kind: 'single' as const,
+            mode: snapshot.mode,
+            ingredients: snapshot.ingredients.map((i) => ({ ...i, brand: i.brand ?? '' })),
+            targetKind: snapshot.targetKind,
+            totalGram: snapshot.totalGram,
+            loss: snapshot.loss,
+            moldUi: snapshot.moldUi,
+          }
+
+    if (overwrite && loadedRecipeId) {
+      const updated = updateRecipe(loadedRecipeId, finalName, snap, notes)
+      if (updated) {
+        snapshot.setLoadedRecipe(updated.id, updated.name)
+        trackEvent('save_recipe', { method: 'local', label: 'overwrite' })
+        showToast('已更新配方', `「${updated.name}」已覆蓋`)
+        setSaveOpen(false)
+        return
+      }
+      // 找不到舊配方（可能已被刪除）→ 退回另存新檔
     }
-    trackEvent('save_recipe', { method: 'local' })
+
+    const entry = saveRecipe(finalName, snap, notes)
+    snapshot.setLoadedRecipe(entry.id, entry.name)
+    trackEvent('save_recipe', { method: 'local', label: overwrite ? 'overwrite_fallback' : 'new' })
     showToast('已存到配方本', '僅限此裝置，換裝置請用雲端備份')
     setSaveOpen(false)
   }
@@ -102,11 +130,7 @@ export function SaveRecipeBar() {
       let sum = 0
       for (const c of comps) {
         const qty = c.customQty ?? globalQ
-        const g =
-          c.targetMode === 'mold'
-            ? gramPerUnitFromComponentMold(c.moldType, c.moldSize, c.cupCount)
-            : c.gramPerUnit
-        sum += Math.max(0, g) * Math.max(1, qty)
+        sum += Math.max(0, componentGramPerUnit(c)) * Math.max(1, qty)
       }
       return sum
     }
@@ -187,7 +211,7 @@ export function SaveRecipeBar() {
       <button
         type="button"
         onClick={() => {
-          setName(defaultRecipeName())
+          setName(loadedRecipeName || defaultRecipeName())
           setNotes('')
           setSaveOpen(true)
         }}
@@ -216,14 +240,37 @@ export function SaveRecipeBar() {
         />
 
         <div className="flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={saveLocal}
-            className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
-          >
-            <span className="text-sm font-extrabold text-[#4A3322]">存到配方本（本機）</span>
-            <span className="text-xs text-[#9B7B5A]">免登入 · 僅限此裝置</span>
-          </button>
+          {existingLoaded ? (
+            <>
+              <button
+                type="button"
+                onClick={() => saveLocal(true)}
+                className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFE1C7] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+              >
+                <span className="text-sm font-extrabold text-[#4A3322]">更新此配方（覆蓋）</span>
+                <span className="text-xs text-[#9B7B5A] truncate max-w-full">
+                  覆蓋「{loadedRecipeName}」· 僅限此裝置
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => saveLocal(false)}
+                className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+              >
+                <span className="text-sm font-extrabold text-[#4A3322]">另存為新配方</span>
+                <span className="text-xs text-[#9B7B5A]">保留舊配方，新增一筆 · 僅限此裝置</span>
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => saveLocal(false)}
+              className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+            >
+              <span className="text-sm font-extrabold text-[#4A3322]">存到配方本（本機）</span>
+              <span className="text-xs text-[#9B7B5A]">免登入 · 僅限此裝置</span>
+            </button>
+          )}
 
           <button
             type="button"
