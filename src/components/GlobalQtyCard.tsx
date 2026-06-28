@@ -5,7 +5,8 @@ import { useCalcStore } from '@/store/calcStore'
 import { Sparkle } from './ui/Sparkle'
 import { Stepper } from './ui/Stepper'
 
-const QUICK_QTY = [1, 2, 4, 6, 12, 24, 48, 100]
+// 拿掉 100（會擠到第二行佔空間）；要更多用 stepper 仍可到 999
+const QUICK_QTY = [1, 2, 4, 6, 12, 24, 48]
 
 export function GlobalQtyCard() {
   const { compQuantity, setCompQuantity } = useCalcStore(
@@ -24,12 +25,12 @@ export function GlobalQtyCard() {
         <Stepper min={1} max={999} value={compQuantity} onChange={setCompQuantity} />
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-1">
         {QUICK_QTY.map((q) => (
           <button
             key={q}
             type="button"
-            className={`min-w-[40px] rounded-[12px] border-2 border-[#6B4A2F] px-2.5 py-1.5 text-[13px] font-extrabold transition ${
+            className={`min-w-0 flex-1 rounded-[10px] border-2 border-[#6B4A2F] px-1.5 py-1.5 text-[13px] font-extrabold transition ${
               compQuantity === q
                 ? 'translate-y-px bg-[#C8602A] text-white shadow-[0_1px_0_#6B4A2F]'
                 : 'bg-[#FFFBF2] text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]'
