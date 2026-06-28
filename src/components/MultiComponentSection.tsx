@@ -218,32 +218,25 @@ export function MultiComponentSection() {
         <div className="flex flex-wrap items-center gap-1.5" data-screenshot-hide>
           <button
             type="button"
-            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-2.5 py-1 text-[12.5px] font-extrabold text-[#C8602A] shadow-[0_2px_0_#6B4A2F] disabled:opacity-50"
-            onClick={() => setShowShareSheet(true)}
-            disabled={sharing}
-          >
-            {sharing ? '產生中…' : '分享'}
-          </button>
-          <button
-            type="button"
-            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
-            onClick={() => { setMultiSavedRecipes(loadSavedRecipes()); setMultiRecipesSheetOpen(true) }}
-          >
-            配方本
-          </button>
-          <button
-            type="button"
-            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
+            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFE1C7] px-3 py-1 text-[12.5px] font-extrabold text-[#C8602A] shadow-[0_2px_0_#6B4A2F]"
             onClick={() => setShowTemplates(true)}
           >
             範本
           </button>
           <button
             type="button"
-            className="hidden items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-2.5 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] sm:flex"
-            onClick={handleExportCsv}
+            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F]"
+            onClick={() => { setMultiSavedRecipes(loadSavedRecipes()); setMultiRecipesSheetOpen(true) }}
           >
-            匯出 CSV
+            配方本
+          </button>
+          <button
+            type="button"
+            className="flex min-h-[44px] items-center gap-1 rounded-full border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-1 text-[12.5px] font-extrabold text-[#6B4A2F] shadow-[0_2px_0_#6B4A2F] disabled:opacity-50"
+            onClick={() => setShowShareSheet(true)}
+            disabled={sharing}
+          >
+            {sharing ? '產生中…' : '分享／匯出'}
           </button>
         </div>
       </div>
@@ -301,6 +294,7 @@ export function MultiComponentSection() {
           comp={comp}
           globalQty={compQuantity}
           lossRate={compLossRate}
+          showQtyOverride={components.length > 1}
           onRemove={() => setRemoveId(comp.id)}
           onRemoveIngredient={(line) => deleteIngredientLine(comp.id, line)}
         />
@@ -412,6 +406,14 @@ export function MultiComponentSection() {
         >
           <span className="text-sm font-extrabold text-[#C8602A]">IG 備料卡</span>
           <span className="text-xs text-[#A86840]">1080×1080 正方形，適合 IG 貼文備料一覽</span>
+        </button>
+        <button
+          type="button"
+          className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
+          onClick={() => { setShowShareSheet(false); handleExportCsv() }}
+        >
+          <span className="text-sm font-extrabold text-[#4A3322]">匯出 CSV（試算表）</span>
+          <span className="text-xs text-[#9B7B5A]">下載 .csv，可用 Excel／Google 試算表開啟</span>
         </button>
       </div>
     </BottomSheet>

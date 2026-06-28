@@ -138,12 +138,15 @@ export function ComponentCard({
   comp,
   globalQty,
   lossRate,
+  showQtyOverride = true,
   onRemove,
   onRemoveIngredient,
 }: {
   comp: RecipeComponent
   globalQty: number
   lossRate: number
+  /** 單一組合時隱藏「每組份數 override」，避免與上方「共做幾個」兩個份數混淆 */
+  showQtyOverride?: boolean
   onRemove: () => void
   onRemoveIngredient: (line: RecipeLine) => void
 }) {
@@ -184,6 +187,7 @@ export function ComponentCard({
 
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showFormula, setShowFormula] = useState(false)
+  const [showCakeInfo, setShowCakeInfo] = useState(false)
 
   const effectiveQty = comp.customQty ?? globalQty
   const isCustomQty = comp.customQty !== null
@@ -403,11 +407,22 @@ export function ComponentCard({
                           </span>
                         )}
                       </div>
-                      <p className="mb-1 text-[#5C4A3A]">{info.desc}</p>
-                      {info.examples && <p className="mb-1 text-[#8A7968]">例：{info.examples}</p>}
-                      <p className="text-[10px] text-[#B0A090]">
-                        比重 {preset.gravity.toFixed(2)} · 填充率 {Math.round(preset.fillRate * 100)}%
-                      </p>
+                      <button
+                        type="button"
+                        className="text-[11px] text-[#8A7968] underline underline-offset-2"
+                        onClick={() => setShowCakeInfo((x) => !x)}
+                      >
+                        {showCakeInfo ? '收起說明' : '這是什麼？'}
+                      </button>
+                      {showCakeInfo && (
+                        <div className="mt-1">
+                          <p className="mb-1 text-[#5C4A3A]">{info.desc}</p>
+                          {info.examples && <p className="mb-1 text-[#8A7968]">例：{info.examples}</p>}
+                          <p className="text-[10px] text-[#B0A090]">
+                            比重 {preset.gravity.toFixed(2)} · 填充率 {Math.round(preset.fillRate * 100)}%
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )
                 })()}
@@ -532,8 +547,8 @@ export function ComponentCard({
           </div>
         )}
 
-        {/* 份數 override */}
-        <div className="mb-3 flex flex-wrap items-center gap-2">
+        {/* 份數 override（單一組合時隱藏，沿用上方「共做幾個」即可） */}
+        <div className={`mb-3 flex flex-wrap items-center gap-2 ${showQtyOverride ? '' : 'hidden'}`}>
           <span className="text-xs text-[#6B5A4A]">份數</span>
           <Stepper
             min={1}
@@ -571,7 +586,7 @@ export function ComponentCard({
             return (
               <div
                 key={line.id}
-                className="flex flex-wrap items-end gap-2 rounded-2xl border-2 border-[#6B4A2F] bg-white px-3 py-3 shadow-[0_2px_0_#6B4A2F]"
+                className="flex flex-wrap items-end gap-2 rounded-2xl border-[1.5px] border-[#C9AE94] bg-white px-3 py-2.5"
               >
                 <div className="min-w-[90px] flex-1">
                   <p className="text-sm font-medium text-[#3D2918]">

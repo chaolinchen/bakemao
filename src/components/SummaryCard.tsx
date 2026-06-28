@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 function fmtG(g: number): string {
-  if (g >= 1000) return `${(g / 1000).toFixed(2).replace(/\.?0+$/, '')} kg`
-  return `${g.toFixed(1)} g`
+  // 一律用公克（烘焙以克為單位較直覺）；≥1000 加千分位逗號，否則保留一位小數
+  if (g >= 1000) return `${Math.round(g).toLocaleString('en-US')} g`
+  return `${(Math.round(g * 10) / 10).toString()} g`
 }
 import { useShallow } from 'zustand/react/shallow'
 import { aggregateIngredientsAcrossComponents } from '@/lib/multiComponentAggregate'
@@ -51,7 +52,8 @@ export function SummaryCard() {
 
   return (
     <section
-      className="overflow-hidden rounded-3xl border-[2.5px] border-[#6B4A2F] shadow-[0_4px_0_#6B4A2F]"
+      id="summary-card"
+      className="overflow-hidden rounded-3xl border-[2.5px] border-[#6B4A2F] shadow-[0_4px_0_#6B4A2F] scroll-mt-20"
       style={{ background: '#FFE9D1' }}
     >
       <button

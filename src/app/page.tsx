@@ -6,6 +6,7 @@ import { GlobalQtyCard } from '@/components/GlobalQtyCard'
 import { MultiComponentSection } from '@/components/MultiComponentSection'
 import { SaveRecipeBar } from '@/components/SaveRecipeBar'
 import { SummaryCard } from '@/components/SummaryCard'
+import { SummaryJumpButton } from '@/components/SummaryJumpButton'
 import { OfflineBanner } from '@/components/ui/Banner'
 import { Sparkle } from '@/components/ui/Sparkle'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -103,6 +104,7 @@ export default function Home() {
       </main>
 
       <SaveRecipeBar />
+      <SummaryJumpButton />
     </div>
   )
 }
