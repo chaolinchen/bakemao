@@ -217,7 +217,8 @@ export function SaveRecipeBar() {
       target_gram: targetGram,
       mold_id: null as string | null,
       mold_params: snapshot.moldUi as unknown as Record<string, unknown>,
-      quantity: comps.length > 0 ? globalQ : snapshot.moldQuantity,
+      // DB recipes.quantity 有 CHECK 1..99；真實份數已存在 ingredients blob，這裡只是 metadata，夾到 99 避免雲端寫入失敗
+      quantity: Math.min(99, Math.max(1, comps.length > 0 ? globalQ : snapshot.moldQuantity)),
       loss_type: snapshot.loss.type,
       loss_value:
         snapshot.loss.type === 'manual'

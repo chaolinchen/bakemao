@@ -310,20 +310,24 @@ export default function RecipesPage() {
 
   if (status === 'unauthenticated') {
     return (
-      <div
-        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#E6EEF5] p-6 text-center"
-      >
-        <h1 className="text-xl font-extrabold text-[#4A3322]">我的配方</h1>
-        <p className="text-[#6B5A4A]">請先登入以管理配方。</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#E6EEF5] p-6 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/maologo.png" width={64} height={64} alt="BakeMao logo" />
+        <div>
+          <h1 className="text-xl font-extrabold text-[#4A3322]">我的配方</h1>
+          <p className="mt-1 text-sm text-[#6B5A4A]">
+            登入後可跨裝置同步、雲端備份你的配方。
+          </p>
+        </div>
         <div className="flex w-full max-w-xs flex-col gap-2">
           <Button onClick={() => void signIn('google', { callbackUrl: '/recipes' })}>
-            Google 登入
-          </Button>
-          <Button onClick={() => void signIn('apple', { callbackUrl: '/recipes' })}>
-            Apple 登入
+            使用 Google 登入
           </Button>
         </div>
-        <Link className="mt-2 text-[#C8602A] underline" href="/">
+        <p className="max-w-xs text-xs text-[#9E8672]">
+          不想登入也沒關係，配方可以存在「配方本（本機）」，只是換裝置不會跟著走。
+        </p>
+        <Link className="mt-1 text-[#C8602A] underline" href="/">
           返回首頁
         </Link>
       </div>

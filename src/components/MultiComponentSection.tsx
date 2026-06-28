@@ -283,7 +283,7 @@ export function MultiComponentSection() {
 
       {components.length === 1 && components[0].ingredients.length === 0 && (
         <div className="rounded-3xl border-[2.5px] border-dashed border-[#6B4A2F] bg-[#FFFBF2] p-4 text-center" data-screenshot-hide>
-          <p className="mb-1 text-sm font-extrabold text-[#4A3322]">第一次使用？</p>
+          <p className="mb-1 text-sm font-extrabold text-[#4A3322]">快速開始</p>
           <p className="mb-3 text-xs text-[#9E8672]">套用範本配方快速開始，或直接加材料自行輸入。</p>
           <button
             type="button"
