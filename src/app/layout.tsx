@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Baloo_2, Noto_Sans_TC, Roboto_Mono } from 'next/font/google'
 import Script from 'next/script'
 import { Providers } from '@/components/Providers'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import './globals.css'
 
@@ -74,6 +75,7 @@ export default function RootLayout({
         style={{ fontFamily: "'Baloo 2', 'Noto Sans TC', system-ui, sans-serif" }}
       >
         <Providers>{children}</Providers>
+        <UpdatePrompt />
         <ToastContainer />
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
         <Script id="ga4-init" strategy="afterInteractive">{`

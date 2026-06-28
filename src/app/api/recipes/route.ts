@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     client_updated_at: string
   }
 
-  await sql`
+  const inserted = await sql`
     INSERT INTO recipes (
       user_id,
       name,
@@ -73,7 +73,8 @@ export async function POST(req: Request) {
       ${JSON.stringify(body.ingredients)}::jsonb,
       ${body.client_updated_at}::timestamptz
     )
+    RETURNING id
   `
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, id: inserted[0]?.id ?? null })
 }

@@ -35,6 +35,10 @@ const withPWA = withPWAInit({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // 部署時把 commit SHA 烘進前端 bundle，供 PWA 偵測「主畫面 App 是否還在跑舊版」
+  env: {
+    NEXT_PUBLIC_COMMIT: process.env.VERCEL_GIT_COMMIT_SHA ?? '',
+  },
   // Beta：全站 X-Robots-Tag noindex（連 API/非 HTML 回應都擋）。只擋搜尋收錄，不影響有連結者開啟。
   async headers() {
     return [
