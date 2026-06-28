@@ -4,7 +4,7 @@ import { signIn, useSession } from 'next-auth/react'
 import { useEffect, useRef, useState } from 'react'
 import { componentGramPerUnit } from '@/lib/multiComponentAggregate'
 import { queueOfflineSave } from '@/lib/offlineSync'
-import { loadSavedRecipes, saveRecipe, updateRecipe } from '@/lib/savedRecipes'
+import { loadSavedRecipes, saveRecipe, updateRecipe, type SavedRecipe } from '@/lib/savedRecipes'
 import { trackEvent } from '@/lib/analytics'
 import { showToast } from '@/lib/toast'
 import { computeResult, useCalcStore } from '@/store/calcStore'
@@ -35,15 +35,22 @@ export function SaveRecipeBar() {
 
   const loadedRecipeId = useCalcStore((s) => s.loadedRecipeId ?? null)
   const loadedRecipeName = useCalcStore((s) => s.loadedRecipeName ?? null)
-  // 載入來源仍存在於配方本時，才顯示「覆蓋」選項
-  const [existingLoaded, setExistingLoaded] = useState(false)
+  // 配方本既有配方清單 + 儲存方式（新增 / 覆蓋哪一份）
+  const [savedList, setSavedList] = useState<SavedRecipe[]>([])
+  const [saveMode, setSaveMode] = useState<'new' | 'overwrite'>('new')
+  const [overwriteId, setOverwriteId] = useState<string | null>(null)
   useEffect(() => {
     if (!saveOpen) return
-    if (!loadedRecipeId) {
-      setExistingLoaded(false)
-      return
+    const list = loadSavedRecipes()
+    setSavedList(list)
+    // 若是從配方本載入且該份仍在，預設「覆蓋該份」；否則預設「新增」
+    if (loadedRecipeId && list.some((r) => r.id === loadedRecipeId)) {
+      setSaveMode('overwrite')
+      setOverwriteId(loadedRecipeId)
+    } else {
+      setSaveMode('new')
+      setOverwriteId(null)
     }
-    setExistingLoaded(loadSavedRecipes().some((r) => r.id === loadedRecipeId))
   }, [saveOpen, loadedRecipeId])
 
   // Detect keyboard open via visualViewport
@@ -79,11 +86,12 @@ export function SaveRecipeBar() {
     }
   }, [])
 
-  // overwrite=true 時覆蓋目前載入的配方，否則另存新配方
-  const saveLocal = (overwrite: boolean) => {
+  // saveMode='overwrite' 時覆蓋 overwriteId 指定的配方，否則另存新配方
+  const saveLocal = () => {
     const snapshot = useCalcStore.getState()
     const comps = snapshot.components ?? []
     const finalName = name.trim() || '未命名配方'
+    const overwrite = saveMode === 'overwrite' && !!overwriteId
     const snap =
       comps.length > 0
         ? {
@@ -102,8 +110,8 @@ export function SaveRecipeBar() {
             moldUi: snapshot.moldUi,
           }
 
-    if (overwrite && loadedRecipeId) {
-      const updated = updateRecipe(loadedRecipeId, finalName, snap, notes)
+    if (overwrite && overwriteId) {
+      const updated = updateRecipe(overwriteId, finalName, snap, notes)
       if (updated) {
         snapshot.setLoadedRecipe(updated.id, updated.name)
         trackEvent('save_recipe', { method: 'local', label: 'overwrite' })
@@ -239,38 +247,84 @@ export function SaveRecipeBar() {
           className="mb-5 w-full resize-none rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-3 py-2 text-sm"
         />
 
+        {/* 儲存方式：新增 / 覆蓋哪一份（配方本已有配方時才需要選） */}
+        {savedList.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-bold text-[#6B5A4A]">儲存方式</p>
+            <div className="mb-2 flex gap-1 rounded-[14px] border-2 border-[#6B4A2F] bg-[#FFE1C7] p-1">
+              {(
+                [
+                  { v: 'new' as const, label: '新增一份' },
+                  { v: 'overwrite' as const, label: '更新現有' },
+                ]
+              ).map((opt) => (
+                <button
+                  key={opt.v}
+                  type="button"
+                  onClick={() => {
+                    setSaveMode(opt.v)
+                    if (opt.v === 'overwrite') {
+                      const target = overwriteId ? savedList.find((r) => r.id === overwriteId) : savedList[0]
+                      if (target) {
+                        setOverwriteId(target.id)
+                        setName(target.name)
+                      }
+                    }
+                  }}
+                  className={`flex-1 rounded-[10px] py-2 text-[13px] font-extrabold transition-all ${
+                    saveMode === opt.v ? 'border-2 border-[#6B4A2F] bg-white text-[#C8602A]' : 'text-[#9E8672]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {saveMode === 'overwrite' && (
+              <div className="max-h-44 space-y-1.5 overflow-y-auto rounded-xl border-2 border-[#6B4A2F] bg-[#FFFBF2] p-2">
+                <p className="px-1 text-[11px] text-[#8A7968]">要覆蓋哪一份？</p>
+                {savedList.map((r) => {
+                  const active = overwriteId === r.id
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => { setOverwriteId(r.id); setName(r.name) }}
+                      className={`flex w-full items-center gap-2 rounded-lg border-2 px-2.5 py-2 text-left transition ${
+                        active ? 'border-[#C8602A] bg-[#FFE1C7]' : 'border-[#E5D8C8] bg-white'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                          active ? 'border-[#C8602A]' : 'border-[#C0AE99]'
+                        }`}
+                      >
+                        {active ? <span className="h-2 w-2 rounded-full bg-[#C8602A]" /> : null}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-bold text-[#4A3322]">{r.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col gap-3">
-          {existingLoaded ? (
-            <>
-              <button
-                type="button"
-                onClick={() => saveLocal(true)}
-                className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFE1C7] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
-              >
-                <span className="text-sm font-extrabold text-[#4A3322]">更新此配方（覆蓋）</span>
-                <span className="text-xs text-[#9B7B5A] truncate max-w-full">
-                  覆蓋「{loadedRecipeName}」· 僅限此裝置
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => saveLocal(false)}
-                className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
-              >
-                <span className="text-sm font-extrabold text-[#4A3322]">另存為新配方</span>
-                <span className="text-xs text-[#9B7B5A]">保留舊配方，新增一筆 · 僅限此裝置</span>
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => saveLocal(false)}
-              className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px"
-            >
-              <span className="text-sm font-extrabold text-[#4A3322]">存到配方本（本機）</span>
-              <span className="text-xs text-[#9B7B5A]">免登入 · 僅限此裝置</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => saveLocal()}
+            disabled={saveMode === 'overwrite' && !overwriteId}
+            className="flex flex-col items-start gap-0.5 rounded-2xl border-2 border-[#6B4A2F] bg-[#FFFBF2] px-4 py-3 text-left shadow-[0_3px_0_#6B4A2F] transition active:translate-y-px disabled:opacity-50"
+          >
+            <span className="text-sm font-extrabold text-[#4A3322]">
+              {saveMode === 'overwrite' ? '更新此配方（覆蓋）' : '存到配方本（新增一份）'}
+            </span>
+            <span className="text-xs text-[#9B7B5A] truncate max-w-full">
+              {saveMode === 'overwrite'
+                ? `覆蓋「${savedList.find((r) => r.id === overwriteId)?.name ?? ''}」· 僅限此裝置`
+                : '免登入 · 僅限此裝置'}
+            </span>
+          </button>
 
           <button
             type="button"
