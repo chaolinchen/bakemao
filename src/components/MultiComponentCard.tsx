@@ -586,45 +586,44 @@ export function ComponentCard({
             return (
               <div
                 key={line.id}
-                className="flex flex-wrap items-end gap-2 rounded-2xl border-[1.5px] border-[#C9AE94] bg-white px-3 py-2.5"
+                className="flex items-center gap-2 rounded-xl border-[1.5px] border-[#C9AE94] bg-white px-3 py-2"
               >
-                <div className="min-w-[90px] flex-1">
-                  <p className="text-sm font-medium text-[#3D2918]">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#3D2918]">
                     {line.name}
                     {line.brand ? (
                       <span className="text-xs text-[#8A7968]"> · {line.brand}</span>
                     ) : null}
                   </p>
                   {isGramMode && (gramValues[line.id] ?? 0) > 0 && (
-                    <p className="text-[10px] text-[#B0A090]">
+                    <p className="text-[10px] leading-tight text-[#B0A090]">
                       佔比 {derivedPcts[line.id]?.toFixed(0) ?? '0'}%
                     </p>
                   )}
                 </div>
-                {isGramMode ? (
-                  <div className="w-20">
-                    <label className="text-xs text-[#6B5A4A]">g</label>
-                    <NumberInput
-                      invalid={invalid}
-                      value={(gramValues[line.id] ?? 0) === 0 ? '' : String(gramValues[line.id])}
-                      onChange={(e) => setCompLineGramValue(comp.id, line.id, parseNum(e.target.value))}
-                      placeholder="200"
-                    />
+                <div className="flex shrink-0 items-center gap-1">
+                  <div className="w-[68px]">
+                    {isGramMode ? (
+                      <NumberInput
+                        invalid={invalid}
+                        value={(gramValues[line.id] ?? 0) === 0 ? '' : String(gramValues[line.id])}
+                        onChange={(e) => setCompLineGramValue(comp.id, line.id, parseNum(e.target.value))}
+                        placeholder="200"
+                      />
+                    ) : (
+                      <NumberInput
+                        invalid={invalid}
+                        value={line.value === 0 ? '' : String(line.value)}
+                        onChange={(e) => updateCompLine(comp.id, line.id, { value: parseNum(e.target.value) })}
+                        placeholder="100"
+                      />
+                    )}
                   </div>
-                ) : (
-                  <div className="w-20">
-                    <label className="text-xs text-[#6B5A4A]">%</label>
-                    <NumberInput
-                      invalid={invalid}
-                      value={line.value === 0 ? '' : String(line.value)}
-                      onChange={(e) => updateCompLine(comp.id, line.id, { value: parseNum(e.target.value) })}
-                      placeholder="100"
-                    />
-                  </div>
-                )}
+                  <span className="w-3 text-xs font-bold text-[#8A7968]">{isGramMode ? 'g' : '%'}</span>
+                </div>
                 <button
                   type="button"
-                  className="text-xs text-[#8A7968] underline underline-offset-2"
+                  className="shrink-0 text-xs text-[#8A7968] underline underline-offset-2"
                   onClick={() =>
                     insertCompLineAfter(comp.id, line.id, {
                       name: line.name,
@@ -638,7 +637,7 @@ export function ComponentCard({
                 </button>
                 <button
                   type="button"
-                  className="text-xs text-red-700 underline underline-offset-2"
+                  className="shrink-0 text-xs text-red-700 underline underline-offset-2"
                   onClick={() => onRemoveIngredient(line)}
                 >
                   刪除
