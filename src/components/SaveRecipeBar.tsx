@@ -39,6 +39,7 @@ export function SaveRecipeBar() {
 
   const loadedRecipeId = useCalcStore((s) => s.loadedRecipeId ?? null)
   const loadedRecipeName = useCalcStore((s) => s.loadedRecipeName ?? null)
+  const loadedRecipeNotes = useCalcStore((s) => s.loadedRecipeNotes ?? null)
 
   // 儲存位置（本機 / 雲端）+ 儲存方式（新增 / 覆蓋哪一份）
   const [dest, setDest] = useState<Dest>('local')
@@ -51,20 +52,27 @@ export function SaveRecipeBar() {
   const currentList: PickItem[] =
     dest === 'local' ? localList.map((r) => ({ id: r.id, name: r.name })) : cloudList
 
-  // 開啟面板：載入本機清單並設定預設（本機；若是從配方本載入的就預設覆蓋該份）
+  // 開啟面板：載入本機清單並帶回「上次儲存的名稱＋備註」。
+  // 若目前載入中的配方在本機還找得到 → 預設「更新現有」並帶回該份的名稱/備註；
+  // 否則（全新配方，或上次存到雲端）→ 帶回 store 記住的名稱/備註，模式為新增。
   useEffect(() => {
     if (!saveOpen) return
     const list = loadSavedRecipes()
     setLocalList(list)
     setDest('local')
-    if (loadedRecipeId && list.some((r) => r.id === loadedRecipeId)) {
+    const matched = loadedRecipeId ? list.find((r) => r.id === loadedRecipeId) : undefined
+    if (matched) {
       setSaveMode('overwrite')
-      setOverwriteId(loadedRecipeId)
+      setOverwriteId(matched.id)
+      setName(matched.name)
+      setNotes(matched.notes ?? '')
     } else {
       setSaveMode('new')
       setOverwriteId(null)
+      setName(loadedRecipeName || defaultRecipeName())
+      setNotes(loadedRecipeNotes ?? '')
     }
-  }, [saveOpen, loadedRecipeId])
+  }, [saveOpen, loadedRecipeId, loadedRecipeName, loadedRecipeNotes])
 
   // 已登入時，面板一打開就預抓雲端配方清單（背景進行），這樣切到「雲端同步」
   // 時「更新現有」清單即時就有、不必等網路。未登入 / 只存本機者不會打這個請求。
@@ -114,12 +122,8 @@ export function SaveRecipeBar() {
   }, [])
 
   useEffect(() => {
-    const handler = () => {
-      const ln = useCalcStore.getState().loadedRecipeName
-      setName(ln || defaultRecipeName())
-      setNotes('')
-      setSaveOpen(true)
-    }
+    // 開啟面板即可；名稱/備註的預填由上方 saveOpen 的 effect 統一處理。
+    const handler = () => setSaveOpen(true)
     window.addEventListener('bakemao:requestSave', handler)
     return () => window.removeEventListener('bakemao:requestSave', handler)
   }, [])
@@ -159,10 +163,12 @@ export function SaveRecipeBar() {
     const finalName = name.trim() || '未命名配方'
     const overwrite = saveMode === 'overwrite' && !!overwriteId
 
+    const finalNotes = notes.trim() || null
+
     if (overwrite && overwriteId) {
       const updated = updateRecipe(overwriteId, finalName, snap, notes)
       if (updated) {
-        snapshot.setLoadedRecipe(updated.id, updated.name)
+        snapshot.setLoadedRecipe(updated.id, updated.name, finalNotes)
         trackEvent('save_recipe', { method: 'local', label: 'overwrite' })
         showToast('已更新配方', `「${updated.name}」已覆蓋`)
         setSaveOpen(false)
@@ -172,7 +178,7 @@ export function SaveRecipeBar() {
     }
 
     const entry = saveRecipe(finalName, snap, notes)
-    snapshot.setLoadedRecipe(entry.id, entry.name)
+    snapshot.setLoadedRecipe(entry.id, entry.name, finalNotes)
     trackEvent('save_recipe', { method: 'local', label: overwrite ? 'overwrite_fallback' : 'new' })
     showToast('已存到配方本', '僅限此裝置，換裝置請用雲端備份')
     setSaveOpen(false)
@@ -267,11 +273,14 @@ export function SaveRecipeBar() {
           body: JSON.stringify(payload),
         })
 
+    const data = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}))
-      showToast(`雲端${overwrite ? '更新' : '備份'}失敗：${(err as { error?: string }).error ?? res.statusText}`)
+      showToast(`雲端${overwrite ? '更新' : '備份'}失敗：${data.error ?? res.statusText}`)
       return
     }
+    // 記住這份雲端配方（id/名稱/備註），下次開儲存面板可帶回名稱與備註、不必重打
+    const savedId = overwrite ? overwriteId : data.id ?? null
+    useCalcStore.getState().setLoadedRecipe(savedId, payload.name, notes.trim() || null)
     trackEvent('save_recipe', { method: 'cloud', label: overwrite ? 'overwrite' : 'new' })
     showToast(overwrite ? '雲端配方已更新 ✓' : '雲端備份成功 ✓')
     setSaveOpen(false)
@@ -309,11 +318,7 @@ export function SaveRecipeBar() {
       {showFab && (
         <button
           type="button"
-          onClick={() => {
-            setName(loadedRecipeName || defaultRecipeName())
-            setNotes('')
-            setSaveOpen(true)
-          }}
+          onClick={() => setSaveOpen(true)}
           className="fixed left-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
           style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         >

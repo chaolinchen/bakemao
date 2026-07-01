@@ -106,6 +106,7 @@ export interface CalcStateSlice {
   /** 目前載入中的本機配方 id（用於儲存時詢問「覆蓋舊配方 / 另存新配方」）；null = 全新配方 */
   loadedRecipeId?: string | null
   loadedRecipeName?: string | null
+  loadedRecipeNotes?: string | null
 }
 
 export function makeRecipeId() {
@@ -295,7 +296,11 @@ export const useCalcStore = create<
     ) => void
     setComponentCustomQty: (id: string, qty: number | null) => void
     setComponentGramBase: (id: string, lineId: string | null) => void
-    setLoadedRecipe: (id: string | null, name?: string | null) => void
+    setLoadedRecipe: (
+      id: string | null,
+      name?: string | null,
+      notes?: string | null
+    ) => void
   }
 >()(
   persist(
@@ -313,6 +318,7 @@ export const useCalcStore = create<
       compLossRate: 0,
       loadedRecipeId: null,
       loadedRecipeName: null,
+      loadedRecipeNotes: null,
 
       setMode: (mode) => set({ mode }),
       setTargetKind: (targetKind) => set({ targetKind }),
@@ -513,10 +519,11 @@ export const useCalcStore = create<
           compLossRate: 0,
           loadedRecipeId: null,
           loadedRecipeName: null,
+          loadedRecipeNotes: null,
         }),
 
-      setLoadedRecipe: (id, name = null) =>
-        set({ loadedRecipeId: id, loadedRecipeName: name }),
+      setLoadedRecipe: (id, name = null, notes = null) =>
+        set({ loadedRecipeId: id, loadedRecipeName: name, loadedRecipeNotes: notes }),
 
       setComponentTargetMode: (id, targetMode) =>
         set((s) => ({
@@ -583,6 +590,7 @@ export const useCalcStore = create<
           compLossRate: Number(p.compLossRate ?? c.compLossRate),
           loadedRecipeId: p.loadedRecipeId ?? null,
           loadedRecipeName: p.loadedRecipeName ?? null,
+          loadedRecipeNotes: p.loadedRecipeNotes ?? null,
         } as never
       },
       partialize: (s) => ({
@@ -599,6 +607,7 @@ export const useCalcStore = create<
         compLossRate: s.compLossRate,
         loadedRecipeId: s.loadedRecipeId,
         loadedRecipeName: s.loadedRecipeName,
+        loadedRecipeNotes: s.loadedRecipeNotes,
       }),
     }
   )
