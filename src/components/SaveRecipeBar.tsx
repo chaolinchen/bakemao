@@ -66,9 +66,10 @@ export function SaveRecipeBar() {
     }
   }, [saveOpen, loadedRecipeId])
 
-  // 切到雲端且已登入時，抓取雲端配方清單供「更新哪一份」挑選
+  // 已登入時，面板一打開就預抓雲端配方清單（背景進行），這樣切到「雲端同步」
+  // 時「更新現有」清單即時就有、不必等網路。未登入 / 只存本機者不會打這個請求。
   useEffect(() => {
-    if (!saveOpen || dest !== 'cloud' || status !== 'authenticated') return
+    if (!saveOpen || status !== 'authenticated') return
     let aborted = false
     setCloudLoading(true)
     fetch('/api/recipes', { credentials: 'include', cache: 'no-store' })
@@ -83,7 +84,7 @@ export function SaveRecipeBar() {
     return () => {
       aborted = true
     }
-  }, [saveOpen, dest, status])
+  }, [saveOpen, status])
 
   const switchDest = (d: Dest) => {
     setDest(d)
