@@ -200,7 +200,7 @@ export default function RecipesPage() {
 
   const load = useCallback(async () => {
     if (status !== 'authenticated') return
-    const res = await fetch('/api/recipes', { credentials: 'include' })
+    const res = await fetch('/api/recipes', { credentials: 'include', cache: 'no-store' })
     if (!res.ok) return
     const data = (await res.json()) as Row[]
     setRows(data)

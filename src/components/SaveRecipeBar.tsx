@@ -278,8 +278,12 @@ export function SaveRecipeBar() {
 
   const primarySave = () => (dest === 'local' ? saveLocal() : void saveCloud())
 
-  // FAB: only show when there are results AND keyboard is closed
-  if (!hasAnyResult || keyboardOpen) return null
+  // FAB 只在「有結果、鍵盤收起、面板未開」時顯示。
+  // 注意：不能在鍵盤開啟時整個 return null，否則會連同已開啟的儲存面板
+  // （含名稱/備註輸入框）一起卸載 → 輸入框失焦 → 鍵盤收起 → 重新掛載 →
+  // 畫面與鍵盤無限跳動。故只用 showFab 控制 FAB，面板永遠保留掛載。
+  const showFab = hasAnyResult && !keyboardOpen && !saveOpen
+  if (!hasAnyResult && !saveOpen) return null
 
   const cloudNeedsLogin = dest === 'cloud' && status !== 'authenticated'
   const overwriteBlocked = saveMode === 'overwrite' && !overwriteId
@@ -301,19 +305,21 @@ export function SaveRecipeBar() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => {
-          setName(loadedRecipeName || defaultRecipeName())
-          setNotes('')
-          setSaveOpen(true)
-        }}
-        className="fixed left-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
-        style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
-      >
-        <Sparkle size={13} color="#fff" />
-        儲存配方
-      </button>
+      {showFab && (
+        <button
+          type="button"
+          onClick={() => {
+            setName(loadedRecipeName || defaultRecipeName())
+            setNotes('')
+            setSaveOpen(true)
+          }}
+          className="fixed left-4 z-30 flex items-center gap-2 rounded-full border-2 border-[#6B4A2F] bg-[#C8602A] px-4 py-3 text-sm font-extrabold tracking-wide text-white shadow-[0_4px_0_#6B4A2F,0_8px_16px_rgba(107,74,47,0.3)] transition active:translate-y-[2px] active:shadow-[0_2px_0_#6B4A2F]"
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+        >
+          <Sparkle size={13} color="#fff" />
+          儲存配方
+        </button>
+      )}
 
       <BottomSheet open={saveOpen} onClose={() => setSaveOpen(false)} title="儲存配方">
         <label className="text-xs text-[#6B5A4A]">名稱（最多 30 字）</label>
