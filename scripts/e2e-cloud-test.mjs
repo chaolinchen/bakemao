@@ -24,7 +24,7 @@ const ok = (b, msg) => console.log(`${b ? '✅' : '❌'} ${msg}`)
 let allPass = true
 const check = (b, msg) => { if (!b) allPass = false; ok(b, msg) }
 
-function payload(name) {
+function payload(name, notes = '') {
   return {
     name,
     mode: 'percent',
@@ -35,7 +35,8 @@ function payload(name) {
     quantity: 1,
     loss_type: 'preset',
     loss_value: 0,
-    ingredients: { components: [{ name: '組', gramValues: { a: 100 } }], v: 1 },
+    // 備註存在 ingredients blob 的 notes 欄（雲端資料表無 notes 欄）
+    ingredients: { components: [{ name: '組', gramValues: { a: 100 } }], v: 1, notes },
     client_updated_at: new Date().toISOString(),
   }
 }
@@ -61,22 +62,34 @@ try {
   const unauth = await fetch(`${BASE}/api/recipes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload('x')) })
   check(unauth.status === 401, `未登入 POST 應 401（實得 ${unauth.status}）`)
 
-  // 4) POST 新增 A
-  const r1 = await fetch(`${BASE}/api/recipes`, { method: 'POST', headers: H, body: JSON.stringify(payload('E2E-A原始')) })
+  // 4) POST 新增 A（帶描述）
+  const r1 = await fetch(`${BASE}/api/recipes`, { method: 'POST', headers: H, body: JSON.stringify(payload('E2E-A原始', '描述-A原始')) })
   const j1 = await r1.json()
   check(r1.status === 200 && j1.id, `POST 新增成功，回傳 id=${j1.id}`)
   const id1 = j1.id
 
-  // 5) PUT 就地更新成 B
-  const r2 = await fetch(`${BASE}/api/recipes/${id1}`, { method: 'PUT', headers: H, body: JSON.stringify(payload('E2E-B已更新')) })
+  // 4b) GET → 描述有存進去（證明 notes 存 blob 能持久化）
+  const gA = await fetch(`${BASE}/api/recipes`, { headers: { Cookie: cookie } })
+  const rowsA = await gA.json()
+  check(rowsA[0]?.ingredients?.notes === '描述-A原始', `新增後描述已存並回傳「${rowsA[0]?.ingredients?.notes}」`)
+
+  // 5) PUT 就地更新成 B（同時改名稱＋描述）
+  const r2 = await fetch(`${BASE}/api/recipes/${id1}`, { method: 'PUT', headers: H, body: JSON.stringify(payload('E2E-B已更新', '描述-B已更新')) })
   const j2 = await r2.json()
   check(r2.status === 200 && j2.id === id1, `PUT 更新成功，id 不變（${j2.id}）`)
 
-  // 6) GET → 應只有 1 筆，且名稱是 B（證明更新沒新增重複）
+  // 6) GET → 應只有 1 筆，名稱＋描述都更新成 B（證明更新沒新增重複、描述會跟著更新）
   const g1 = await fetch(`${BASE}/api/recipes`, { headers: { Cookie: cookie } })
   const rows1 = await g1.json()
   check(Array.isArray(rows1) && rows1.length === 1, `更新後仍只有 1 筆（實得 ${rows1.length}）= 沒重複`)
   check(rows1[0]?.name === 'E2E-B已更新', `那 1 筆名稱已是「${rows1[0]?.name}」`)
+  check(rows1[0]?.ingredients?.notes === '描述-B已更新', `那 1 筆描述已跟著更新為「${rows1[0]?.ingredients?.notes}」`)
+
+  // 6b) PUT 清空描述 → GET 應為空字串（證明描述可被清掉、不會殘留舊值）
+  await fetch(`${BASE}/api/recipes/${id1}`, { method: 'PUT', headers: H, body: JSON.stringify(payload('E2E-B已更新', '')) })
+  const gC = await fetch(`${BASE}/api/recipes`, { headers: { Cookie: cookie } })
+  const rowsC = await gC.json()
+  check(rowsC[0]?.ingredients?.notes === '', `清空描述後回傳空字串（實得 ${JSON.stringify(rowsC[0]?.ingredients?.notes)}）`)
 
   // 7) 再 POST 一筆 C → 應變 2 筆（證明「新增」確實會多一筆）
   const r3 = await fetch(`${BASE}/api/recipes`, { method: 'POST', headers: H, body: JSON.stringify(payload('E2E-C另存新')) })

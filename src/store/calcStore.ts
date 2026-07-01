@@ -107,6 +107,8 @@ export interface CalcStateSlice {
   loadedRecipeId?: string | null
   loadedRecipeName?: string | null
   loadedRecipeNotes?: string | null
+  /** 這份配方上次存到哪（本機/雲端）→ 再開儲存面板時預設停在同一個分頁 */
+  loadedRecipeDest?: 'local' | 'cloud' | null
 }
 
 export function makeRecipeId() {
@@ -299,7 +301,8 @@ export const useCalcStore = create<
     setLoadedRecipe: (
       id: string | null,
       name?: string | null,
-      notes?: string | null
+      notes?: string | null,
+      dest?: 'local' | 'cloud' | null
     ) => void
   }
 >()(
@@ -319,6 +322,7 @@ export const useCalcStore = create<
       loadedRecipeId: null,
       loadedRecipeName: null,
       loadedRecipeNotes: null,
+      loadedRecipeDest: null,
 
       setMode: (mode) => set({ mode }),
       setTargetKind: (targetKind) => set({ targetKind }),
@@ -520,10 +524,16 @@ export const useCalcStore = create<
           loadedRecipeId: null,
           loadedRecipeName: null,
           loadedRecipeNotes: null,
+          loadedRecipeDest: null,
         }),
 
-      setLoadedRecipe: (id, name = null, notes = null) =>
-        set({ loadedRecipeId: id, loadedRecipeName: name, loadedRecipeNotes: notes }),
+      setLoadedRecipe: (id, name = null, notes = null, dest = null) =>
+        set({
+          loadedRecipeId: id,
+          loadedRecipeName: name,
+          loadedRecipeNotes: notes,
+          loadedRecipeDest: dest,
+        }),
 
       setComponentTargetMode: (id, targetMode) =>
         set((s) => ({
@@ -591,6 +601,7 @@ export const useCalcStore = create<
           loadedRecipeId: p.loadedRecipeId ?? null,
           loadedRecipeName: p.loadedRecipeName ?? null,
           loadedRecipeNotes: p.loadedRecipeNotes ?? null,
+          loadedRecipeDest: p.loadedRecipeDest ?? null,
         } as never
       },
       partialize: (s) => ({
@@ -608,6 +619,7 @@ export const useCalcStore = create<
         loadedRecipeId: s.loadedRecipeId,
         loadedRecipeName: s.loadedRecipeName,
         loadedRecipeNotes: s.loadedRecipeNotes,
+        loadedRecipeDest: s.loadedRecipeDest,
       }),
     }
   )

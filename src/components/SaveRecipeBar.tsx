@@ -13,7 +13,7 @@ import { Sparkle } from './ui/Sparkle'
 
 type Dest = 'local' | 'cloud'
 type SaveMode = 'new' | 'overwrite'
-type PickItem = { id: string; name: string }
+type PickItem = { id: string; name: string; notes?: string }
 
 function defaultRecipeName() {
   const d = new Date()
@@ -40,6 +40,7 @@ export function SaveRecipeBar() {
   const loadedRecipeId = useCalcStore((s) => s.loadedRecipeId ?? null)
   const loadedRecipeName = useCalcStore((s) => s.loadedRecipeName ?? null)
   const loadedRecipeNotes = useCalcStore((s) => s.loadedRecipeNotes ?? null)
+  const loadedRecipeDest = useCalcStore((s) => s.loadedRecipeDest ?? null)
 
   // 儲存位置（本機 / 雲端）+ 儲存方式（新增 / 覆蓋哪一份）
   const [dest, setDest] = useState<Dest>('local')
@@ -50,40 +51,50 @@ export function SaveRecipeBar() {
   const [cloudLoading, setCloudLoading] = useState(false)
 
   const currentList: PickItem[] =
-    dest === 'local' ? localList.map((r) => ({ id: r.id, name: r.name })) : cloudList
+    dest === 'local'
+      ? localList.map((r) => ({ id: r.id, name: r.name, notes: r.notes }))
+      : cloudList
 
-  // 開啟面板：載入本機清單並帶回「上次儲存的名稱＋備註」。
-  // 若目前載入中的配方在本機還找得到 → 預設「更新現有」並帶回該份的名稱/備註；
-  // 否則（全新配方，或上次存到雲端）→ 帶回 store 記住的名稱/備註，模式為新增。
+  // 開啟面板：帶回「上次儲存的名稱＋備註」，並停在上次儲存的分頁（本機/雲端）。
+  // 這份配方之前存過（本機在清單裡找得到，或上次存到雲端）→ 預設「更新現有」+
+  // 帶回名稱/備註；否則（全新配方）→ 帶回 store 記住的名稱/備註，模式為新增。
   useEffect(() => {
     if (!saveOpen) return
     const list = loadSavedRecipes()
     setLocalList(list)
-    setDest('local')
-    const matched = loadedRecipeId ? list.find((r) => r.id === loadedRecipeId) : undefined
-    if (matched) {
+    const savedDest: Dest = loadedRecipeDest === 'cloud' ? 'cloud' : 'local'
+    setDest(savedDest)
+
+    const localMatch = loadedRecipeId ? list.find((r) => r.id === loadedRecipeId) : undefined
+    const savedBefore = !!loadedRecipeId && (savedDest === 'cloud' || !!localMatch)
+
+    if (savedBefore) {
       setSaveMode('overwrite')
-      setOverwriteId(matched.id)
-      setName(matched.name)
-      setNotes(matched.notes ?? '')
+      setOverwriteId(loadedRecipeId)
+      setName(localMatch?.name ?? loadedRecipeName ?? defaultRecipeName())
+      setNotes(localMatch?.notes ?? loadedRecipeNotes ?? '')
     } else {
       setSaveMode('new')
       setOverwriteId(null)
       setName(loadedRecipeName || defaultRecipeName())
       setNotes(loadedRecipeNotes ?? '')
     }
-  }, [saveOpen, loadedRecipeId, loadedRecipeName, loadedRecipeNotes])
+  }, [saveOpen, loadedRecipeId, loadedRecipeName, loadedRecipeNotes, loadedRecipeDest])
 
   // 已登入時，面板一打開就預抓雲端配方清單（背景進行），這樣切到「雲端同步」
   // 時「更新現有」清單即時就有、不必等網路。未登入 / 只存本機者不會打這個請求。
+  // 備註存在 ingredients blob 裡（雲端資料表無 notes 欄），一併帶回供覆蓋時預填。
   useEffect(() => {
     if (!saveOpen || status !== 'authenticated') return
     let aborted = false
     setCloudLoading(true)
     fetch('/api/recipes', { credentials: 'include', cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : []))
-      .then((rows: Array<{ id: string; name: string }>) => {
-        if (!aborted) setCloudList(rows.map((r) => ({ id: r.id, name: r.name })))
+      .then((rows: Array<{ id: string; name: string; ingredients?: { notes?: string } }>) => {
+        if (!aborted)
+          setCloudList(
+            rows.map((r) => ({ id: r.id, name: r.name, notes: r.ingredients?.notes ?? '' }))
+          )
       })
       .catch(() => {})
       .finally(() => {
@@ -103,6 +114,7 @@ export function SaveRecipeBar() {
   const pickOverwrite = (item: PickItem) => {
     setOverwriteId(item.id)
     setName(item.name)
+    setNotes(item.notes ?? '')
   }
 
   // Detect keyboard open via visualViewport
@@ -168,7 +180,7 @@ export function SaveRecipeBar() {
     if (overwrite && overwriteId) {
       const updated = updateRecipe(overwriteId, finalName, snap, notes)
       if (updated) {
-        snapshot.setLoadedRecipe(updated.id, updated.name, finalNotes)
+        snapshot.setLoadedRecipe(updated.id, updated.name, finalNotes, 'local')
         trackEvent('save_recipe', { method: 'local', label: 'overwrite' })
         showToast('已更新配方', `「${updated.name}」已覆蓋`)
         setSaveOpen(false)
@@ -178,7 +190,7 @@ export function SaveRecipeBar() {
     }
 
     const entry = saveRecipe(finalName, snap, notes)
-    snapshot.setLoadedRecipe(entry.id, entry.name, finalNotes)
+    snapshot.setLoadedRecipe(entry.id, entry.name, finalNotes, 'local')
     trackEvent('save_recipe', { method: 'local', label: overwrite ? 'overwrite_fallback' : 'new' })
     showToast('已存到配方本', '僅限此裝置，換裝置請用雲端備份')
     setSaveOpen(false)
@@ -214,6 +226,9 @@ export function SaveRecipeBar() {
       loss: snapshot.loss,
       moldUi: snapshot.moldUi,
       resultSnapshot: legacyResult?.ingredients ?? [],
+      // 雲端 recipes 表沒有 notes 欄位 → 備註存進 ingredients blob 一起持久化，
+      // GET 會原樣回傳，開儲存面板時可帶回描述。
+      notes: notes.trim() || '',
     }
     return {
       name: (name.trim() || '未命名配方').slice(0, 30),
@@ -280,7 +295,7 @@ export function SaveRecipeBar() {
     }
     // 記住這份雲端配方（id/名稱/備註），下次開儲存面板可帶回名稱與備註、不必重打
     const savedId = overwrite ? overwriteId : data.id ?? null
-    useCalcStore.getState().setLoadedRecipe(savedId, payload.name, notes.trim() || null)
+    useCalcStore.getState().setLoadedRecipe(savedId, payload.name, notes.trim() || null, 'cloud')
     trackEvent('save_recipe', { method: 'cloud', label: overwrite ? 'overwrite' : 'new' })
     showToast(overwrite ? '雲端配方已更新 ✓' : '雲端備份成功 ✓')
     setSaveOpen(false)
@@ -298,7 +313,8 @@ export function SaveRecipeBar() {
   const cloudNeedsLogin = dest === 'cloud' && status !== 'authenticated'
   const overwriteBlocked = saveMode === 'overwrite' && !overwriteId
   const showModeChooser = !cloudNeedsLogin && currentList.length > 0
-  const targetName = currentList.find((r) => r.id === overwriteId)?.name ?? ''
+  // 雲端清單還在載入時 currentList 可能是空的 → 覆蓋對象名稱退回目前輸入的名稱
+  const targetName = currentList.find((r) => r.id === overwriteId)?.name ?? name
 
   let primaryTitle: string
   let primarySub: string
